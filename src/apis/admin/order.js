@@ -1,0 +1,68 @@
+import axios from 'axios';
+
+// Create Axios instance
+const order = axios.create({
+  baseURL: `${import.meta.env.VITE_BACKEND_URL}/api/v1/admin/order`,
+  timeout: 10000,
+  withCredentials: true,
+});
+
+order.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response && error.response.status === 401) {
+      window.location.href = '/admin/login';
+    }
+    return Promise.reject(error);
+  }
+);
+
+export const createOrder = async (data) => {
+  try {
+    const response = await order.post('/create', data);
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching products:', error);
+    throw error;
+  }
+};
+
+export const updateOrder = async (id, data) => {
+  try {
+    const response = await order.post(`/update/${id}`, data);
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching products:', error);
+    throw error;
+  }
+};
+
+export const getAll = async (options) => {
+  try {
+    const response = await order.get(`/get-all`, { params: options });
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching products:', error);
+    throw error;
+  }
+};
+
+export const getSingle = async (id) => {
+  try {
+    const response = await order.get(`/get-single/${id}`);
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching products:', error);
+    throw error;
+  }
+};
+
+export const deleteOrder = async (id) => {
+  try {
+    const response = await order.get(`/delete/${id}`);
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching products:', error);
+    throw error;
+  }
+};
