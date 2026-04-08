@@ -16,3 +16,8 @@ export const getOrders = async (options) => {
   const response = await order.get('/get-user-orders', { params: options });
   return response.data;
 };
+
+export const requestReturnExchange = async (orderId, data) => {
+  const response = await order.post(`/request-return-exchange/${orderId}`, data);
+  return response.data;
+};

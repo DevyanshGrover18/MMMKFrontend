@@ -21,6 +21,7 @@ import {
 } from '../context/TranslationContext';
 
 import SkeletonCard from '../components/listing/SkeletonCard';
+import { getCategoryLabel } from '../utils/categoryTranslation';
 
 const ProductListing = () => {
   const navigate = useNavigate();
@@ -54,6 +55,7 @@ const ProductListing = () => {
     const price = searchParams.get('price');
     const discount = searchParams.get('discount');
     const category = searchParams.get('category');
+    const q = searchParams.get('q');
 
     // Extract all other params as potential custom filters
     const knownParams = [
@@ -63,6 +65,7 @@ const ProductListing = () => {
       'price',
       'discount',
       'category',
+      'q',
     ];
     const customFilters = {};
     for (const [key, value] of searchParams.entries()) {
@@ -78,10 +81,11 @@ const ProductListing = () => {
         searchedCategories
           ? categories
               ?.filter((item) => searchedCats.includes(item.name.en))
-              .map((item) => item.nameInLanguage?.[translateLanguage])
+              .map((item) => getCategoryLabel(item, translateLanguage))
               .join(', ')
           : null
       );
+    else setSelectedCategory(q ? `Search: ${q}` : null);
     setSelectedCategoryIds(
       searchedCats.length > 0
         ? categories
@@ -97,10 +101,11 @@ const ProductListing = () => {
       discount: discount ? discount.split(',') : [],
       category: category ? category.split(',') : [],
       brand: brand ? brand.split(',') : [],
+      q: q || null,
       ...customFilters,
       currentPage: 1,
     });
-  }, [searchParams, translateLanguage]);
+  }, [searchParams, translateLanguage, categories]);
 
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [selectedCategoryIds, setSelectedCategoryIds] = useState(null);
@@ -196,14 +201,12 @@ const ProductListing = () => {
                         : 'text-white'
                     } px-6 py-2 transition duration-300 border-2 border-transparent rounded-md hover:border-white hover:bg-white hover:text-black whitespace-nowrap`}
                   >
-                    {item?.nameInLanguage?.[translateLanguage] ||
-                      item?.name?.en ||
-                      'Unnamed Category'}
+                    {getCategoryLabel(item, translateLanguage)}
                   </button>
                 );
               })
             ) : (
-              <div className="text-white">Loading categories...</div>
+              <div className="text-white">{common.loadingCategories}</div>
             )}
           </div>
 
@@ -300,7 +303,7 @@ const ProductListing = () => {
                   onClick={toggleFilterSidebar}
                   className="text-white hover:text-yellow-500"
                 >
-                  Close
+                  {common.close}
                 </button>
               </div>
               <div className="mt-5">

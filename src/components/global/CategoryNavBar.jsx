@@ -2,6 +2,7 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { getUrl } from '../../utils/globalMethods';
 import { useGlobalContext } from '../../context/GlobalProvider';
 import { useTranslationContext } from '../../context/TranslationContext';
+import { getCategoryLabel } from '../../utils/categoryTranslation';
 
 const CategoryNavBar = ({ setUtils }) => {
   const { translateLanguage } = useTranslationContext();
@@ -33,7 +34,7 @@ const CategoryNavBar = ({ setUtils }) => {
             onClick={() => handleSelectCategory(item.name.en)}
             className="px-6 py-2 text-white transition duration-300 border-2 border-transparent rounded-md hover:border-white hover:bg-white hover:text-black whitespace-nowrap"
           >
-            {item?.nameInLanguage?.[translateLanguage]}
+            {getCategoryLabel(item, translateLanguage)}
           </button>
         );
       })}

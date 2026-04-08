@@ -27,8 +27,6 @@ export default function BarChart({
     //     fontWeight: "light",
     //   },
     // },
-    colors: chartColors,
-
     chart: {
       type: 'bar',
       stacked: stacked,
@@ -60,8 +58,6 @@ export default function BarChart({
         colors: [color],
       },
     },
-    colors: chartColors.length == 0 ? [] : chartColors,
-
     xaxis: {
       labels: {
         style: {

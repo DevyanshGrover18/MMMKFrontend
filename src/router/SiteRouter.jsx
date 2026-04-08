@@ -17,8 +17,10 @@ const ProductDetails = lazy(() => import('../pages/ProductDetails'));
 const ShoppingCart = lazy(() => import('../pages/ShoppingCart'));
 const Checkout = lazy(() => import('../pages/Checkout'));
 const ThankYou = lazy(() => import('../pages/ThankYou'));
+const OrderSuccess = lazy(() => import('../pages/OrderSuccess'));
 const BuyGiftCard = lazy(() => import('../pages/BuyGiftCard'));
 const GiftCard = lazy(() => import('../pages/GiftCard'));
+const ContactUs = lazy(() => import('../pages/ContactUs'));
 const ProfileSidebar = lazy(() => import('../pages/ProfileSidebar'));
 const CheckoutForm = lazy(() => import('../components/checkout/CheckoutForm'));
 const ProductPage = lazy(() => import('../pages/ProductPage'));
@@ -67,6 +69,14 @@ export default function SiteRouter() {
               element={
                 <UserProtectedRoute>
                   <ThankYou />
+                </UserProtectedRoute>
+              }
+            />
+            <Route
+              path="/order-success/:orderId"
+              element={
+                <UserProtectedRoute>
+                  <OrderSuccess />
                 </UserProtectedRoute>
               }
             />
@@ -173,8 +183,8 @@ export default function SiteRouter() {
             <Route path="/forgot-password" element={<ForgetPassword />} />
             <Route path="/reset-password/:token" element={<NewPassword />} />
             <Route path="/about-us" element={<AboutUs />} />
+            <Route path="/contact-us" element={<ContactUs />} />
             {...[
-              'contact-us',
               'privacy-policy',
               'refund-policy',
               'terms-conditions',

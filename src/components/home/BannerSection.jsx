@@ -54,7 +54,7 @@ export default function BannerSection() {
           <div className="w-32 h-32 md:w-40 md:h-40 lg:w-48 lg:h-48">
             <img
               src="Wode Logo.png"
-              alt="MMMK WODE Logo"
+              alt={common.mmmk}
               className="object-contain w-full h-full"
             />
           </div>
@@ -85,7 +85,7 @@ export default function BannerSection() {
       content: (
         <img
           src={leftImg}
-          alt="Silky Musk Perfume"
+          alt={common.productImageAlt}
           className="object-cover shadow w-full h-full"
         />
       ),
@@ -96,7 +96,7 @@ export default function BannerSection() {
       content: (
         <img
           src="/bannerSectionImage.jpg"
-          alt="Silky Musk Perfume"
+          alt={common.productImageAlt}
           className="object-cover shadow w-full h-full"
         />
       ),
@@ -107,7 +107,7 @@ export default function BannerSection() {
       content: (
         <img
           src={rightImg}
-          alt="Silky Musk Perfume"
+          alt={common.productImageAlt}
           className="object-cover shadow w-full h-full"
         />
       ),

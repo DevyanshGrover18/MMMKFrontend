@@ -9,7 +9,6 @@ import {
 } from 'react';
 import { getAllCategory } from '../apis/nonAuth/category';
 import { getAllProductsWithFilters } from '../apis/nonAuth/products';
-import { useLocation } from 'react-router-dom';
 
 const GlobalContext = createContext(null);
 
@@ -29,7 +28,6 @@ const GlobalProvider = ({ children }) => {
   };
 
   const { pathname } = window.location;
-  console.log(pathname);
 
   const screenSizes = useMemo(
     () =>
@@ -58,8 +56,6 @@ const GlobalProvider = ({ children }) => {
     queryFn: () => getAllProductsWithFilters({ showOnHomepage: true }),
     enabled: pathname === '/',
   });
-
-  console.log(utils.recommendedProducts);
 
   useEffect(() => {
     updateUtils({

@@ -172,5 +172,26 @@
     "signOut": "Déconnexion",
     "signedOutMessage": "Vous avez été déconnecté !",
     "thankYouMessage": "Merci de votre visite, à bientôt !"
+  },
+  "contactPage": {
+    "title": "Contactez-nous",
+    "subtitle": "Dites-nous ce dont vous avez besoin et notre équipe vous répondra dans les plus brefs délais.",
+    "name": "Nom",
+    "email": "E-mail",
+    "phoneCountryCode": "Indicatif pays",
+    "phoneNumber": "Numéro de téléphone",
+    "query": "Demande",
+    "namePlaceholder": "Entrez votre nom",
+    "emailPlaceholder": "Entrez votre e-mail",
+    "phoneNumberPlaceholder": "Entrez votre numéro de téléphone",
+    "queryPlaceholder": "Comment pouvons-nous vous aider ?",
+    "countryCodePlaceholder": "Sélectionnez l'indicatif pays",
+    "submitSuccess": "Votre message a été envoyé avec succès",
+    "submitError": "Échec de l'envoi de votre message",
+    "requiredName": "Le nom est requis",
+    "requiredEmail": "L'e-mail est requis",
+    "requiredPhoneCode": "L'indicatif pays est requis",
+    "requiredPhoneNumber": "Le numéro de téléphone est requis",
+    "requiredQuery": "La demande est requise"
   }
 }

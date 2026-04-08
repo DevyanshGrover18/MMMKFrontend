@@ -6,6 +6,7 @@ import { FaChevronLeft, FaChevronRight } from 'react-icons/fa';
 import CustomCarousel from './Carousal';
 import { useTranslationContext } from '../../context/TranslationContext';
 import { useGlobalContext } from '../../context/GlobalProvider';
+import { getCategoryLabel } from '../../utils/categoryTranslation';
 
 export default function Slider() {
   const {
@@ -88,7 +89,7 @@ export default function Slider() {
                     className="absolute z-10 left-0 right-0 bottom-0 h-full bg-gradient-to-t from-black/60 to-transparent transition-all duration-500 flex items-center justify-center group-hover:shadow-[inset_0_0_0_4px_white]"
                   >
                     <h3 className="text-lg font-semibold sm:text-xl md:text-2xl text-center w-full">
-                      {product.nameInLanguage?.[translateLanguage]}
+                      {getCategoryLabel(product, translateLanguage)}
                     </h3>
                   </Link>
                 </div>

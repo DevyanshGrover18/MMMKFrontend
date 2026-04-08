@@ -66,3 +66,16 @@ export const deleteOrder = async (id) => {
     throw error;
   }
 };
+
+export const processReturnExchange = async (orderId, requestId, data) => {
+  try {
+    const response = await order.post(
+      `/process-return-exchange/${orderId}/${requestId}`,
+      data
+    );
+    return response.data;
+  } catch (error) {
+    console.error('Error processing return/exchange request:', error);
+    throw error;
+  }
+};

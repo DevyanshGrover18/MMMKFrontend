@@ -38,7 +38,7 @@ const Section6 = () => {
       <div className="flex items-center justify-center w-full">
         <img
           src="/melMoneyRight2.jpg"
-          alt="Silky Musk Perfume"
+          alt={common.productImageAlt}
           className="object-contain shadow w-full h-auto"
         />
       </div>

@@ -10,7 +10,6 @@ import { useQuery } from '@tanstack/react-query';
 import Section10 from '../components/home/Section10';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { message, notification } from 'antd';
-import { addCartItem } from '../apis/user/cart';
 import {
   getProductSkus,
   getRelatedProducts,
@@ -36,7 +35,7 @@ const ProductDetails = () => {
   } = useTranslationContext();
   const [count, setCount] = useState(1);
   const params = useParams();
-  const { addProductToCart } = useCart();
+  const { addProductToCart, data: cartItems } = useCart();
   const navigate = useNavigate();
   const [product, setProduct] = useState({});
   const [selectedSku, setSelectedSku] = useState(null);
@@ -57,6 +56,48 @@ const ProductDetails = () => {
     queryKey: ['getRelatedProducts', params.id, translateLanguage],
     queryFn: () => getRelatedProducts(params.id, translateLanguage),
   });
+  const productData = query.data?.data || {};
+  const skuList = SkuQuery.data?.length
+    ? SkuQuery.data
+    : Array.isArray(productData?.skus)
+      ? productData.skus
+      : [];
+  const selectedSkuDetails = skuList.find((sku) => sku.sku === selectedSku);
+  const totalAvailableStock = skuList.reduce(
+    (sum, sku) => sum + Number(sku?.quantity || 0),
+    0
+  );
+  const usesProductLevelStock =
+    Array.isArray(productData?.filters) && productData.filters.length === 0;
+  const selectedAvailableQuantity =
+    usesProductLevelStock
+      ? Number(productData?.quantity || 0)
+      : skuList.length > 0
+      ? Number(selectedSkuDetails?.quantity || 0)
+      : Number(productData?.quantity || 0);
+  const quantityAlreadyInCart = Array.isArray(cartItems)
+    ? cartItems.reduce((sum, item) => {
+        if (
+          String(item?.product?._id) === String(params.id) &&
+          String(item?.sku || '') === String(selectedSku || '')
+        ) {
+          return sum + Number(item?.quantity || 0);
+        }
+        return sum;
+      }, 0)
+    : 0;
+  const remainingSelectableQuantity = Math.max(
+    selectedAvailableQuantity - quantityAlreadyInCart,
+    0
+  );
+  const isOutOfStock =
+    skuList.length > 0 && !usesProductLevelStock
+      ? totalAvailableStock <= 0 || remainingSelectableQuantity <= 0
+      : remainingSelectableQuantity <= 0;
+  const productImages = [
+    ...(productData?.image ? [productData.image] : []),
+    ...(Array.isArray(productData?.images) ? productData.images : []),
+  ].filter(Boolean);
 
   const handleTranslateProductData = async (data, language) => {
     const allFieldsToTranslate = {
@@ -75,14 +116,18 @@ const ProductDetails = () => {
     for (const key of keys) {
       if (key === 'subCategory') {
         translated[key] = await translateText(
-          allFieldsToTranslate[key],
+          allFieldsToTranslate[key] || '',
           language
         );
         continue;
       }
-      translated[key] =
-        allFieldsToTranslate[key]?.[language] ||
-        (await translateText(allFieldsToTranslate[key]?.en, language));
+      translated[key] = allFieldsToTranslate[key]?.[language];
+      if (!translated[key] && allFieldsToTranslate[key]?.en) {
+        translated[key] = await translateText(
+          allFieldsToTranslate[key].en,
+          language
+        );
+      }
     }
 
     setProduct({
@@ -92,7 +137,6 @@ const ProductDetails = () => {
   };
 
   useEffect(() => {
-    console.log(query.data?.data);
     if (query.data?.data) {
       handleTranslateProductData(query.data.data, translateLanguage);
     } else {
@@ -102,50 +146,78 @@ const ProductDetails = () => {
   }, [query.data, translateLanguage]);
 
   useEffect(() => {
-    if (SkuQuery.data?.length > 0 && !selectedSku) {
-      setSelectedSku(SkuQuery.data[0].sku);
+    if (skuList.length > 0 && !selectedSku) {
+      const firstInStockSku = skuList.find((sku) => Number(sku?.quantity) > 0);
+      setSelectedSku(firstInStockSku?.sku || null);
     }
-  }, [SkuQuery.data]);
+  }, [skuList, selectedSku]);
+
+  useEffect(() => {
+    if (remainingSelectableQuantity > 0 && count > remainingSelectableQuantity) {
+      setCount(remainingSelectableQuantity);
+      return;
+    }
+
+    if (remainingSelectableQuantity <= 0 && count !== 1) {
+      setCount(1);
+    }
+  }, [remainingSelectableQuantity, count]);
 
   const handleAddToWishList = async (e) => {
     try {
+      if (isOutOfStock) {
+        message.warning(common.outOfStock || 'Sold out');
+        return;
+      }
+
       if (!selectedSku) {
         notification.warning({
-          message: 'Please select a ' + query.data?.data?.filters?.join(' / '),
+          message: `${common.chooseOption} ${productData?.filters?.join(' / ')}`,
         });
         return;
       }
 
       // Find the selected SKU details
-      const skuDetails = SkuQuery.data?.find((sku) => sku.sku === selectedSku);
+      const skuDetails = skuList?.find((sku) => sku.sku === selectedSku);
 
       if (!skuDetails) {
-        message.error('Selected SKU not found');
+        message.error(common.selectedOptionNotFound);
         return;
       }
 
-      await addProductToCart({
+      if (Number(skuDetails.quantity || 0) <= 0 || remainingSelectableQuantity <= 0) {
+        message.warning(common.outOfStock || 'Sold out');
+        return;
+      }
+
+      if (count > remainingSelectableQuantity) {
+        message.warning(
+          `Only ${remainingSelectableQuantity} item(s) available for selected option`
+        );
+        return;
+      }
+
+      const added = await addProductToCart({
         productId: params.id,
         sku: selectedSku,
         quantity: count,
         showMessage: true,
       });
 
-      if (e.target?.name === 'buyNow') {
+      if (added && e.target?.name === 'buyNow') {
         navigate('/shopping-cart');
       }
     } catch (err) {
       console.log('Error adding to cart:', err);
-      message.error(
-        err?.response?.data?.message || 'Failed to add item to cart'
-      );
+      message.error(err?.response?.data?.message || common.addToCartFailed);
     }
   };
 
   const handleSelectSku = (skuId) => {
-    const selected = SkuQuery.data.find((sku) => sku._id === skuId);
+    const selected = skuList.find((sku) => sku._id === skuId);
     if (selected && selected.quantity > 0) {
       setSelectedSku(selected.sku);
+      setCount(1);
     }
   };
 
@@ -173,7 +245,8 @@ const ProductDetails = () => {
             <div className="w-full md:w-auto">
               <div className="flex flex-wrap gap-3 mt-2 text-lg md:text-xl md:flex-nowrap md:gap-5">
                 <p className="text-base font-bold md:text-xl">
-                  {common.home} {'>'} {product?.translated?.category}
+                  {common.home} {'>'}{' '}
+                  {product?.translated?.category || productData?.category?.name?.en}
                 </p>
               </div>
             </div>
@@ -186,7 +259,7 @@ const ProductDetails = () => {
               <div className="col-span-1 p-6 border lg:col-span-3 md:p-10">
                 <div className="flex flex-col justify-between">
                   <h3 className="text-base font-bold md:text-xl">
-                    {product?.translated?.productName}
+                    {product?.translated?.productName || productData?.productName?.en}
                   </h3>
                   {/* <p
                   className="my-4 text-sm md:text-base"
@@ -194,32 +267,29 @@ const ProductDetails = () => {
                     __html: product?.translated?.productDescription,
                   }}
                 ></p> */}
-                  {query.data?.data?.price && query.data?.data?.websitePrice ? (
+                  {productData?.price && productData?.websitePrice ? (
                     <>
                       <h2 className="text-base font-semibold md:text-lg flex gap-3">
-                        {query.data?.data?.price && (
+                        {productData?.price && (
                           <span className="line-through text-gray-400 text-sm md:text-base">
-                            ${query.data?.data?.price}
+                            ${productData?.price}
                           </span>
                         )}
 
                         <span className="font-semibold text-lg md:text-xl">
-                          {query.data?.data?.discount
-                            ? query.data?.data?.websitePrice
-                            : 'Coming Soon'}
+                          {productData?.websitePrice}
                         </span>
                       </h2>
                     </>
                   ) : (
-                    <>Coming Soon</>
+                    <>{common.itemUnavailable}</>
                   )}
 
-                  {query.data?.data?.filters?.length > 0 &&
-                    SkuQuery.data?.length > 0 && (
+                  {productData?.filters?.length > 0 && skuList?.length > 0 && (
                       <div className="mt-4">
-                        Select {query.data?.data?.filters?.join(' / ')}
+                        {common.chooseOption} {productData?.filters?.join(' / ')}
                         <div className="flex flex-wrap gap-x-2">
-                          {SkuQuery.data.map((sku) => (
+                          {skuList.map((sku) => (
                             <CommonButton
                               key={sku._id}
                               onClick={() => handleSelectSku(sku._id)}
@@ -227,16 +297,18 @@ const ProductDetails = () => {
                               size="sm"
                               className="!px-2"
                               disabled={sku.quantity <= 0}
-                              title={sku.quantity <= 0 ? 'Out of stock' : ''}
+                              title={
+                                sku.quantity <= 0 ? common.outOfStock : ''
+                              }
                             >
                               <span>
-                                {query.data?.data?.filters
+                                {productData?.filters
                                   ?.map((filter) => sku.filters[filter])
                                   .join(' / ')}
                               </span>
                               {sku.quantity <= 0 ? (
                                 <span className="block text-[8px]">
-                                  Out of stock
+                                  {common.outOfStock}
                                 </span>
                               ) : (
                                 ''
@@ -252,11 +324,13 @@ const ProductDetails = () => {
                       <div className="flex items-center border border-white">
                         <button
                           className="px-3 text-2nd"
+                          type="button"
                           onClick={() =>
                             setCount((prevData) =>
                               prevData === 1 ? 1 : prevData - 1
                             )
                           }
+                          disabled={isOutOfStock}
                         >
                           -
                         </button>
@@ -265,13 +339,32 @@ const ProductDetails = () => {
                         </span>
                         <button
                           className="px-3 text-2nd"
-                          onClick={() => setCount(count + 1)}
+                          type="button"
+                          onClick={() => {
+                            if (selectedAvailableQuantity <= 0) {
+                              message.warning(common.outOfStock || 'Sold out');
+                              return;
+                            }
+                            if (remainingSelectableQuantity <= 0) {
+                              message.warning(common.outOfStock || 'Sold out');
+                              return;
+                            }
+                            if (count >= remainingSelectableQuantity) {
+                              message.warning(
+                                `Maximum available quantity is ${remainingSelectableQuantity}`
+                              );
+                              return;
+                            }
+                            setCount((prev) => prev + 1);
+                          }}
+                          disabled={isOutOfStock}
                         >
                           +
                         </button>
                       </div>
-                      {query.data?.data?.price &&
-                        query.data?.data?.websitePrice && (
+                      {productData?.price &&
+                        productData?.websitePrice &&
+                        !isOutOfStock && (
                           <button
                             name="buyNow"
                             onClick={handleAddToWishList}
@@ -286,15 +379,16 @@ const ProductDetails = () => {
                       name="wishList"
                       onClick={handleAddToWishList}
                       className="w-full py-2 mt-3 font-semibold text-black bg-white"
+                      disabled={isOutOfStock}
                     >
-                      {common.addToCart}
+                      {isOutOfStock ? 'Sold Out' : common.addToCart}
                     </button>
                   </div>
                 </div>
               </div>
 
               <div className="col-span-1 p-6 border lg:col-span-5 md:p-8">
-                <Slider images={query.data?.data?.images} />
+                <Slider images={productImages} />
                 {/* <div className="absolute top-[%] right-[487px] z-10 hidden md:block ">
                   <div className="flex items-center justify-center w-16 h-16 text-white bg-red-700 rounded-full">
                     30% {t("productDetails.off")}
@@ -323,7 +417,7 @@ const ProductDetails = () => {
                   size="sm"
                   isLink
                   to={`/product-listings?categories=${encodeURIComponent(
-                    product?.category?.name?.en || ''
+                    productData?.category?.name?.en || ''
                   )}`}
                 >
                   {common.showAll}

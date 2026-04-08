@@ -45,7 +45,7 @@ const Section8 = () => {
         <img
           src="Wode Logo.png"
           className="w-20 h-20 mb-6 md:w-32 md:h-32"
-          alt="Wode Logo"
+          alt={common.mmmk}
         />
         <p className="text-sm md:text-lg lg:text-2xl tracking-[2px] md:tracking-[6px] leading-10 flex flex-col gap-4 mb-8">
           {/* {query.data?.data?.centerTitle[i18n.language] */}

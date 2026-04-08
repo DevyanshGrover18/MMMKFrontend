@@ -93,9 +93,18 @@ const SupportPage = () => {
         align: 'center',
       },
       {
-        title: 'Subject',
-        dataIndex: 'subject',
-        key: 'subject',
+        title: 'Query',
+        dataIndex: 'query',
+        key: 'query',
+        render: (query) =>
+          query?.length > 80 ? `${query.slice(0, 80)}...` : query || '-',
+      },
+      {
+        title: 'Locale',
+        dataIndex: 'locale',
+        key: 'locale',
+        align: 'center',
+        render: (locale) => String(locale || 'en').toUpperCase(),
       },
       {
         title: 'Actions',
@@ -149,13 +158,25 @@ const SupportPage = () => {
               <strong>Contact Number:</strong> {viewModal.record.phone}
             </p>
             <p>
-              <strong>Subject:</strong> {viewModal.record.subject}
+              <strong>Country Code:</strong>{' '}
+              {viewModal.record.phoneCountryCode || '-'}
             </p>
             <p>
-              <strong>Description:</strong>
+              <strong>Phone Number:</strong>{' '}
+              {viewModal.record.phoneNumber || viewModal.record.phone || '-'}
+            </p>
+            <p>
+              <strong>Locale:</strong>{' '}
+              {String(viewModal.record.locale || 'en').toUpperCase()}
+            </p>
+            <p>
+              <strong>Source:</strong> {viewModal.record.source || 'contact-us'}
+            </p>
+            <p>
+              <strong>Query:</strong>
               <br />
               <span style={{ whiteSpace: 'pre-line' }}>
-                {viewModal.record.description}
+                {viewModal.record.query || viewModal.record.description}
               </span>
             </p>
           </div>
@@ -169,6 +190,8 @@ const SupportPage = () => {
               { label: 'Name', value: 'name' },
               { label: 'Email', value: 'email' },
               { label: 'Contact Number', value: 'phone' },
+              { label: 'Query', value: 'query' },
+              { label: 'Locale', value: 'locale' },
             ]}
             onSearch={(value, key) => {
               setSearch({ searchKey: key, searchValue: value });

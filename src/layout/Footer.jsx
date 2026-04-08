@@ -1,13 +1,12 @@
 import bgImg from '../assets/bg.png';
 import { Instagram } from 'lucide-react';
 import { FaSnapchat } from 'react-icons/fa6';
-import SupportModal from './SupportModal';
-import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { FaTiktok } from 'react-icons/fa';
 import { useTranslationContext } from '../context/TranslationContext';
 import { useGlobalContext } from '../context/GlobalProvider';
 import { getUrl } from '../utils/globalMethods';
+import { getCategoryLabel } from '../utils/categoryTranslation';
 
 const Footer = () => {
   const {
@@ -15,21 +14,9 @@ const Footer = () => {
     content: { common },
   } = useTranslationContext();
   const { categories } = useGlobalContext();
-  const navigate = useNavigate();
-  const [isSupportModalOpen, setIsSupportModalOpen] = useState(false);
   const isRTL = translateLanguage === 'ar';
-
-  const handleClickProductCategory = (e) => {
-    e.preventDefault();
-    navigate(`/product-listings`);
-  };
   return (
-    <>
-      <SupportModal
-        isModalOpen={isSupportModalOpen}
-        handleCancel={() => setIsSupportModalOpen(false)}
-      />
-      <footer
+    <footer
         className={`relative bg-black text-white pt-12 md:pt-[100px] ${
           isRTL ? 'rtl' : 'ltr'
         }`}
@@ -66,7 +53,7 @@ const Footer = () => {
                         category.name.en
                       )}`}
                     >
-                      {category.nameInLanguage?.[translateLanguage]}
+                      {getCategoryLabel(category, translateLanguage)}
                     </Link>
                   </li>
                 ))}
@@ -132,37 +119,34 @@ const Footer = () => {
               </h3>
               <ul className="space-y-6 text-sm cursor-pointer md:text-lg sm:text-xl md:text-right">
                 <li>
-                  <Link to="contact-us" className="hover:underline">
+                  <Link to="/contact-us" className="hover:underline">
                     {common.contactUs}
                   </Link>
                 </li>
                 <li>
-                  <Link to="about-us" className="hover:underline">
+                  <Link to="/about-us" className="hover:underline">
                     {common.ourStory}
                   </Link>
                 </li>
                 <li>
-                  <Link to="privacy-policy" className="hover:underline">
+                  <Link to="/privacy-policy" className="hover:underline">
                     {common.privacyPolicy}
                   </Link>
                 </li>
                 <li>
-                  <Link to="refund-policy" className="hover:underline">
+                  <Link to="/refund-policy" className="hover:underline">
                     {common.refundPolicy}
                   </Link>
                 </li>
                 <li>
-                  <Link to="terms-conditions" className="hover:underline">
+                  <Link to="/terms-conditions" className="hover:underline">
                     {common.termsAndConditions}
                   </Link>
                 </li>
                 <li>
-                  <a
-                    onClick={() => setIsSupportModalOpen(true)}
-                    className="hover:underline"
-                  >
+                  <Link to="/contact-us" className="hover:underline">
                     {common.customerSupport}
-                  </a>
+                  </Link>
                 </li>
               </ul>
             </div>
@@ -177,7 +161,6 @@ const Footer = () => {
           </div>
         </div>
       </footer>
-    </>
   );
 };
 

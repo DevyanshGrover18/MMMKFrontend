@@ -69,6 +69,27 @@ export default function AdminProductPage() {
     }
   };
 
+  const getTotalStock = (record) => {
+    if (Array.isArray(record?.skus) && record.skus.length > 0) {
+      return record.skus.reduce(
+        (sum, sku) => sum + Number(sku?.quantity || 0),
+        0
+      );
+    }
+    return Number(record?.quantity || 0);
+  };
+
+  const getDisplayStatus = (record) => {
+    const totalStock = getTotalStock(record);
+    if (totalStock <= 0) {
+      return 'Out of stock';
+    }
+    if (record?.status === 'Inactive') {
+      return 'Inactive';
+    }
+    return 'Active';
+  };
+
   const columns = useMemo(
     () => [
       {
@@ -105,13 +126,14 @@ export default function AdminProductPage() {
         dataIndex: 'quantity',
         width: 100,
         align: 'center',
-        render: (quantity) => quantity || 0,
+        render: (_, record) => getTotalStock(record),
       },
       {
         title: 'Status',
         dataIndex: 'status',
         width: 120,
         align: 'center',
+        render: (_, record) => getDisplayStatus(record),
       },
       {
         title: 'Action',

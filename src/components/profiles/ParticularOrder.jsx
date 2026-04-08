@@ -12,10 +12,16 @@ const ParticularOrder = ({ activeOrder, setActiveOrder }) => {
     content: { profile, common },
     translateLanguage,
   } = useTranslationContext();
-  console.log(activeOrder.translated);
-  const subTotal = activeOrder?.products.reduce((a, b) => {
-    return a + b?.amount;
-  }, 0);
+  const paymentSummary = {
+    subtotal:
+      Number(activeOrder?.price?.subtotal) ||
+      activeOrder?.products.reduce((a, b) => {
+        return a + b?.amount;
+      }, 0),
+    shippingCharges: Number(activeOrder?.price?.shippingCharges || 0),
+    couponDiscount: Number(activeOrder?.price?.couponDiscount || 0),
+    total: Number(activeOrder?.price?.total || activeOrder?.amount || 0),
+  };
 
   const handleTranslateProductData = async (data, language) => {
     const allFieldsToTranslate = {
@@ -41,8 +47,6 @@ const ParticularOrder = ({ activeOrder, setActiveOrder }) => {
       allFieldsToTranslate[`productDescription_${i}`] =
         product?.id?.productDescription?.en || '';
     });
-
-    console.log(allFieldsToTranslate);
 
     if (language === 'en') {
       setActiveOrder({
@@ -79,7 +83,6 @@ const ParticularOrder = ({ activeOrder, setActiveOrder }) => {
   };
 
   useEffect(() => {
-    console.log(activeOrder.translated);
     if (activeOrder && activeOrder.translatedTo !== translateLanguage)
       handleTranslateProductData(activeOrder, translateLanguage);
   }, [activeOrder, translateLanguage]);
@@ -244,9 +247,9 @@ const ParticularOrder = ({ activeOrder, setActiveOrder }) => {
 
           {/* Delivery Information */}
           <div className="mb-6">
-            <h4 className="font-semibold">Delivery Information</h4>
+            <h4 className="font-semibold">{profile.deliveryInformation}</h4>
             <div className="text-gray-600">
-              <span className="font-semibold">Delivery Status: </span>
+              <span className="font-semibold">{profile.deliveryStatus}: </span>
               <span
                 className={`font-medium ${activeOrder?.deliveryStatus === 'Delivered'
                     ? 'text-green-600'
@@ -259,12 +262,12 @@ const ParticularOrder = ({ activeOrder, setActiveOrder }) => {
                         : 'text-gray-600'
                   }`}
               >
-                {activeOrder?.deliveryStatus || 'Pending'}
+                {activeOrder?.deliveryStatus || profile.pending}
               </span>
               <br />
-              <span className="font-semibold">Shipper: </span>
+              <span className="font-semibold">{profile.shipper}: </span>
               {activeOrder?.shipperName || '-'} <br />
-              <span className="font-semibold">AWB: </span>
+              <span className="font-semibold">{profile.awb}: </span>
               {activeOrder?.awb || '-'}
               {activeOrder?.trackingUrl && (
                 <div className="mt-1">
@@ -274,7 +277,7 @@ const ParticularOrder = ({ activeOrder, setActiveOrder }) => {
                     rel="noopener noreferrer"
                     className="text-blue-500 hover:underline font-medium flex items-center gap-1"
                   >
-                    Track Package
+                    {profile.trackPackage}
                     <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
                     </svg>
@@ -327,12 +330,24 @@ const ParticularOrder = ({ activeOrder, setActiveOrder }) => {
             </h4>
             <div className="flex justify-between mb-2 text-gray-600">
               <p>{profile.subTotal}</p>
-              <p>${subTotal}</p>
+              <p>${paymentSummary.subtotal.toFixed(2)}</p>
             </div>
             {activeOrder?.couponCode && (
               <div className="flex justify-between mb-2 text-gray-600">
                 <p>{profile.couponCodeApplied}</p>
                 <p>{activeOrder.couponCode}</p>
+              </div>
+            )}
+            {paymentSummary.couponDiscount > 0 && (
+              <div className="flex justify-between mb-2 text-green-700">
+                <p>{common.coupon}</p>
+                <p>-${paymentSummary.couponDiscount.toFixed(2)}</p>
+              </div>
+            )}
+            {paymentSummary.shippingCharges > 0 && (
+              <div className="flex justify-between mb-2 text-gray-600">
+                <p>Shipping</p>
+                <p>${paymentSummary.shippingCharges.toFixed(2)}</p>
               </div>
             )}
 
@@ -346,7 +361,7 @@ const ParticularOrder = ({ activeOrder, setActiveOrder }) => {
             </div> */}
             <div className="flex justify-between pt-2 mt-4 font-semibold text-black border-t">
               <p>{profile.totalPaidByCustomer}</p>
-              <p>${activeOrder.amount} </p>
+              <p>${paymentSummary.total.toFixed(2)} </p>
             </div>
           </div>
 

@@ -1,7 +1,10 @@
-import { ChevronLeft, ChevronRight, Heart, Play, Pause } from 'lucide-react';
 import { useState, useRef, useEffect } from 'react';
+import { useTranslationContext } from '../../context/TranslationContext';
 
 export default function VideoCard() {
+  const {
+    content: { common, homepage },
+  } = useTranslationContext();
   const [hoveredVideo, setHoveredVideo] = useState(null);
   const [playingStates, setPlayingStates] = useState({});
   const videoRefs = useRef({});
@@ -51,18 +54,14 @@ export default function VideoCard() {
     },
   ];
 
-  // Effect to handle video loading and autoplay setup
   useEffect(() => {
     Object.keys(videoRefs.current).forEach((id) => {
       const video = videoRefs.current[id];
       if (video) {
-        // Set video properties for better autoplay compatibility
         video.muted = true;
         video.playsInline = true;
 
-        // Add event listeners
         const handleCanPlay = () => {
-          // Video is ready to play
           if (hoveredVideo === parseInt(id)) {
             video.play().catch((e) => console.log('Autoplay prevented:', e));
           }
@@ -80,7 +79,6 @@ export default function VideoCard() {
         video.addEventListener('play', handlePlay);
         video.addEventListener('pause', handlePause);
 
-        // Cleanup function
         return () => {
           video.removeEventListener('canplay', handleCanPlay);
           video.removeEventListener('play', handlePlay);
@@ -106,24 +104,20 @@ export default function VideoCard() {
       setHoveredVideo(id);
       const video = videoRefs.current[id];
       if (video) {
-        // Try to play immediately, and if it fails, try again after a short delay
         const attemptPlay = () => {
           video.play().catch((e) => {
             console.log('Autoplay prevented, retrying:', e);
-            // Retry after a short delay
             setTimeout(() => {
               video
                 .play()
-                .catch((e) => console.log('Second attempt failed:', e));
+                .catch((err) => console.log('Second attempt failed:', err));
             }, 100);
           });
         };
 
         if (video.readyState >= 3) {
-          // HAVE_FUTURE_DATA
           attemptPlay();
         } else {
-          // Wait for the video to be ready
           video.addEventListener('canplay', attemptPlay, { once: true });
         }
       }
@@ -132,25 +126,23 @@ export default function VideoCard() {
       const video = videoRefs.current[id];
       if (video && !video.paused) {
         video.pause();
-        video.currentTime = 0; // Reset to beginning
+        video.currentTime = 0;
       }
     }
   };
 
   return (
-    <div className="bg-white py-8 md:py-12 px-4 md:px-8">
-      <div className="max-w-full mx-auto">
-        {/* Header Section */}
-        <div className="flex justify-between items-center mb-8">
+    <div className="bg-white py-8 px-4 md:px-8 md:py-12">
+      <div className="mx-auto max-w-full">
+        <div className="mb-8 flex items-center justify-between">
           <div>
-            <h1 className="text-3xl md:text-4xl font-bold text-black mb-2">
-              Everyday Elegance: Wardrobe & Decor
+            <h1 className="mb-2 text-3xl font-bold text-black md:text-4xl">
+              {homepage.section17Heading1}
             </h1>
           </div>
         </div>
 
-        {/* Products Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 gap-6 md:grid-cols-3 lg:grid-cols-4">
           {products.map((product) => (
             <div
               key={product.id}
@@ -159,12 +151,11 @@ export default function VideoCard() {
               onMouseLeave={() => handleVideoHover(product.id, false)}
             >
               <div
-                className={`relative aspect-square rounded-lg overflow-hidden ${product.backgroundColor} flex items-center justify-center`}
+                className={`relative aspect-square overflow-hidden rounded-lg ${product.backgroundColor} flex items-center justify-center`}
               >
-                {/* Video Element */}
                 <video
                   ref={(el) => (videoRefs.current[product.id] = el)}
-                  className="w-full h-full object-cover"
+                  className="h-full w-full object-cover"
                   muted
                   loop
                   playsInline
@@ -175,19 +166,18 @@ export default function VideoCard() {
                 </video>
               </div>
 
-              {/* Product Info */}
               <div className="mt-3">
                 <div className="flex">
-                  <p className="text-gray-700 line-through text-lg">
+                  <p className="text-lg text-gray-700 line-through">
                     {product.OriginalPrice}
                   </p>
-                  <p className="text-gray-700 ml-3 text-lg">
+                  <p className="ml-3 text-lg text-gray-700">
                     {product.OfferedPrice}
                   </p>
                 </div>
-                <h3 className="text-gray-900 text-2xl">{product.title}</h3>
-                <h3 className="font-semibold text-gray-900 text-md">
-                  MMMK WODE
+                <h3 className="text-2xl text-gray-900">{product.title}</h3>
+                <h3 className="text-md font-semibold text-gray-900">
+                  {common.mmmk}
                 </h3>
               </div>
             </div>

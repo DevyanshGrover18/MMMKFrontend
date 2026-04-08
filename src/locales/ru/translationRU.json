@@ -172,5 +172,26 @@
     "signOut": "Выйти",
     "signedOutMessage": "Вы вышли из системы!",
     "thankYouMessage": "Спасибо за визит, до скорой встречи!"
+  },
+  "contactPage": {
+    "title": "Свяжитесь с нами",
+    "subtitle": "Сообщите, что вам нужно, и наша команда ответит вам как можно скорее.",
+    "name": "Имя",
+    "email": "Электронная почта",
+    "phoneCountryCode": "Код страны",
+    "phoneNumber": "Номер телефона",
+    "query": "Запрос",
+    "namePlaceholder": "Введите ваше имя",
+    "emailPlaceholder": "Введите вашу электронную почту",
+    "phoneNumberPlaceholder": "Введите ваш номер телефона",
+    "queryPlaceholder": "Чем мы можем помочь?",
+    "countryCodePlaceholder": "Выберите код страны",
+    "submitSuccess": "Ваше сообщение успешно отправлено",
+    "submitError": "Не удалось отправить ваше сообщение",
+    "requiredName": "Имя обязательно",
+    "requiredEmail": "Электронная почта обязательна",
+    "requiredPhoneCode": "Код страны обязателен",
+    "requiredPhoneNumber": "Номер телефона обязателен",
+    "requiredQuery": "Запрос обязателен"
   }
 }

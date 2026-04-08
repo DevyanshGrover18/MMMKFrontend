@@ -21,7 +21,10 @@ const Accordion = ({ data }) => {
             <div
               className="ck-content"
               dangerouslySetInnerHTML={{
-                __html: data?.translated?.productDescription || '',
+                __html:
+                  data?.translated?.productDescription ||
+                  data?.productDescription?.en ||
+                  '',
               }}
             />
           ),
@@ -33,7 +36,7 @@ const Accordion = ({ data }) => {
             <div
               className="ck-content"
               dangerouslySetInnerHTML={{
-                __html: data?.translated?.uses || '',
+                __html: data?.translated?.uses || data?.uses?.en || '',
               }}
             />
           ),
@@ -45,7 +48,7 @@ const Accordion = ({ data }) => {
             <div
               className="ck-content"
               dangerouslySetInnerHTML={{
-                __html: data?.translated?.benefits || '',
+                __html: data?.translated?.benefits || data?.benefits?.en || '',
               }}
             />
           ),

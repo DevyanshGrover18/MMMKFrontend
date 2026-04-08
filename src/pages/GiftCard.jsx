@@ -1,26 +1,66 @@
-import React, { useState } from 'react';
-import { Table, Tag, message, Tooltip } from 'antd';
+import React, { useMemo, useState } from 'react';
+import { Input, Modal, Select, Table, Tag, message, Tooltip } from 'antd';
 import Banner from '../components/global/Banner';
 import CategoryNavBar from '../components/global/CategoryNavBar';
 import NewsLetter from '../components/global/NewsLetter';
 import Section10 from '../components/home/Section10';
 import { CommonButton } from '../components/global/UIButtons';
 import { useTranslationContext } from '../context/TranslationContext';
-import { useQuery } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import bg from '../assets/bg.png';
-import { FiCopy, FiPlus, FiRefreshCw, FiGift } from 'react-icons/fi';
+import { FiCopy, FiGift, FiPlus, FiSend } from 'react-icons/fi';
 import { TbGiftCard } from 'react-icons/tb';
-import { getCreatedGiftCards } from '../apis/user/giftCard';
+import { Country } from 'country-state-city';
+import { getCreatedGiftCards, shareGiftCard } from '../apis/user/giftCard';
 
 export const GiftCard = () => {
+  const queryClient = useQueryClient();
   const {
     content: { common, giftCard },
   } = useTranslationContext();
+  const [shareModal, setShareModal] = useState({
+    open: false,
+    giftCardId: null,
+    recipientName: '',
+    recipientEmail: '',
+    recipientCountryCode: '+971',
+    recipientPhoneNumber: '',
+  });
 
   // Fetch gift cards
   const giftCardsQuery = useQuery({
     queryKey: ['userGiftCards'],
     queryFn: getCreatedGiftCards,
+  });
+  const countryCodeOptions = useMemo(
+    () =>
+      Country.getAllCountries()
+        .filter((country) => country.phonecode)
+        .map((country) => ({
+          label: `${country.name} (+${country.phonecode})`,
+          value: `+${country.phonecode}`,
+        })),
+    []
+  );
+  const shareGiftCardMutation = useMutation({
+    mutationFn: ({ giftCardId, payload }) => shareGiftCard(giftCardId, payload),
+    onSuccess: () => {
+      message.success('Gift card share details saved');
+      setShareModal({
+        open: false,
+        giftCardId: null,
+        recipientName: '',
+        recipientEmail: '',
+        recipientCountryCode: '+971',
+        recipientPhoneNumber: '',
+      });
+      queryClient.invalidateQueries({ queryKey: ['userGiftCards'] });
+    },
+    onError: (error) => {
+      message.error(
+        error?.response?.data?.message || 'Failed to share gift card'
+      );
+    },
   });
 
   const copyToClipboard = (text) => {
@@ -46,6 +86,31 @@ export const GiftCard = () => {
       day: 'numeric',
       hour: showTime ? '2-digit' : undefined,
       minute: showTime ? '2-digit' : undefined,
+    });
+  };
+
+  const handleShareSubmit = async () => {
+    if (!shareModal.giftCardId) return;
+    if (!shareModal.recipientName.trim()) {
+      message.warning('Recipient name is required');
+      return;
+    }
+    if (!shareModal.recipientEmail.trim()) {
+      message.warning('Recipient email is required');
+      return;
+    }
+    if (!shareModal.recipientPhoneNumber.trim()) {
+      message.warning('Recipient phone number is required');
+      return;
+    }
+
+    await shareGiftCardMutation.mutateAsync({
+      giftCardId: shareModal.giftCardId,
+      payload: {
+        recipientName: shareModal.recipientName.trim(),
+        recipientEmail: shareModal.recipientEmail.trim(),
+        recipientPhone: `${shareModal.recipientCountryCode} ${shareModal.recipientPhoneNumber.trim()}`,
+      },
     });
   };
 
@@ -162,10 +227,100 @@ export const GiftCard = () => {
         </div>
       ),
     },
+    {
+      title: 'Share',
+      key: 'share',
+      render: (_, record) => (
+        <CommonButton
+          size="sm"
+          variant={6}
+          type="button"
+          disabled={record.status !== 'Active'}
+          onClick={() =>
+            setShareModal((prev) => ({
+              ...prev,
+              open: true,
+              giftCardId: record._id,
+            }))
+          }
+        >
+          <FiSend className="mr-1" />
+          Share
+        </CommonButton>
+      ),
+    },
   ];
 
   return (
     <div className="w-full">
+      <Modal
+        title="Share Gift Card"
+        open={shareModal.open}
+        onCancel={() =>
+          setShareModal({
+            open: false,
+            giftCardId: null,
+            recipientName: '',
+            recipientEmail: '',
+            recipientCountryCode: '+971',
+            recipientPhoneNumber: '',
+          })
+        }
+        onOk={handleShareSubmit}
+        okText="Save Recipient"
+        confirmLoading={shareGiftCardMutation.isPending}
+        centered
+      >
+        <div className="mt-6 space-y-4">
+          <Input
+            placeholder="Recipient name"
+            value={shareModal.recipientName}
+            onChange={(event) =>
+              setShareModal((prev) => ({
+                ...prev,
+                recipientName: event.target.value,
+              }))
+            }
+          />
+          <Input
+            placeholder="Recipient email"
+            type="email"
+            value={shareModal.recipientEmail}
+            onChange={(event) =>
+              setShareModal((prev) => ({
+                ...prev,
+                recipientEmail: event.target.value,
+              }))
+            }
+          />
+          <div className="grid grid-cols-3 gap-3">
+            <Select
+              showSearch
+              className="col-span-1"
+              value={shareModal.recipientCountryCode}
+              options={countryCodeOptions}
+              onChange={(value) =>
+                setShareModal((prev) => ({
+                  ...prev,
+                  recipientCountryCode: value,
+                }))
+              }
+              optionFilterProp="label"
+            />
+            <Input
+              className="col-span-2"
+              placeholder="Recipient phone number"
+              value={shareModal.recipientPhoneNumber}
+              onChange={(event) =>
+                setShareModal((prev) => ({
+                  ...prev,
+                  recipientPhoneNumber: event.target.value,
+                }))
+              }
+            />
+          </div>
+        </div>
+      </Modal>
       <Banner bg={bg}>
         <div className="w-full md:mt-24 mt-36">
           <CategoryNavBar />

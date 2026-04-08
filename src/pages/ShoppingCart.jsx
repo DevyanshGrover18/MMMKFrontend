@@ -6,16 +6,17 @@ import ProductGrid from '../components/listing/ProductGrid';
 import NewsLetter from '../components/global/NewsLetter';
 import bg from '../assets/bg.png';
 import Section10 from '../components/home/Section10';
-import { Link, NavLink } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import CategoryNavBar from '../components/global/CategoryNavBar';
 import { useCart } from '../context/CartProvider';
-import { message } from 'antd';
+import { message, Modal } from 'antd';
 import {
   getPercentageOf,
-  percentageValue,
   showTranslatedMessage,
+  isUserSignedIn,
 } from '../utils/globalMethods';
 import { applyCoupon, getValidTokens } from '../apis/user/coupon';
+import { getUserCredits } from '../apis/user/profile';
 import { useQuery } from '@tanstack/react-query';
 import { LuX } from 'react-icons/lu';
 import {
@@ -23,6 +24,7 @@ import {
   useTranslationContext,
 } from '../context/TranslationContext';
 import { Button4, CommonButton } from '../components/global/UIButtons';
+import { getProductSkus } from '../apis/nonAuth/products';
 
 const ShoppingCart = () => {
   const {
@@ -40,11 +42,17 @@ const ShoppingCart = () => {
     couponData,
     removeFromCart,
     addProductToCart,
+    calculateCartSummary,
+    setCheckoutSummary,
+    appliedCreditAmount,
+    setAppliedCreditAmount,
   } = useCart();
-  const [subTotal, setSubTotal] = useState(0);
+  const navigate = useNavigate();
   const [couponInput, setCouponInput] = useState(null);
   const [cartItems, setCartItems] = useState([]);
   const [loadings, setLoadings] = useState([]);
+  const [isCouponModalOpen, setIsCouponModalOpen] = useState(false);
+  const [availableStockByItem, setAvailableStockByItem] = useState({});
 
   const addLoading = (index) => {
     setLoadings((prev) => [...prev, index]);
@@ -53,23 +61,38 @@ const ShoppingCart = () => {
     setLoadings((prev) => prev.filter((item) => item !== index));
   };
 
+  const couponsQuery = useQuery({
+    queryKey: ['valid-coupons'],
+    queryFn: getValidTokens,
+    enabled: isUserSignedIn(),
+  });
+  const availableCoupons = couponsQuery.data?.data || [];
+  const creditsQuery = useQuery({
+    queryKey: ['credit'],
+    queryFn: getUserCredits,
+    enabled: isUserSignedIn(),
+  });
+  const availableCredits = Number(creditsQuery.data?.credits || 0);
+
+  const cartSummary = calculateCartSummary({
+    items: data,
+    couponData,
+    isCouponApply,
+    appliedCreditAmount,
+  });
+
   const handleApplyCoupon = async (coupon) => {
     if (!coupon) return;
 
     try {
       const res = await applyCoupon(coupon);
       const validCoupon = res?.data;
-      console.log(validCoupon);
       setCouponData(validCoupon);
       setCouponInput('');
-
-      setSubTotal((prevData) => {
-        return getPercentageOf(prevData, validCoupon?.discount);
-      });
       setCouponCode(validCoupon?.couponCode);
       setIsCouponApply(true);
+      setIsCouponModalOpen(false);
     } catch (err) {
-      console.log(err);
       showTranslatedMessage({
         msg: err?.response?.data?.message || 'Failed to apply coupon',
         language: translateLanguage,
@@ -86,7 +109,6 @@ const ShoppingCart = () => {
       removeLoading(i);
     } catch (err) {
       removeLoading(i);
-      console.log(err);
       showTranslatedMessage({
         msg: err?.response?.data?.message || 'Failed to remove cart item',
         language: translateLanguage,
@@ -100,6 +122,23 @@ const ShoppingCart = () => {
 
   const handleAdjustQuantity = async (id, sku, action, i) => {
     try {
+      const itemKey = `${id}:${sku}`;
+      const matchingItem = cartItems.find(
+        (item) => item?.product?._id === id && item?.sku === sku
+      );
+      const availableQuantity = Number(availableStockByItem[itemKey] ?? Infinity);
+
+      if (
+        action === 'inc' &&
+        matchingItem &&
+        Number(matchingItem.quantity || 0) >= availableQuantity
+      ) {
+        message.warning(
+          `Only ${availableQuantity} item(s) available for selected option`
+        );
+        return;
+      }
+
       addLoading(i);
       if (action === 'inc')
         await addProductToCart({
@@ -118,7 +157,6 @@ const ShoppingCart = () => {
       removeLoading(i);
     } catch (err) {
       removeLoading(i);
-      console.log(err);
       message.error(
         err?.response?.data?.message || 'Failed to adjust cart item quantity'
       );
@@ -159,18 +197,88 @@ const ShoppingCart = () => {
     } else {
       setCartItems([]);
     }
-    setSubTotal(() => {
-      return data?.reduce((acc, item) => {
-        return (
-          acc +
-          getPercentageOf(item?.product?.price, item?.product?.discount) *
-            item?.quantity
-        );
-      }, 0);
-    });
   }, [data, translateLanguage]);
 
-  console.log(cartItems);
+  useEffect(() => {
+    let isMounted = true;
+
+    const loadItemAvailability = async () => {
+      if (!Array.isArray(data) || data.length === 0) {
+        if (isMounted) setAvailableStockByItem({});
+        return;
+      }
+
+      const entries = await Promise.all(
+        data.map(async (item) => {
+          const productId = item?.product?._id;
+          const sku = item?.sku;
+
+          if (!productId || !sku) {
+            return [
+              `${productId || 'unknown'}:${sku || ''}`,
+              Number(item?.product?.quantity || 0),
+            ];
+          }
+
+          if (
+            Array.isArray(item?.product?.filters) &&
+            item.product.filters.length === 0
+          ) {
+            return [`${productId}:${sku}`, Number(item?.product?.quantity || 0)];
+          }
+
+          try {
+            const productSkus = await getProductSkus(productId);
+            const selectedSku = productSkus.find((skuItem) => skuItem?.sku === sku);
+            return [`${productId}:${sku}`, Number(selectedSku?.quantity || 0)];
+          } catch {
+            return [`${productId}:${sku}`, Number(item?.product?.quantity || 0)];
+          }
+        })
+      );
+
+      if (isMounted) {
+        setAvailableStockByItem(Object.fromEntries(entries));
+      }
+    };
+
+    loadItemAvailability();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [data]);
+
+  const handleProceedToCheckout = () => {
+    const summary = calculateCartSummary({
+      items: data,
+      couponData,
+      isCouponApply,
+      appliedCreditAmount,
+    });
+    setCheckoutSummary(summary);
+    navigate('/checkout', { state: { cartSummary: summary } });
+  };
+
+  const handleApplyCredits = () => {
+    const eligibleAmount = Math.min(
+      availableCredits,
+      cartSummary.subtotal - cartSummary.couponDiscount
+    );
+
+    if (eligibleAmount <= 0) {
+      message.warning('No wallet credit available to apply');
+      return;
+    }
+
+    setAppliedCreditAmount(Number(eligibleAmount.toFixed(2)));
+    message.success(`Applied $${eligibleAmount.toFixed(2)} from My Credit`);
+  };
+
+  const handleRemoveCredits = () => {
+    setAppliedCreditAmount(0);
+    message.success('Removed applied wallet credit');
+  };
 
   return (
     <div className="w-full">
@@ -188,14 +296,74 @@ const ShoppingCart = () => {
 
           {/* Main Section */}
           <main className="w-full text-black bg-white">
+            <Modal
+              title="Available Coupons"
+              open={isCouponModalOpen}
+              onCancel={() => setIsCouponModalOpen(false)}
+              footer={null}
+              centered
+            >
+              {!isUserSignedIn() ? (
+                <p className="text-sm text-gray-600">
+                  {common.signInToContinue}
+                </p>
+              ) : couponsQuery.isLoading ? (
+                <p className="text-sm text-gray-600">{common.loading}</p>
+              ) : availableCoupons.length ? (
+                <div className="space-y-3">
+                  {availableCoupons.map((coupon) => {
+                    const isActiveCoupon = couponCode === coupon.couponCode;
+
+                    return (
+                      <button
+                        key={coupon._id}
+                        type="button"
+                        onClick={() => handleApplyCoupon(coupon.couponCode)}
+                        className="w-full rounded-xl border border-gray-200 p-4 text-left transition hover:border-black disabled:cursor-not-allowed disabled:opacity-60"
+                        disabled={isActiveCoupon}
+                      >
+                        <div className="flex items-center justify-between gap-3">
+                          <div>
+                            <div className="flex items-center gap-2">
+                              <p className="font-semibold">{coupon.couponCode}</p>
+                              {isActiveCoupon && (
+                                <span className="rounded-full bg-black px-2 py-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-white">
+                                  Applied
+                                </span>
+                              )}
+                            </div>
+                            <p className="text-sm text-gray-500">
+                              {coupon.couponName}
+                            </p>
+                          </div>
+                          <p className="font-semibold text-green-600">
+                            {coupon.discount}% OFF
+                          </p>
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
+              ) : (
+                <p className="text-sm text-gray-600">No active coupons found.</p>
+              )}
+            </Modal>
+
             <div className="grid grid-cols-1 gap-6 md:grid-cols-12">
               {/* Left Side: Cart Items */}
               <div className="col-span-12 p-2 px-12 border md:px-0 brown-border md:col-span-7 md:p-5">
-                {cartItems?.map((list, i) => (
-                  <div
-                    key={list._id}
-                    className="w-full py-6 px-6 md:px-10 mb-10 bg-white shadow-lg rounded-lg"
-                  >
+                {cartItems?.map((list, i) => {
+                  const itemKey = `${list?.product?._id}:${list?.sku}`;
+                  const maxAvailable = Number(
+                    availableStockByItem[itemKey] ?? Infinity
+                  );
+                  const atMaxStock = Number(list?.quantity || 0) >= maxAvailable;
+
+                  return (
+                    <div
+                      key={list._id}
+                      className="w-full py-6 px-6 md:px-10 mb-10 bg-white shadow-lg rounded-lg"
+                    >
                     <div className="flex flex-col items-center md:flex-row md:items-start gap-4">
                       {/* Product Image */}
                       <img
@@ -263,8 +431,8 @@ const ShoppingCart = () => {
 
                       {/* Pricing Section */}
                     </div>
-                    <div className="flex items-center justify-end gap-4 mt-4">
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center justify-end gap-4 mt-4">
+                        <div className="flex items-center gap-2">
                         <CommonButton
                           onClick={() =>
                             handleAdjustQuantity(
@@ -295,27 +463,28 @@ const ShoppingCart = () => {
                           }
                           size="xs"
                           variant="primary1"
-                          disabled={loadings.includes(i)}
+                          disabled={loadings.includes(i) || atMaxStock}
                           className="w-[40px] text-center"
                         >
                           +
                         </CommonButton>
-                      </div>
+                        </div>
 
-                      {/* Remove Button */}
-                      <CommonButton
-                        variant="danger1"
-                        onClick={() =>
-                          handleRemoveCart(list.product?._id, list.sku, i)
-                        }
-                        size="sm"
-                        disabled={loadings.includes(i)}
-                      >
-                        {common.remove}
-                      </CommonButton>
+                        {/* Remove Button */}
+                        <CommonButton
+                          variant="danger1"
+                          onClick={() =>
+                            handleRemoveCart(list.product?._id, list.sku, i)
+                          }
+                          size="sm"
+                          disabled={loadings.includes(i)}
+                        >
+                          {common.remove}
+                        </CommonButton>
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
 
               {/* Right Side: Payment Breakdown */}
@@ -326,7 +495,7 @@ const ShoppingCart = () => {
                   </h3>
                   <div className="flex items-center justify-between my-5 ">
                     <p>{common.subTotal}</p>
-                    <p>$ {subTotal}</p>
+                    <p>$ {cartSummary.subtotal.toFixed(2)}</p>
                   </div>
 
                   {isCouponApply && (
@@ -334,11 +503,7 @@ const ShoppingCart = () => {
                       <div className="flex items-center flex-1 justify-between">
                         <p>{common.coupon}</p>
                         <p className="text-green-500">
-                          - ${' '}
-                          {(
-                            subTotal / (1 - (couponData?.discount || 0) / 100) -
-                            subTotal
-                          ).toFixed(2)}{' '}
+                          - $ {cartSummary.couponDiscount.toFixed(2)}{' '}
                           ({couponData?.discount}% off)
                         </p>
                       </div>
@@ -348,11 +513,7 @@ const ShoppingCart = () => {
                           setCouponInput('');
                           setCouponCode(null);
                           setIsCouponApply(false);
-                          setSubTotal(
-                            (prevData) =>
-                              +prevData /
-                              (1 - (couponData?.discount || 0) / 100)
-                          );
+                          setCouponData({});
                         }}
                       >
                         <LuX />
@@ -360,9 +521,45 @@ const ShoppingCart = () => {
                     </div>
                   )}
 
+                  {isUserSignedIn() && (
+                    <div className="my-5 rounded-lg border border-gray-300 bg-white p-4">
+                      <div className="flex items-center justify-between gap-3">
+                        <div>
+                          <p className="font-semibold">My Credit</p>
+                          <p className="text-sm text-gray-500">
+                            Available: $ {availableCredits.toFixed(2)}
+                          </p>
+                        </div>
+                        {appliedCreditAmount > 0 ? (
+                          <button
+                            type="button"
+                            onClick={handleRemoveCredits}
+                            className="text-sm font-semibold text-red-600"
+                          >
+                            Remove
+                          </button>
+                        ) : (
+                          <button
+                            type="button"
+                            onClick={handleApplyCredits}
+                            className="text-sm font-semibold text-black"
+                          >
+                            Apply
+                          </button>
+                        )}
+                      </div>
+                      {appliedCreditAmount > 0 && (
+                        <div className="mt-3 flex items-center justify-between text-green-600">
+                          <p>Applied Credit</p>
+                          <p>- $ {appliedCreditAmount.toFixed(2)}</p>
+                        </div>
+                      )}
+                    </div>
+                  )}
+
                   <div className="flex items-center justify-between my-5 font-bold ">
                     <p>{common.total}</p>
-                    <p>${subTotal}</p>
+                    <p>${cartSummary.total.toFixed(2)}</p>
                   </div>
 
                   {/* Promo Code Section */}
@@ -389,11 +586,20 @@ const ShoppingCart = () => {
                       </button>
                     </div>
                     <CommonButton
+                      variant={1}
+                      className="w-full mb-3 text-black border-2 border-black hover:bg-black hover:text-white transition-colors"
+                      size="md"
+                      type="button"
+                      onClick={() => setIsCouponModalOpen(true)}
+                    >
+                      View Available Coupons
+                    </CommonButton>
+                    <CommonButton
                       variant={6}
                       className="w-full mb-6 ms-auto block"
-                      isLink
                       size="md"
-                      to="/checkout"
+                      type="button"
+                      onClick={handleProceedToCheckout}
                     >
                       {common.checkout}
                     </CommonButton>

@@ -13,13 +13,22 @@ const ProductGrid = ({ list = [], textColor = 'white' }) => {
     content: { common },
   } = useTranslationContext();
 
+  const getProductName = (product) =>
+    product?.translated?.productName ||
+    product?.productName?.en ||
+    product?.productName ||
+    common.itemUnavailable;
+
+  const getProductImage = (product) =>
+    product?.image || product?.images?.[0] || '';
+
   const handleAddWishList = async (id) => {
     const userId = JSON.parse(localStorage.getItem('userToken'));
     console.log('wishList function called');
     if (!userId) {
       console.log('user not logged in');
       notification.error({
-        message: 'Please login to add to wishlist',
+        message: common.signInToContinue,
         placement: 'topRight',
       });
       return null;
@@ -32,14 +41,13 @@ const ProductGrid = ({ list = [], textColor = 'white' }) => {
       });
       console.log('res', res);
       notification.success({
-        message: 'Added to wishlist successfully',
+        message: common.wishlistAdded,
         placement: 'topRight',
       });
     } catch (err) {
       console.log(err);
       notification.error({
-        message:
-          'Failed to add to wishlist, Please refresh the page and try again',
+        message: common.wishlistAddFailed,
         placement: 'topRight',
       });
     }
@@ -61,7 +69,7 @@ const ProductGrid = ({ list = [], textColor = 'white' }) => {
           // )} */}
 
           <button
-            title="Add to wishlist"
+            title={common.addToWishlist}
             onClick={() => {
               handleAddWishList(product._id);
             }}
@@ -76,8 +84,12 @@ const ProductGrid = ({ list = [], textColor = 'white' }) => {
           <div className="text-center md:h-[450px] h-[550px] flex flex-col">
             <div className="flex-1">
               <img
-                src={import.meta.env.VITE_IMAGE_URL + product?.image}
-                alt={product.translated?.productName}
+                src={
+                  getProductImage(product)
+                    ? import.meta.env.VITE_IMAGE_URL + getProductImage(product)
+                    : ''
+                }
+                alt={getProductName(product)}
                 className="h-full w-full mb-4 object-cover"
               />
             </div>
@@ -103,10 +115,10 @@ const ProductGrid = ({ list = [], textColor = 'white' }) => {
                 </span>
               </p>
             ) : (
-              'Coming Soon'
+              common.itemUnavailable
             )}
             <h3 className={`text-base md:text-xl font-bold text-${textColor}`}>
-              {product.translated?.productName}
+              {getProductName(product)}
             </h3>
 
             {product.brand && (

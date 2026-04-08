@@ -5,6 +5,7 @@ import { Link } from 'react-router-dom';
 import { getUrl } from '../../utils/globalMethods';
 import SearchBox from './SearchBox';
 import { useTranslationContext } from '../../context/TranslationContext';
+import { getCategoryLabel } from '../../utils/categoryTranslation';
 
 export default function SearchDrawer({ isOpen, onClose }) {
   const {
@@ -42,7 +43,7 @@ export default function SearchDrawer({ isOpen, onClose }) {
                   className="flex items-center justify-between pb-2 border-b border-gray-300"
                 >
                   <span className="text-base text-2nd">
-                    {item.nameInLanguage?.[translateLanguage]}
+                    {getCategoryLabel(item, translateLanguage)}
                   </span>
                   <svg
                     xmlns="http://www.w3.org/2000/svg"

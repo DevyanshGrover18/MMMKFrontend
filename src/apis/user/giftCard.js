@@ -21,3 +21,8 @@ export const createGiftCard = async (data) => {
   const response = await card.post('/create-gift-card', data);
   return response.data;
 };
+
+export const shareGiftCard = async (giftCardId, data) => {
+  const response = await card.post(`/share/${giftCardId}`, data);
+  return response.data;
+};

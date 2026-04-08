@@ -166,12 +166,12 @@ export default function AdminSidebar({ children }) {
         title: 'Filters',
         key: '/admin/filters',
       },
-      {
-        icon: <CreditCard size={15} />,
-        label: 'Payment',
-        title: 'Payment',
-        key: '/admin/payment',
-      },
+      // {
+      //   icon: <CreditCard size={15} />,
+      //   label: 'Payment',
+      //   title: 'Payment',
+      //   key: '/admin/payment',
+      // },
       // { icon: <FaMoneyBill1Wave />, label: "Pricing", title: "Pricing", key: "/admin/pricing" },
       // { icon: <BookOpen />, label: "Blogs", title: "Blogs", key: "/admin/blogs" },
       {

@@ -12,7 +12,7 @@ const product = axios.create({
 });
 
 export const getAllProducts = async (
-  { currentPage, categories, gender, brand, price, discount, ...customFilters },
+  { currentPage, categories, gender, brand, price, discount, q, ...customFilters },
   { translateLanguage } = {}
 ) => {
   const response = await product.get(`/all-products`, {
@@ -23,6 +23,7 @@ export const getAllProducts = async (
       brand,
       price,
       discount,
+      q,
       ...customFilters,
     },
   });
@@ -80,4 +81,11 @@ export const getRandomProducts = async () => {
 export const getHomePageBottomSection = async () => {
   const response = await product.get('/home-bootom-section');
   return response?.data?.data;
+};
+
+export const searchProducts = async (query, limit = 10) => {
+  const response = await product.get('/search', {
+    params: { q: query, limit },
+  });
+  return response?.data?.data || [];
 };

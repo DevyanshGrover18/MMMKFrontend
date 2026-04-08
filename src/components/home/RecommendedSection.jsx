@@ -71,7 +71,7 @@ export default function RecommendedSection() {
                       </span>
                     </p>
                   ) : (
-                    'Coming Soon'
+                    common.itemUnavailable
                   )}
 
                   <p className="text-xl px-4">

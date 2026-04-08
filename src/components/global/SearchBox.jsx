@@ -1,28 +1,19 @@
 /* eslint-disable compat/compat */
 import { useState } from 'react';
 import { Select } from 'antd';
-import { searchCategory } from '../../apis/nonAuth/category';
-import { getUrl } from '../../utils/globalMethods';
+import { searchProducts } from '../../apis/nonAuth/products';
 import { useNavigate } from 'react-router-dom';
 import { BsSearch } from 'react-icons/bs';
 let timeout;
 let currentValue;
-const toURLSearchParams = (record) => {
-  const params = new URLSearchParams();
-  for (const [key, value] of Object.entries(record)) {
-    params.append(key, value);
-  }
-  return params;
-};
 const fetchData = (value, callback) => {
   if (timeout) {
     clearTimeout(timeout);
     timeout = null;
   }
   currentValue = value;
-  const params = toURLSearchParams({ code: 'utf-8', q: value });
   const fake = async () => {
-    const results = await searchCategory(value);
+    const results = await searchProducts(value, 10);
 
     if (currentValue === value) {
       const resultData =
@@ -50,27 +41,39 @@ const fetchData = (value, callback) => {
 };
 export default function SearchBox(props) {
   const [data, setData] = useState([]);
-  const [value, setValue] = useState();
+  const [searchValue, setSearchValue] = useState('');
   const navigate = useNavigate();
+
+  const navigateToListingSearch = () => {
+    const trimmedValue = searchValue.trim();
+    if (!trimmedValue) return;
+    navigate(`/product-listings?q=${encodeURIComponent(trimmedValue)}`);
+    setSearchValue('');
+    setData([]);
+  };
+
   const handleSearch = (newValue) => {
+    setSearchValue(newValue);
     fetchData(newValue, setData);
   };
   const handleChange = (newValue) => {
-    setValue(newValue);
+    setSearchValue(newValue || '');
   };
   const handleNavigate = (option) => {
     const [type, label] = option.key.split('-');
     if (type === 'Category') {
-      navigate(`/product-listings?categories=${getUrl(option.label)}`);
+      navigate(`/product-listings?categories=${encodeURIComponent(option.label)}`);
     } else if (type === 'Product') {
       navigate(`/product-details/${option.value}`);
     }
+    setSearchValue('');
+    setData([]);
   };
   return (
     <Select
       showSearch
-      value={value}
-      //   searchValue={search}
+      value={searchValue}
+      searchValue={searchValue}
       placeholder={props.placeholder || 'Search...'}
       style={props.style}
       defaultActiveFirstOption={false}
@@ -83,6 +86,19 @@ export default function SearchBox(props) {
       onSearch={handleSearch}
       onChange={handleChange}
       onSelect={(v, option) => handleNavigate(option)}
+      onClear={() => {
+        setSearchValue('');
+        setData([]);
+      }}
+      onInputKeyDown={(event) => {
+        if (event.key === 'Escape') {
+          setSearchValue('');
+          setData([]);
+        }
+        if (event.key === 'Enter') {
+          navigateToListingSearch();
+        }
+      }}
       notFoundContent={null}
       options={data}
     />

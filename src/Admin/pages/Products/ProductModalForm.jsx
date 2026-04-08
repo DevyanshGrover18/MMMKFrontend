@@ -586,6 +586,28 @@ const PrimaryDetails = ({
     }
   }, [price, websitePrice, form]);
 
+  useEffect(() => {
+    if (!Array.isArray(skus) || skus.length === 0) return;
+
+    const totalStock = skus.reduce(
+      (sum, sku) => sum + Number(sku?.quantity || 0),
+      0
+    );
+    const currentStatus = form.getFieldValue('status');
+
+    if (totalStock <= 0 && currentStatus !== 'Out of stock') {
+      form.setFieldValue('status', 'Out of stock');
+      return;
+    }
+
+    if (
+      totalStock > 0 &&
+      (!currentStatus || currentStatus === 'Out of stock')
+    ) {
+      form.setFieldValue('status', 'Active');
+    }
+  }, [skus, form]);
+
   return (
     <div>
       {/* Product Name */}

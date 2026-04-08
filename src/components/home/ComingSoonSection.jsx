@@ -30,7 +30,7 @@ const ComingSoonSection = () => {
         <div className="w-32 h-32 md:w-40 md:h-40 lg:w-48 lg:h-48">
           <img
             src="Wode Logo.png"
-            alt="MMMK WODE Logo"
+            alt={common.mmmk}
             className="object-contain w-full h-full"
           />
         </div>
@@ -41,7 +41,7 @@ const ComingSoonSection = () => {
           isLink
           to="/product-listings?categories=Fragrance"
         >
-          Shop Fragrance
+          {common.shopNow} {common.fragrance}
         </CommonButton>
 
         {/* <p className="text-center text-3xl">{common.comingSoon}</p> */}

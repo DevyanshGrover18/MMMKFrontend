@@ -3,6 +3,7 @@ import { Divider, Drawer } from 'antd';
 import { Link } from 'react-router-dom';
 import { useGlobalContext } from '../../context/GlobalProvider';
 import { useTranslationContext } from '../../context/TranslationContext';
+import { getCategoryLabel } from '../../utils/categoryTranslation';
 
 export default function MenuDrawer({ isOpen, onClose }) {
   const {
@@ -26,7 +27,7 @@ export default function MenuDrawer({ isOpen, onClose }) {
             className="text-left px-4 py-2 cursor-pointer hover:text-primary relative"
           >
             <Link to={`/product-listings?categories=${getUrl(item.name.en)}`}>
-              {item.nameInLanguage?.[translateLanguage]}
+              {getCategoryLabel(item, translateLanguage)}
             </Link>
           </div>
         ))}

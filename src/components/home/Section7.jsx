@@ -10,6 +10,7 @@ import { useNavigate } from 'react-router-dom';
 
 const section7 = () => {
   const {
+    translateLanguage,
     content: { common, homepage },
   } = useTranslationContext();
   const navigate = useNavigate();
@@ -22,6 +23,12 @@ const section7 = () => {
   console.log('productsQuery.data', productsQuery.data);
 
   let textColor = 'white';
+  const getProductName = (product) =>
+    product?.translated?.productName ||
+    product?.productName?.[translateLanguage] ||
+    product?.productName?.en ||
+    '';
+
   return (
     <div className="relativ py-10 bg-[var(--primary-dark)]">
       {/* 30% off badge */}
@@ -93,7 +100,7 @@ const section7 = () => {
               <div className="flex-1">
                 <img
                   src={import.meta.env.VITE_IMAGE_URL + product?.image}
-                  alt={product.translated?.productName}
+                  alt={getProductName(product) || common.productImageAlt}
                   className="h-full min-h-[300px] w-full mb-4 object-cover"
                 />
               </div>
@@ -121,12 +128,12 @@ const section7 = () => {
                   </span>
                 </p>
               ) : (
-                'Coming Soon'
+                common.itemUnavailable
               )}
               <h3
                 className={`text-base md:text-xl font-bold text-${textColor}`}
               >
-                {product.productName.en}
+                {getProductName(product)}
               </h3>
 
               {product.brand && (

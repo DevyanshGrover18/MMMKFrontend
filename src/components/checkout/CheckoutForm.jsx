@@ -1,13 +1,11 @@
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useEffect, useState } from 'react';
-import { getAddressBook } from '../../apis/user/profile';
-import { Country, State } from 'country-state-city';
 import {
-  useElements,
-  useStripe,
-  CardElement,
-  Elements,
-} from '@stripe/react-stripe-js';
+  getAddressBook,
+  getMyAccount,
+  updateAddressBook,
+} from '../../apis/user/profile';
+import { Country, State } from 'country-state-city';
 import { createPaymentIntent } from '../../apis/user/payment';
 import { message } from 'antd';
 import { useCart } from '../../context/CartProvider';
@@ -19,6 +17,7 @@ import rateByWeight from '../../rateByWeight.json';
 import { useTranslationContext } from '../../context/TranslationContext';
 import { CommonButton } from '../global/UIButtons';
 import { loadStripe } from '@stripe/stripe-js';
+import { isUserSignedIn } from '../../utils/globalMethods';
 
 const calculateShippingCharges = (country, weight) => {
   const countryData = Country.getCountryByCode(country);
@@ -35,12 +34,18 @@ export default function CheckoutForm() {
     content: { common, checkout },
   } = useTranslationContext();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const {
     data: cartData,
     couponCode,
     isCouponApply,
     setIsCouponApply,
     setCouponCode,
+    couponData,
+    calculateCartSummary,
+    setCheckoutSummary,
+    appliedCreditAmount,
+    setAppliedCreditAmount,
   } = useCart();
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -72,19 +77,32 @@ export default function CheckoutForm() {
   const [shippingCharges, setShippingCharges] = useState(0);
   const [isSameAsShipping, setIsSameAsShipping] = useState(false);
 
+  const derivedSummary = calculateCartSummary({
+    items: cartData,
+    couponData,
+    isCouponApply,
+    shippingCharges,
+    appliedCreditAmount,
+  });
+
   const query = useQuery({
     queryKey: ['address-book'],
     queryFn: () => getAddressBook(),
   });
+  const profileQuery = useQuery({
+    queryKey: ['my-account'],
+    queryFn: () => getMyAccount(),
+  });
 
   const handleChange = (e) => {
-    if (e.target?.name === 'shipping_country') {
-      setShippingStateList(State.getStatesOfCountry(e.target?.value));
+    const { name, value } = e.target || {};
+    if (name === 'shipping_country') {
+      setShippingStateList(State.getStatesOfCountry(value));
     }
-    if (e.target?.name === 'billing_country') {
-      setBillingStateList(State.getStatesOfCountry(e.target?.value));
+    if (name === 'billing_country') {
+      setBillingStateList(State.getStatesOfCountry(value));
     }
-    setFormData({ ...formData, [e.target?.name]: e.target?.value });
+    setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
   const handleSameAsShippingChange = (e) => {
@@ -92,20 +110,25 @@ export default function CheckoutForm() {
     setIsSameAsShipping(isChecked);
 
     if (isChecked) {
-      setFormData((prevFormData) => ({
-        ...prevFormData,
-        billing_firstName: prevFormData.shipping_firstName,
-        billing_lastName: prevFormData.shipping_lastName,
-        billing_streetAddress: prevFormData.shipping_streetAddress,
-        billing_city: prevFormData.shipping_city,
-        billing_state: prevFormData.shipping_state,
-        billing_postalCode: prevFormData.shipping_postalCode,
-        billing_country: prevFormData.shipping_country,
-        billing_company: prevFormData.shipping_company,
-        billing_phoneNumber: prevFormData.shipping_phoneNumber,
-        billing_landmark: prevFormData.shipping_landmark,
-      }));
-      setBillingStateList(State.getStatesOfCountry(formData.shipping_country));
+      setFormData((prevFormData) => {
+        const nextFormData = {
+          ...prevFormData,
+          billing_firstName: prevFormData.shipping_firstName,
+          billing_lastName: prevFormData.shipping_lastName,
+          billing_streetAddress: prevFormData.shipping_streetAddress,
+          billing_city: prevFormData.shipping_city,
+          billing_state: prevFormData.shipping_state,
+          billing_postalCode: prevFormData.shipping_postalCode,
+          billing_country: prevFormData.shipping_country,
+          billing_company: prevFormData.shipping_company,
+          billing_phoneNumber: prevFormData.shipping_phoneNumber,
+          billing_landmark: prevFormData.shipping_landmark,
+        };
+        setBillingStateList(
+          State.getStatesOfCountry(nextFormData.shipping_country)
+        );
+        return nextFormData;
+      });
     } else {
       setFormData((prevFormData) => ({
         ...prevFormData,
@@ -124,26 +147,56 @@ export default function CheckoutForm() {
     }
   };
 
+  const persistAddressBook = async (shippingAddress, billingAddress) => {
+    if (!isUserSignedIn()) return;
+    try {
+      const response = await updateAddressBook({ shippingAddress, billingAddress });
+      queryClient.setQueryData(['address-book'], (oldData) => ({
+        ...(oldData || {}),
+        data: response?.data || {
+          ...(oldData?.data || {}),
+          shippingAddress,
+          billingAddress,
+        },
+      }));
+    } catch (error) {
+      console.error('Failed to persist checkout address to profile:', error);
+    }
+  };
+
   const handlePaymentChoice = async (mode) => {
     setIsModalVisible(false);
 
     const { shippingAddress, billingAddress } =
       formatShippingBillingAddress(formData);
 
+    await persistAddressBook(shippingAddress, billingAddress);
+
     if (mode === 'card') {
       try {
         setLoading(true);
-
-        const stripePromise = await loadStripe(
-          import.meta.env.VITE_STRIPE_API_KEY
-        );
+        const publishableKey = getStripePublishableKey();
+        if (!publishableKey) {
+          throw new Error('Stripe publishable key is not configured');
+        }
+        const stripePromise = await loadStripe(publishableKey);
         const data = await createPaymentIntent({
           products: cartData,
           shippingAddress,
           billingAddress,
           shippingCharges,
           couponCode: isCouponApply ? couponCode : null,
+          creditsUsed: appliedCreditAmount,
+          totalAmount: derivedSummary.total, // ← final calculated total
         });
+
+        if (data?.paidWithCredits && data?.orderId) {
+          setCouponCode(null);
+          setIsCouponApply(false);
+          setAppliedCreditAmount(0);
+          navigate(`/order-success/${data.orderId}`);
+          return;
+        }
 
         const result = await stripePromise.redirectToCheckout({
           sessionId: data.id,
@@ -151,13 +204,19 @@ export default function CheckoutForm() {
 
         if (result.error) {
           message.error(result.error.message);
+          setLoading(false);
+          return;
         }
-        message.success('Redirecting to payment gateway...');
+        message.success(checkout.redirectingToPaymentGateway);
+        setAppliedCreditAmount(0);
         setLoading(false);
       } catch (err) {
         setLoading(false);
-        console.log(err);
-        message.error(err?.response?.data?.message || 'Failed to checkout');
+        message.error(
+          err?.response?.data?.message ||
+            err?.response?.data?.error ||
+            checkout.checkoutFailed
+        );
       }
     } else {
       try {
@@ -167,13 +226,15 @@ export default function CheckoutForm() {
           billingAddress,
           shippingCharges,
           couponCode: isCouponApply ? couponCode : null,
+          creditsUsed: appliedCreditAmount,
+          totalAmount: derivedSummary.total, // ← final calculated total
         });
-        message.success('Order placed successfully');
+        message.success(res?.message || checkout.orderPlacedSuccessfully);
         setCouponCode(null);
         setIsCouponApply(false);
-        return navigate(`/thank-you/${res?.data}`);
+        setAppliedCreditAmount(0);
+        return navigate(`/order-success/${res?.data}`);
       } catch (err) {
-        console.log(err);
         message.error(err?.response?.data?.message);
       }
     }
@@ -186,43 +247,88 @@ export default function CheckoutForm() {
 
   useEffect(() => {
     if (query.data) {
-      setShippingStateList(() =>
-        State.getStatesOfCountry(query.data?.data.shippingAddress?.country)
-      );
+      const shippingAddress = query.data?.data?.shippingAddress || {};
+      const billingAddress = query.data?.data?.billingAddress || {};
 
+      setShippingStateList(() =>
+        State.getStatesOfCountry(shippingAddress?.country)
+      );
       setBillingStateList(() =>
-        State.getStatesOfCountry(query.data?.data.billingAddress?.country)
+        State.getStatesOfCountry(billingAddress?.country)
       );
 
       setFormData({
-        shipping_firstName: query.data?.data.shippingAddress?.firstName || '',
-        shipping_lastName: query.data?.data.shippingAddress?.lastName || '',
+        shipping_firstName:
+          shippingAddress?.firstName ||
+          shippingAddress?.first_name ||
+          profileQuery.data?.data?.firstName ||
+          '',
+        shipping_lastName:
+          shippingAddress?.lastName ||
+          shippingAddress?.last_name ||
+          profileQuery.data?.data?.lastName ||
+          '',
         shipping_streetAddress:
-          query.data?.data.shippingAddress?.street_address || '',
-        shipping_city: query.data?.data.shippingAddress?.city || '',
-        shipping_state: query.data?.data.shippingAddress?.state || '',
-        shipping_postalCode: query.data?.data.shippingAddress?.postalCode || '',
-        shipping_country: query.data?.data.shippingAddress?.country || '',
-        shipping_company: query.data?.data.shippingAddress?.company || '',
+          shippingAddress?.street_address ||
+          shippingAddress?.streetAddress ||
+          '',
+        shipping_city: shippingAddress?.city || '',
+        shipping_state: shippingAddress?.state || '',
+        shipping_postalCode: shippingAddress?.postalCode || '',
+        shipping_country: shippingAddress?.country || '',
+        shipping_company: shippingAddress?.company || '',
         shipping_phoneNumber:
-          query.data?.data.shippingAddress?.phone_number || '',
-        shipping_landmark: query.data?.data.shippingAddress?.landmark || '',
-        billing_firstName: query.data?.data.billingAddress?.firstName || '',
-        billing_lastName: query.data?.data.billingAddress?.lastName || '',
-        billing_streetAddress: query.data?.data.billingAddress?.city || '',
-        billing_city: query.data?.data.billingAddress?.city || '',
-        billing_state: query.data?.data.billingAddress?.state || '',
-        billing_postalCode: query.data?.data.billingAddress?.postalCode || '',
-        billing_country: query.data?.data.billingAddress?.state || '',
-        billing_company: query.data?.data.billingAddress?.company || '',
+          shippingAddress?.phone_number ||
+          shippingAddress?.phoneNumber ||
+          profileQuery.data?.data?.contactNumber ||
+          '',
+        shipping_landmark: shippingAddress?.landmark || '',
+        billing_firstName:
+          billingAddress?.firstName ||
+          billingAddress?.first_name ||
+          profileQuery.data?.data?.firstName ||
+          '',
+        billing_lastName:
+          billingAddress?.lastName ||
+          billingAddress?.last_name ||
+          profileQuery.data?.data?.lastName ||
+          '',
+        billing_streetAddress:
+          billingAddress?.street_address ||
+          billingAddress?.streetAddress ||
+          '',
+        billing_city: billingAddress?.city || '',
+        billing_state: billingAddress?.state || '',
+        billing_postalCode: billingAddress?.postalCode || '',
+        billing_country: billingAddress?.country || '',
+        billing_company: billingAddress?.company || '',
         billing_phoneNumber:
-          query.data?.data.billingAddress?.phone_number || '',
-        billing_landmark: query.data?.data.billingAddress?.landmark || '',
+          billingAddress?.phone_number ||
+          billingAddress?.phoneNumber ||
+          profileQuery.data?.data?.contactNumber ||
+          '',
+        billing_landmark: billingAddress?.landmark || '',
       });
     }
-  }, [query.data]);
+  }, [query.data, profileQuery.data]);
 
-  // calculating total products weight in cart
+  useEffect(() => {
+    if (profileQuery.data?.data) {
+      const profile = profileQuery.data.data;
+      setFormData((prev) => ({
+        ...prev,
+        shipping_firstName: prev.shipping_firstName || profile.firstName || '',
+        shipping_lastName: prev.shipping_lastName || profile.lastName || '',
+        shipping_phoneNumber:
+          prev.shipping_phoneNumber || profile.contactNumber || '',
+        billing_firstName: prev.billing_firstName || profile.firstName || '',
+        billing_lastName: prev.billing_lastName || profile.lastName || '',
+        billing_phoneNumber:
+          prev.billing_phoneNumber || profile.contactNumber || '',
+      }));
+    }
+  }, [profileQuery.data]);
+
   useEffect(() => {
     setTotalProductWeight(() => {
       return cartData?.reduce((acc, list) => {
@@ -233,18 +339,22 @@ export default function CheckoutForm() {
     });
   }, [cartData]);
 
-  // calculating shipping charges
   useEffect(() => {
     if (totalProductWeight) {
       setShippingCharges(() =>
         calculateShippingCharges(formData.shipping_country, totalProductWeight)
       );
+    } else {
+      setShippingCharges(0);
     }
   }, [totalProductWeight, formData.shipping_country]);
 
+  useEffect(() => {
+    setCheckoutSummary(derivedSummary);
+  }, [derivedSummary, setCheckoutSummary]);
+
   return (
     <>
-      {/* <Elements stripe={stripePromise}> */}
       <PaymentModal
         visible={isModalVisible}
         onClose={() => setIsModalVisible(false)}
@@ -252,27 +362,9 @@ export default function CheckoutForm() {
         checkout={checkout}
       />
 
-      <div className="max-w-sm  mx-auto bg-white  rounded-2xl p-5 border border-gray-200">
-        <div className="flex  justify-between text-gray-600 text-sm border-b pb-2 mb-2">
-          <span>Tax</span>
-          <span className="font-medium">$11.21</span>
-        </div>
-        <div className="flex  justify-between text-gray-600 text-sm border-b pb-2 mb-2">
-          <span>COD</span>
-          <span className="font-medium">$10.31</span>
-        </div>
-        <div className="flex  justify-between text-gray-600 text-sm border-b pb-2 mb-2">
-          <span>Extra Charges</span>
-          <span className="font-medium">$232</span>
-        </div>
-        <div className="flex  justify-between text-gray-600 text-sm border-b pb-2 mb-2">
-          <span>{checkout.shippingCharges}</span>
-          <span className="font-medium">${shippingCharges}</span>
-        </div>
-      </div>
-
       <form onSubmit={handleSubmit} className="max-w-5xl p-6 mx-auto">
         <div className="flex flex-col gap-10 md:flex-row">
+
           {/* Shipping Address */}
           <div className="w-full space-y-6">
             <h2 className="pb-2 text-xl font-normal md:text-5xl">
@@ -286,7 +378,7 @@ export default function CheckoutForm() {
                 value={formData.shipping_firstName}
                 onChange={handleChange}
                 className="w-full md:h-[65px] border-b focus:outline-none"
-                placeholder={'First Name'}
+                placeholder={checkout.firstName}
                 required
               />
               <input
@@ -294,7 +386,7 @@ export default function CheckoutForm() {
                 value={formData.shipping_lastName}
                 onChange={handleChange}
                 className="w-full md:h-[65px] border-b focus:outline-none"
-                placeholder={'Last Name'}
+                placeholder={checkout.lastName}
                 required
               />
             </div>
@@ -316,16 +408,12 @@ export default function CheckoutForm() {
                 className="w-full md:h-[65px] border-b focus:outline-none"
                 required
               >
-                <option value="" disabled>
-                  {checkout.country}
-                </option>
-                {Country.getAllCountries().map((list) => {
-                  return (
-                    <option value={list?.isoCode}>
-                      {list?.name} {list?.flag}
-                    </option>
-                  );
-                })}
+                <option value="" disabled>{checkout.country}</option>
+                {Country.getAllCountries().map((list) => (
+                  <option key={list.isoCode} value={list?.isoCode}>
+                    {list?.name} {list?.flag}
+                  </option>
+                ))}
               </select>
               <select
                 name="shipping_state"
@@ -334,16 +422,12 @@ export default function CheckoutForm() {
                 className="w-full md:h-[65px] border-b focus:outline-none"
                 required
               >
-                <option value="" disabled>
-                  {checkout.state}
-                </option>
-                {shippingStateList?.map((list) => {
-                  return (
-                    <option value={list.isoCode}>
-                      {list?.name} {list?.flag}
-                    </option>
-                  );
-                })}
+                <option value="" disabled>{checkout.state}</option>
+                {shippingStateList?.map((list) => (
+                  <option key={list.isoCode} value={list.isoCode}>
+                    {list?.name} {list?.flag}
+                  </option>
+                ))}
               </select>
             </div>
 
@@ -372,7 +456,7 @@ export default function CheckoutForm() {
                 value={formData.shipping_landmark}
                 onChange={handleChange}
                 className="w-full md:h-[65px] border-b focus:outline-none"
-                placeholder={'Landmark'}
+                placeholder={checkout.landmark}
               />
             </div>
 
@@ -393,6 +477,16 @@ export default function CheckoutForm() {
                 required
               />
             </div>
+
+            {/* Shipping charges display */}
+            {shippingCharges > 0 && (
+              <div className="rounded-lg border border-gray-200 bg-gray-50 px-4 py-3 text-sm">
+                <div className="flex items-center justify-between">
+                  <span className="text-gray-600">Shipping Charges</span>
+                  <span className="font-semibold">${shippingCharges.toFixed(2)}</span>
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Divider */}
@@ -413,7 +507,9 @@ export default function CheckoutForm() {
                 onChange={handleSameAsShippingChange}
                 className="mr-2"
               />
-              <label htmlFor="sameAsShipping">Same as Shipping Address</label>
+              <label htmlFor="sameAsShipping">
+                {checkout.sameAsShippingAddress}
+              </label>
             </div>
 
             <div className="grid grid-cols-2 gap-6 md:text-lg sm:grid-cols-2">
@@ -422,7 +518,7 @@ export default function CheckoutForm() {
                 value={formData.billing_firstName}
                 onChange={handleChange}
                 className="w-full md:h-[65px] border-b focus:outline-none"
-                placeholder={'First Name'}
+                placeholder={checkout.firstName}
                 required
                 disabled={isSameAsShipping}
               />
@@ -431,7 +527,7 @@ export default function CheckoutForm() {
                 value={formData.billing_lastName}
                 onChange={handleChange}
                 className="w-full md:h-[65px] border-b focus:outline-none"
-                placeholder={'Last Name'}
+                placeholder={checkout.lastName}
                 required
                 disabled={isSameAsShipping}
               />
@@ -446,6 +542,7 @@ export default function CheckoutForm() {
               required
               disabled={isSameAsShipping}
             />
+
             <div className="grid grid-cols-2 gap-6 md:text-lg sm:grid-cols-2">
               <select
                 name="billing_country"
@@ -455,18 +552,13 @@ export default function CheckoutForm() {
                 required
                 disabled={isSameAsShipping}
               >
-                <option value="" disabled>
-                  {checkout.country}
-                </option>
-                {Country.getAllCountries().map((list) => {
-                  return (
-                    <option value={list.isoCode}>
-                      {list?.name} {list?.flag}
-                    </option>
-                  );
-                })}
+                <option value="" disabled>{checkout.country}</option>
+                {Country.getAllCountries().map((list) => (
+                  <option key={list.isoCode} value={list.isoCode}>
+                    {list?.name} {list?.flag}
+                  </option>
+                ))}
               </select>
-
               <select
                 name="billing_state"
                 value={formData.billing_state}
@@ -475,18 +567,15 @@ export default function CheckoutForm() {
                 required
                 disabled={isSameAsShipping}
               >
-                <option value="" disabled>
-                  {checkout.state}
-                </option>
-                {billingStateList?.map((list) => {
-                  return (
-                    <option value={list.isoCode}>
-                      {list?.name} {list?.flag}
-                    </option>
-                  );
-                })}
+                <option value="" disabled>{checkout.state}</option>
+                {billingStateList?.map((list) => (
+                  <option key={list.isoCode} value={list.isoCode}>
+                    {list?.name} {list?.flag}
+                  </option>
+                ))}
               </select>
             </div>
+
             <div className="grid grid-cols-2 gap-6 md:text-lg sm:grid-cols-2">
               <input
                 name="billing_postalCode"
@@ -507,16 +596,18 @@ export default function CheckoutForm() {
                 disabled={isSameAsShipping}
               />
             </div>
+
             <div className="grid grid-cols-1 gap-6 md:text-lg sm:grid-cols-2">
               <input
                 name="billing_landmark"
                 value={formData.billing_landmark}
                 onChange={handleChange}
                 className="w-full md:h-[65px] border-b focus:outline-none"
-                placeholder={'Landmark'}
+                placeholder={checkout.landmark}
                 disabled={isSameAsShipping}
               />
             </div>
+
             <div className="grid grid-cols-1 gap-6 md:text-lg sm:grid-cols-2">
               <input
                 name="billing_company"
@@ -536,6 +627,36 @@ export default function CheckoutForm() {
                 disabled={isSameAsShipping}
               />
             </div>
+
+            {/* Order total summary */}
+            <div className="rounded-lg border border-gray-200 bg-gray-50 px-4 py-4 space-y-2 text-sm">
+              <div className="flex items-center justify-between text-gray-600">
+                <span>{common.subTotal}</span>
+                <span>${derivedSummary.subtotal.toFixed(2)}</span>
+              </div>
+              {derivedSummary.couponDiscount > 0 && (
+                <div className="flex items-center justify-between text-green-700">
+                  <span>{common.coupon}</span>
+                  <span>-${derivedSummary.couponDiscount.toFixed(2)}</span>
+                </div>
+              )}
+              {Number(appliedCreditAmount || 0) > 0 && (
+                <div className="flex items-center justify-between text-green-700">
+                  <span>My Credit</span>
+                  <span>-${Number(appliedCreditAmount).toFixed(2)}</span>
+                </div>
+              )}
+              {shippingCharges > 0 && (
+                <div className="flex items-center justify-between text-gray-600">
+                  <span>Shipping</span>
+                  <span>${shippingCharges.toFixed(2)}</span>
+                </div>
+              )}
+              <div className="flex items-center justify-between border-t border-gray-200 pt-2 font-bold text-base">
+                <span>{common.total}</span>
+                <span>${derivedSummary.total.toFixed(2)}</span>
+              </div>
+            </div>
           </div>
         </div>
 
@@ -545,7 +666,6 @@ export default function CheckoutForm() {
           </CommonButton>
         </div>
       </form>
-      {/* </Elements> */}
     </>
   );
 }
@@ -578,4 +698,20 @@ const formatShippingBillingAddress = (data) => {
   };
 
   return { shippingAddress, billingAddress };
+};
+
+const getStripePublishableKey = () => {
+  const mode = (import.meta.env.VITE_STRIPE_MODE || 'live').toLowerCase();
+  if (mode === 'test') {
+    return (
+      import.meta.env.VITE_STRIPE_TEST_API_KEY ||
+      import.meta.env.VITE_STRIPE_API_KEY ||
+      import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY
+    );
+  }
+  return (
+    import.meta.env.VITE_STRIPE_LIVE_API_KEY ||
+    import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY ||
+    import.meta.env.VITE_STRIPE_API_KEY
+  );
 };

@@ -17,7 +17,7 @@ const LuxurySection = () => {
       <div className="absolute top-4 left-4 sm:left-8">
         <img
           src="/Wode Logo.png"
-          alt="Wode Logo"
+          alt={common.mmmk}
           className="w-24 h-24 sm:w-32 sm:h-32"
         />
       </div>
