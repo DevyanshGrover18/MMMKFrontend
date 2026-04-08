@@ -251,16 +251,17 @@ const ParticularOrder = ({ activeOrder, setActiveOrder }) => {
             <div className="text-gray-600">
               <span className="font-semibold">{profile.deliveryStatus}: </span>
               <span
-                className={`font-medium ${activeOrder?.deliveryStatus === 'Delivered'
+                className={`font-medium ${
+                  activeOrder?.deliveryStatus === 'Delivered'
                     ? 'text-green-600'
                     : activeOrder?.deliveryStatus === 'In Transit' ||
-                      activeOrder?.deliveryStatus === 'Out for Delivery'
+                        activeOrder?.deliveryStatus === 'Out for Delivery'
                       ? 'text-blue-500'
                       : activeOrder?.deliveryStatus === 'Failed' ||
-                        activeOrder?.deliveryStatus === 'Returned'
+                          activeOrder?.deliveryStatus === 'Returned'
                         ? 'text-red-500'
                         : 'text-gray-600'
-                  }`}
+                }`}
               >
                 {activeOrder?.deliveryStatus || profile.pending}
               </span>
@@ -278,8 +279,19 @@ const ParticularOrder = ({ activeOrder, setActiveOrder }) => {
                     className="text-blue-500 hover:underline font-medium flex items-center gap-1"
                   >
                     {profile.trackPackage}
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      className="h-4 w-4"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
+                      />
                     </svg>
                   </a>
                 </div>
@@ -365,8 +377,24 @@ const ParticularOrder = ({ activeOrder, setActiveOrder }) => {
             </div>
           </div>
 
-          {/* Cancel Button */}
-          <div className="mt-4 text-left">
+          {/* Return / Exchange + Cancel Buttons */}
+          <div className="mt-4 flex items-center gap-3">
+            {['delivered', 'completed'].includes(
+              activeOrder?.status?.toLowerCase()
+            ) && (
+              <button
+                onClick={() =>
+                  window.open(
+                    `https://juraa.co/general/return-order?id=${activeOrder.orderId}&website=MMMK+WODE`,
+                    '_blank'
+                  )
+                }
+                className="px-6 py-2 text-amber-600 transition-all duration-200 border border-amber-600 rounded hover:bg-amber-50 flex items-center gap-2"
+              >
+                <FaExchangeAlt size={13} />
+                Return / Exchange
+              </button>
+            )}
             <button
               onClick={() => setActiveOrder(null)}
               className="px-16 py-2 text-gray-500 transition-all duration-200 border border-gray-500 rounded hover:bg-gray-100"

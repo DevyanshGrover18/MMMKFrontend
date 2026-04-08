@@ -1,7 +1,7 @@
 /* eslint-disable react/prop-types */
 /* eslint-disable no-unused-vars */
 import { Table, Button, Empty } from 'antd';
-import { FaEye } from 'react-icons/fa';
+import { FaEye, FaExchangeAlt } from 'react-icons/fa';
 import { useQuery } from '@tanstack/react-query';
 import { getOrders } from '../../apis/user/order';
 import { useState } from 'react';
@@ -9,6 +9,8 @@ import ParticularOrder from './ParticularOrder';
 import { LuSearch } from 'react-icons/lu';
 import Loading from '../../Admin/UI/Loading';
 import { useTranslationContext } from '../../context/TranslationContext';
+
+const RETURNABLE_STATUSES = ['delivered', 'completed'];
 
 const MyOrders = () => {
   const {
@@ -34,7 +36,7 @@ const MyOrders = () => {
       key: 'createdAt',
       align: 'center',
       width: 100,
-      render: (text) => new Date(text).toLocaleDateString(), // Formatting date
+      render: (text) => new Date(text).toLocaleDateString(),
     },
     {
       title: profile.status,
@@ -72,10 +74,9 @@ const MyOrders = () => {
       render: (_, record) => (
         <Button
           type="link"
-          onClick={() => {
-            setActiveOrder(record);
-          }}
+          onClick={() => setActiveOrder(record)}
           icon={<FaEye />}
+          title="View Order"
         />
       ),
     },
@@ -102,7 +103,6 @@ const MyOrders = () => {
         >
           <input
             type="text"
-            // placeholder={t("myOrders.searchPlaceholder")}
             className="border p-2 border-black mb-0 flex-1"
             value={searchOrder || ''}
             onChange={(e) => setSearchOrder(e.target.value)}
@@ -116,7 +116,6 @@ const MyOrders = () => {
         </form>
       </div>
 
-      {/* Loader */}
       {Orders.isLoading ? (
         <Loading />
       ) : Orders.data?.data?.length === 0 ? (
