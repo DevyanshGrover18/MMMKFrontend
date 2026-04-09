@@ -23,7 +23,13 @@ import translationZH from '../locales/zh/translationZH.json';
 
 const TranslationContext = createContext(null);
 
-const LIBRE_TRANSLATE_ENDPOINT = import.meta.env.VITE_LIBRE_TRANSLATE_ENDPOINT;
+const TRANSLATE_ENDPOINT =
+  import.meta.env.VITE_TRANSLATE_ENDPOINT ||
+  (import.meta.env.VITE_LIBRE_TRANSLATE_ENDPOINT
+    ? `${import.meta.env.VITE_LIBRE_TRANSLATE_ENDPOINT.replace(/\/$/, '')}/translate`
+    : import.meta.env.VITE_BACKEND_URL
+      ? `${import.meta.env.VITE_BACKEND_URL.replace(/\/$/, '')}/api/v1/translate`
+      : '');
 const STATIC_LOCALES = {
   ar: translationAR,
   de: translationDE,
@@ -429,8 +435,7 @@ const buildStaticPageContent = (page, language) => {
 export async function translateText(text, toLang = 'en', fromLang = 'en') {
   if (!text || typeof text !== 'string') return text;
   if (toLang === fromLang) return text;
-  if (!LIBRE_TRANSLATE_ENDPOINT) return text;
-  const url = `${LIBRE_TRANSLATE_ENDPOINT}/translate`;
+  if (!TRANSLATE_ENDPOINT) return text;
 
   const body = {
     q: text,
@@ -438,7 +443,7 @@ export async function translateText(text, toLang = 'en', fromLang = 'en') {
     target: toLang,
   };
 
-  const response = await axios.post(url, body, {
+  const response = await axios.post(TRANSLATE_ENDPOINT, body, {
     headers: {
       'Content-Type': 'application/json',
     },
@@ -449,8 +454,7 @@ export async function translateText(text, toLang = 'en', fromLang = 'en') {
 
 export async function translate(textArray, toLang = 'en', fromLang = 'en') {
   if (toLang === fromLang) return textArray;
-  if (!LIBRE_TRANSLATE_ENDPOINT) return textArray;
-  const url = `${LIBRE_TRANSLATE_ENDPOINT}/translate`;
+  if (!TRANSLATE_ENDPOINT) return textArray;
 
   const promises = textArray.map((text) => {
     const body = {
@@ -458,7 +462,7 @@ export async function translate(textArray, toLang = 'en', fromLang = 'en') {
       source: fromLang,
       target: toLang,
     };
-    return axios.post(url, body, {
+    return axios.post(TRANSLATE_ENDPOINT, body, {
       headers: {
         'Content-Type': 'application/json',
       },
