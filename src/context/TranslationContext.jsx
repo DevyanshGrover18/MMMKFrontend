@@ -479,34 +479,39 @@ export const getTranslateProducts = async (
   language,
   fields = ['productName']
 ) => {
-  const newList = [];
-  if (!list || !list.length) return newList;
+  if (!list || !list.length) return [];
 
-  for (const item of list) {
-    const translated = {};
-    for (const field of fields) {
-      if (item[field]) {
-        switch (typeof item[field]) {
-          case 'object':
-            if (item[field][language]) {
-              translated[field] = item[field][language];
-            } else {
-              translated[field] = await translateText(
-                item[field].en || item[field].fr,
-                language
-              );
-            }
-            break;
-          case 'string':
-            translated[field] = await translateText(item[field], language);
-            break;
-        }
-      }
-    }
-    newList.push({ ...item, translated });
-  }
+  return Promise.all(
+    list.map(async (item) => {
+      const translated = {};
 
-  return newList;
+      await Promise.all(
+        fields.map(async (field) => {
+          if (!item[field]) return;
+
+          switch (typeof item[field]) {
+            case 'object':
+              if (item[field][language]) {
+                translated[field] = item[field][language];
+              } else {
+                translated[field] = await translateText(
+                  item[field].en || item[field].fr,
+                  language
+                );
+              }
+              break;
+            case 'string':
+              translated[field] = await translateText(item[field], language);
+              break;
+            default:
+              break;
+          }
+        })
+      );
+
+      return { ...item, translated };
+    })
+  );
 };
 
 const TranslationProvider = ({ children }) => {

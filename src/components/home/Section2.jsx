@@ -34,6 +34,7 @@ const Section2 = () => {
           autoPlay
           loop
           muted
+          preload="metadata"
           // playsInline
           controls
         />

@@ -64,32 +64,32 @@ export default VideoSection;
 const dataSource = [
   {
     id: 1,
-    videoSrc: { video },
+    videoSrc: video,
     title: 'PARFUME',
   },
   {
     id: 2,
-    videoSrc: { video },
+    videoSrc: video,
     title: 'PARFUME',
   },
   {
     id: 3,
-    videoSrc: { video },
+    videoSrc: video,
     title: 'PARFUME',
   },
   {
     id: 4,
-    videoSrc: { video },
+    videoSrc: video,
     title: 'PARFUME',
   },
   {
     id: 5,
-    videoSrc: { video },
+    videoSrc: video,
     title: 'PARFUME',
   },
   {
     id: 6,
-    videoSrc: { video },
+    videoSrc: video,
     title: 'PARFUME',
   },
 ];

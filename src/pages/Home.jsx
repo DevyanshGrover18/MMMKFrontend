@@ -1,4 +1,5 @@
 /* eslint-disable no-unused-vars */
+import { lazy, Suspense } from 'react';
 import Section2 from '../components/home/Section2';
 import Section3 from '../components/home/Section3';
 import Section6 from '../components/home/Section6';
@@ -9,18 +10,21 @@ import Enquiry from '../components/home/Enquiry';
 import NewsLetter from '../components/global/NewsLetter';
 import ShopInstant from '../components/home/ShopInstant';
 import Slider from '../components/global/Slider';
-import BikiniSection from '../components/home/BikiniSection';
 import Section5 from '../components/home/Section5';
-import Section10 from '../components/home/Section10';
-import LuxurySection from '../components/home/LuxurySection';
 import RecommendedSection from '../components/home/RecommendedSection';
 import BannerSection from '../components/home/BannerSection';
 import BannerVideo from '../components/global/BannerVideo';
 import { CommonButton } from '../components/global/UIButtons';
-import Section11 from '../components/home/Section11';
-import ComingSoonSection from '../components/home/ComingSoonSection';
 import { useTranslationContext } from '../context/TranslationContext';
-import VideoCard from '../components/home/VideoCard';
+
+const BikiniSection = lazy(() => import('../components/home/BikiniSection'));
+const Section10 = lazy(() => import('../components/home/Section10'));
+const LuxurySection = lazy(() => import('../components/home/LuxurySection'));
+const Section11 = lazy(() => import('../components/home/Section11'));
+const ComingSoonSection = lazy(() =>
+  import('../components/home/ComingSoonSection')
+);
+const VideoCard = lazy(() => import('../components/home/VideoCard'));
 
 const Home = () => {
   const {
@@ -52,16 +56,29 @@ const Home = () => {
       <BannerSection></BannerSection>
       <ShopInstant></ShopInstant>
       <Section6 />
-      <VideoCard />
-      <ComingSoonSection />
+      <Suspense fallback={null}>
+        <BikiniSection />
+      </Suspense>
       <Section7 />
       <Section3 />
-      <Section9></Section9>
-      <Enquiry></Enquiry>
-      <LuxurySection></LuxurySection>
-      <Section10></Section10>
-      <Section11></Section11>
-      <NewsLetter></NewsLetter>
+      <Section9 />
+      <Enquiry />
+      <Suspense fallback={null}>
+        <VideoCard />
+      </Suspense>
+      <Suspense fallback={null}>
+        <ComingSoonSection />
+      </Suspense>
+      <Suspense fallback={null}>
+        <LuxurySection />
+      </Suspense>
+      <Suspense fallback={null}>
+        <Section10 />
+      </Suspense>
+      <Suspense fallback={null}>
+        <Section11 />
+      </Suspense>
+      <NewsLetter />
     </div>
   );
 };

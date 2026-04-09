@@ -1,15 +1,20 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect } from 'react';
 import { Modal, Form, Input, Select, Button, InputNumber, message } from 'antd';
 import { updateOrder } from '../../../apis/admin/order';
 
 const { Option } = Select;
 
-const OrderFormModal = ({ visible, onCancel, tableQuery }) => {
+const OrderFormModal = ({ editData, onCancel, tableQuery }) => {
   const [form] = Form.useForm();
 
   const handleFinish = async (values) => {
     try {
-      const res = await updateOrder(visible._id, { status: values.status });
+      if (!editData?._id) {
+        message.error('No order selected');
+        return;
+      }
+
+      const res = await updateOrder(editData._id, { status: values.status });
       console.log(res);
       message.success('Order status updated successfully');
       tableQuery.refetch();
@@ -21,29 +26,33 @@ const OrderFormModal = ({ visible, onCancel, tableQuery }) => {
     }
   };
 
-  console.log('visible', visible);
   useEffect(() => {
-    if (visible) {
-      form.setFieldValue('user', visible?.userId?.firstName);
-      form.setFieldValue('amount', visible?.amount);
-      form.setFieldValue('paymentType', visible?.mode);
+    if (editData) {
+      form.setFieldsValue({
+        user: editData?.userId?.firstName
+          ? `${editData.userId.firstName} ${editData.userId.lastName || ''}`.trim()
+          : '',
+        amount: editData?.amount,
+        paymentType: editData?.mode,
+        status: editData?.status,
+      });
+    } else {
+      form.resetFields();
     }
-  }, [visible]);
+  }, [editData, form]);
 
   return (
     <Modal
-      visible={visible}
+      open={Boolean(editData)}
       title="Update order status"
       onCancel={onCancel}
       footer={null}
+      destroyOnClose
     >
       <Form
         form={form}
         layout="vertical"
         onFinish={handleFinish}
-        initialValues={{
-          status: 'Pending',
-        }}
       >
         {/* User Field */}
         <Form.Item

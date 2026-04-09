@@ -22,6 +22,7 @@ export default function Section11() {
       autoPlay
       loop
       playsInline
+      preload="metadata"
     />
   );
 

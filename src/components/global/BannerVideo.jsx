@@ -3,36 +3,13 @@
 /* eslint-disable no-unused-vars */
 import React, { useEffect, useState, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
-import Container from './Container';
-import { TbMenu } from 'react-icons/tb';
-import { Button, Divider, Drawer, Space } from 'antd';
-import { IoSearchSharp } from 'react-icons/io5';
-import { FaUser, FaVolumeUp, FaVolumeMute } from 'react-icons/fa';
-import { BsMinecartLoaded } from 'react-icons/bs';
-import { RiArrowDropDownLine } from 'react-icons/ri';
-import BannerSlider from './BannerSlider';
-import { Link, NavLink, useNavigate } from 'react-router-dom';
-import { useCart } from '../../context/CartProvider';
-import { useQuery } from '@tanstack/react-query';
-import { getAllCategory } from '../../apis/nonAuth/category';
-import { getUrl } from '../../utils/globalMethods';
-import MenuDrawer from './MenuDrawer';
-import SearchDrawer from './SearchDrawer';
+import { FaVolumeUp, FaVolumeMute } from 'react-icons/fa';
 import Navbar from './Navbar';
 
 const BannerVideo = ({ children, minHight, bg }) => {
-  const navigate = useNavigate();
-  const { t, i18n } = useTranslation();
-  const [isOpen, setIsOpen] = useState(false);
-  const [isSearch, setIsSearch] = useState(false);
-  const [listOpen, setListOpen] = useState(false);
+  const { i18n } = useTranslation();
   const [isMuted, setIsMuted] = useState(false); // Start muted by default
   const videoRef = useRef(null);
-  const { data } = useCart();
-
-  const showDrawer = () => {
-    setIsOpen(true);
-  };
 
   useEffect(() => {
     if (!i18n.language) {
@@ -42,20 +19,6 @@ const BannerVideo = ({ children, minHight, bg }) => {
       document.dir = i18n.language === 'ar' ? 'rtl' : 'ltr';
     }
   }, [i18n.language]);
-
-  const changeLanguage = (lng) => {
-    i18n.changeLanguage(lng);
-    document.dir = lng === 'ar' ? 'rtl' : 'ltr';
-    setListOpen(false);
-  };
-
-  const showSearchDrawer = () => {
-    setIsSearch(true);
-  };
-
-  const closeSearchDrawer = () => {
-    setIsSearch(false);
-  };
 
   const toggleMute = () => {
     setIsMuted(!isMuted);
@@ -74,7 +37,9 @@ const BannerVideo = ({ children, minHight, bg }) => {
           autoPlay
           loop
           playsInline
+          preload="metadata"
           muted={isMuted}
+          aria-hidden="true"
         ></video>
         <div className="video-overlay"></div>
 

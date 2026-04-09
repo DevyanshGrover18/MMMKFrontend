@@ -19,6 +19,7 @@ export default function Section10() {
       controls
       muted
       playsInline
+      preload="metadata"
     />
   );
 

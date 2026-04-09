@@ -17,6 +17,7 @@ const BikiniSection = () => {
           muted
           loop
           playsInline
+          preload="metadata"
           src="/Bikni-left-section-(1).mp4"
         ></video>
       </div>
@@ -50,6 +51,7 @@ const BikiniSection = () => {
           muted
           loop
           playsInline
+          preload="metadata"
           src="/rightside-(1).mp4"
         ></video>
       </div>

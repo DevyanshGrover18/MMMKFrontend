@@ -89,6 +89,8 @@ const ProductGrid = ({ list = [], textColor = 'white' }) => {
                 }
                 alt={getProductName(product)}
                 className="h-full w-full mb-4 object-cover"
+                loading="lazy"
+                decoding="async"
               />
             </div>
             {/* <p

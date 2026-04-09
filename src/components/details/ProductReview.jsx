@@ -1,12 +1,16 @@
 import React, { useEffect, useState } from 'react';
-import { Form, Input, Rate, Button, Card, message } from 'antd';
-import { addReview } from '../../apis/user/review';
+import { Form, Input, Rate, Button, message } from 'antd';
+import {
+  addReview,
+  getReviewEligibility,
+} from '../../apis/user/review';
 import { useQuery } from '@tanstack/react-query';
 import { getReviewsByProduct } from '../../apis/nonAuth/review';
 import {
   translate,
   useTranslationContext,
 } from '../../context/TranslationContext';
+import { getStoredUserToken } from '../../utils/authStorage';
 
 const ProductReview = ({ product }) => {
   const {
@@ -15,16 +19,31 @@ const ProductReview = ({ product }) => {
   } = useTranslationContext();
   const [form] = Form.useForm();
   const [reviews, setReviews] = useState([]);
+  const userToken = getStoredUserToken();
 
   const query = useQuery({
-    queryKey: ['product-reviews'],
+    queryKey: ['product-reviews', product],
     queryFn: () => getReviewsByProduct(product),
     enabled: Boolean(product),
   });
 
+  const eligibilityQuery = useQuery({
+    queryKey: ['review-eligibility', product, userToken],
+    queryFn: () => getReviewEligibility(product),
+    enabled: Boolean(product && userToken),
+  });
+
   const handleSubmit = async (values) => {
     try {
-      const res = await addReview({ ...values, product });
+      if (!eligibilityQuery.data?.canReview) {
+        message.error(
+          eligibilityQuery.data?.message ||
+            'You can only review this product after delivery.'
+        );
+        return;
+      }
+
+      await addReview({ ...values, product });
       form.resetFields();
       query.refetch();
       message.success('Thanks for adding review');
@@ -94,11 +113,26 @@ const ProductReview = ({ product }) => {
         <h2 className="text-2xl font-bold text-white mb-4 text-center">
           {productDetails.addYourReview}
         </h2>
+        {!userToken ? (
+          <p className="mb-4 text-center text-sm text-yellow-200">
+            Sign in to review this product.
+          </p>
+        ) : eligibilityQuery.isLoading ? (
+          <p className="mb-4 text-center text-sm text-yellow-200">
+            Checking review eligibility...
+          </p>
+        ) : !eligibilityQuery.data?.canReview ? (
+          <p className="mb-4 text-center text-sm text-yellow-200">
+            {eligibilityQuery.data?.message ||
+              'You can leave a review after the order is completed or delivered.'}
+          </p>
+        ) : null}
         <Form
           form={form}
           layout="vertical"
           onFinish={handleSubmit}
           className="space-y-4"
+          disabled={!eligibilityQuery.data?.canReview}
         >
           <Form.Item
             name="rating"
@@ -135,6 +169,7 @@ const ProductReview = ({ product }) => {
               type="primary"
               htmlType="submit"
               className="w-32 bg-blue-500 hover:bg-blue-600 border-none rounded-lg py-1 text-white font-semibold"
+              disabled={!eligibilityQuery.data?.canReview}
             >
               {common.submit}
             </Button>

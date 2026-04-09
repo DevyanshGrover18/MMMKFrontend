@@ -1,7 +1,6 @@
 /* eslint-disable no-unused-vars */
 /* eslint-disable react/prop-types */
 import { useRef } from 'react';
-import videoSuggest from '../../assets/video.mp4';
 
 const VideoPlayer = ({ videoSrc }) => {
   const videoRef = useRef(null); // Reference to the video element
@@ -12,7 +11,7 @@ const VideoPlayer = ({ videoSrc }) => {
       <video
         ref={videoRef}
         className="w-full h-[500px] object-cover"
-        src={videoSuggest} // Test with a public video
+        src={videoSrc}
         controls={true} // Default video controls enabled
       />
     </div>

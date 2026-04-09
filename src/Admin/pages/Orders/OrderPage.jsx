@@ -63,12 +63,6 @@ const OrderPage = () => {
     }
   };
 
-  const handleSubmit = () => {
-    updateUtils({
-      isModalVisible: false,
-    });
-  };
-
   const handleCloseModal = () => {
     updateUtils({
       isModalVisible: false,
@@ -261,12 +255,8 @@ const OrderPage = () => {
     <>
       <OrderFormModal
         onCancel={handleCloseModal}
-        visible={utils.isModalVisible}
-        tableQuery={Orders}
         editData={utils.currentEditOrder}
-        setEditData={(bool) =>
-          updateUtils({ isModalVisible: bool, currentEditOrder: null })
-        }
+        tableQuery={Orders}
       />
       <PageTitle title="Order Management" />
       <div className="p-4 bg-white shadow-lg rounded-lg overflow-x-auto">
