@@ -24,6 +24,7 @@ const MyAccounts = () => {
   const query = useQuery({
     queryKey: ['my-profile'],
     queryFn: () => getMyAccount(),
+    retry: false,
   });
 
   const updateQueryCache = (newData) => {

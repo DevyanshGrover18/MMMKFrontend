@@ -41,9 +41,8 @@ const AddressBook = () => {
   const query = useQuery({
     queryKey: ['address-book'],
     queryFn: () => getAddressBook(),
+    retry: false,
   });
-
-  console.log('query', query.data);
 
   const handleFormChange = (key1, key2, value) => {
     if (key1 == 'shippingAddress') {
@@ -73,20 +72,15 @@ const AddressBook = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log('shipping', shippingAddress);
-    console.log('billingAddress', billingAddress);
-
     try {
-      const res = await updateAddressBook({
+      await updateAddressBook({
         shippingAddress,
         billingAddress,
       });
-      console.log(res);
       message.success('Address updated successfully');
       query.refetch();
     } catch (err) {
-      console.log(err);
-      message.success(
+      message.error(
         err?.response?.data?.message || 'Failed to update address'
       );
     }

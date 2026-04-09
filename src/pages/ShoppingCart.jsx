@@ -65,12 +65,14 @@ const ShoppingCart = () => {
     queryKey: ['valid-coupons'],
     queryFn: getValidTokens,
     enabled: isUserSignedIn(),
+    retry: false,
   });
   const availableCoupons = couponsQuery.data?.data || [];
   const creditsQuery = useQuery({
     queryKey: ['credit'],
     queryFn: getUserCredits,
     enabled: isUserSignedIn(),
+    retry: false,
   });
   const availableCredits = Number(creditsQuery.data?.credits || 0);
 

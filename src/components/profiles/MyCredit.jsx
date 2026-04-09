@@ -12,6 +12,7 @@ export default function MyCredit() {
   const Credit = useQuery({
     queryKey: ['credit'],
     queryFn: getUserCredits,
+    retry: false,
   });
 
   const [utils, setUtils] = useState({

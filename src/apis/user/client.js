@@ -5,6 +5,24 @@ import {
   isStoredUserTokenExpired,
 } from '../../utils/authStorage';
 
+const logAuthDebug = (error, token) => {
+  const method = error.config?.method?.toUpperCase() || 'UNKNOWN';
+  const url =
+    error.config?.url && error.config?.baseURL
+      ? `${error.config.baseURL}${error.config.url}`
+      : error.config?.url || 'UNKNOWN_URL';
+
+  console.error('[user-api-auth-debug]', {
+    method,
+    url,
+    status: error.response?.status,
+    responseMessage: error.response?.data?.message || error.message,
+    hasBearerToken: Boolean(token),
+    tokenExpiredOnClient: isStoredUserTokenExpired(),
+    backendBaseUrl: import.meta.env.VITE_BACKEND_URL,
+  });
+};
+
 export const createUserApiClient = (basePath, timeout = 10000) => {
   const client = axios.create({
     baseURL: `${import.meta.env.VITE_BACKEND_URL}${basePath}`,
@@ -23,6 +41,12 @@ export const createUserApiClient = (basePath, timeout = 10000) => {
   client.interceptors.response.use(
     (response) => response,
     (error) => {
+      const token = getStoredUserToken();
+
+      if (error.response?.status === 401) {
+        logAuthDebug(error, token);
+      }
+
       if (error.response?.status === 401 && isStoredUserTokenExpired()) {
         clearStoredUserAuth();
         window.location.href = '/auth';

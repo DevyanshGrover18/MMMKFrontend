@@ -44,17 +44,16 @@ const PaymentMethods = () => {
   const query = useQuery({
     queryKey: ['payment-methods'],
     queryFn: () => getPaymentMethods(),
+    retry: false,
   });
 
   const handleAddCard = async (values) => {
     try {
-      const res = await updatePaymentMethods(values);
-      console.log(res);
+      await updatePaymentMethods(values);
       query.refetch();
       form.resetFields();
       setIsModalVisible(false);
     } catch (err) {
-      console.log(err);
       message.error(
         err.response.data.message || 'Failed to add new payment methods'
       );
@@ -68,7 +67,6 @@ const PaymentMethods = () => {
       query.refetch();
       message.success('Card delete successfullyu');
     } catch (err) {
-      console.log(err);
       message.error(
         err.response.data.message || 'Failed to delete payment card'
       );

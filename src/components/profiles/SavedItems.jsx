@@ -40,6 +40,7 @@ const SavedItems = () => {
     queryKey: ['wish-list', userId],
     queryFn: () => getWishLists(userId.id),
     enabled: Boolean(userId?.id),
+    retry: false,
   });
   // Update wishlist items
   const updateWishlistItems = async (data, language) => {
@@ -193,14 +194,14 @@ const SavedItems = () => {
 
   const handleRemoveFromWishlist = async (id) => {
     try {
-      const res = await removeItemFromWishList({
+      await removeItemFromWishList({
         userId: userId.id,
         productId: id,
       });
       notification.success({ message: 'Removed from wishlist successfully' });
       refetchWishList();
     } catch (err) {
-      console.log('err', err);
+      notification.error({ message: 'Failed to remove from wishlist' });
     }
   };
 

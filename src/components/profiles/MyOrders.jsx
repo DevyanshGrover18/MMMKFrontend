@@ -22,6 +22,7 @@ const MyOrders = () => {
   const Orders = useQuery({
     queryKey: ['orders'],
     queryFn: () => getOrders({ orderId: searchOrder }),
+    retry: false,
   });
 
   const columns = [
