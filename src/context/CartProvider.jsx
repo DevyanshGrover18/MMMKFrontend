@@ -175,6 +175,8 @@ const CartProvider = ({ children }) => {
           filters: item.filters || {},
           quantity: item.quantity,
         })),
+      }).catch(() => {
+        // Keep the local cart usable when the backend cart API is unavailable.
       });
     }
     if (successMessage) message.success(successMessage);
@@ -219,12 +221,16 @@ const CartProvider = ({ children }) => {
     );
 
     if (isUserSignedIn()) {
-      await addCartItem({
-        product: product._id,
-        sku,
-        filters,
-        quantity,
-      });
+      try {
+        await addCartItem({
+          product: product._id,
+          sku,
+          filters,
+          quantity,
+        });
+      } catch (error) {
+        // Preserve client-side cart behavior when production cart auth fails.
+      }
     }
 
     if (existingItemIndex > -1) {
@@ -269,8 +275,9 @@ const CartProvider = ({ children }) => {
     setCartItems({ items: cartItems });
 
     if (isUserSignedIn()) {
-      // Call API to remove item from cart
-      removeCartItems(productId, sku, quantity);
+      removeCartItems(productId, sku, quantity).catch(() => {
+        // Local cart remains the source of truth if backend removal fails.
+      });
     }
 
     if (showMessage) showNotfication({ type: 'remove' });
@@ -297,7 +304,11 @@ const CartProvider = ({ children }) => {
     localStorage.removeItem(APPLIED_CREDIT_KEY);
     if (updateOnBackend && isUserSignedIn()) {
       for (const item of localCart) {
-        removeCartItems(item.product._id, item.sku, item.quantity);
+        removeCartItems(item.product._id, item.sku, item.quantity).catch(
+          () => {
+            // Ignore backend cleanup failures while clearing the local cart.
+          }
+        );
       }
     }
   };
