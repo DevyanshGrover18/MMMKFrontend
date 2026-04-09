@@ -10,6 +10,10 @@ import { useCart } from '../context/CartProvider';
 import {LuEye, LuEyeOff} from 'react-icons/lu';
 import { jwtDecode } from 'jwt-decode';
 import { useTranslationContext } from '../context/TranslationContext';
+import {
+  getStoredUserToken,
+  normalizeUserAuthPayload,
+} from '../utils/authStorage';
 
 const passwordRegex =
   /^(?=.*[A-Za-z])(?=.*\d)(?=.*[@$!%*#?&])[A-Za-z\d@$!%*#?&]{6,}$/;
@@ -85,6 +89,7 @@ const AuthPage = () => {
     setLoading(true);
     try {
       const res = await userSignup(signUpData);
+      const authPayload = normalizeUserAuthPayload(res?.data);
       message.success('Signup successful');
       setSignUpData({
         firstName: '',
@@ -93,8 +98,8 @@ const AuthPage = () => {
         password: '',
         confirmPassword: '',
       });
-      setData(res?.data);
-      localStorage.setItem('userToken', JSON.stringify(res?.data));
+      setData(authPayload);
+      localStorage.setItem('userToken', JSON.stringify(authPayload));
       localStorage.setItem(
         'signinData',
         JSON.stringify({
@@ -124,10 +129,11 @@ const AuthPage = () => {
 
     try {
       const res = await userLogin(signInData);
+      const authPayload = normalizeUserAuthPayload(res?.data);
       message.success('Login successfully');
       setSignInData({ email: '', password: '', rememberMe: false });
-      setData(res?.data);
-      localStorage.setItem('userToken', JSON.stringify(res?.data));
+      setData(authPayload);
+      localStorage.setItem('userToken', JSON.stringify(authPayload));
       if (signInData.rememberMe) {
         localStorage.setItem(
           'signinData',
@@ -151,11 +157,7 @@ const AuthPage = () => {
   };
 
   useEffect(() => {
-    const userToken = localStorage.getItem('userToken')
-      ? JSON.parse(localStorage.getItem('userToken'))
-      : {};
-
-    const { token } = userToken;
+    const token = getStoredUserToken();
 
     if (token) {
       try {

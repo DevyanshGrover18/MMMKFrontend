@@ -1,6 +1,7 @@
 import { message } from 'antd';
 import { translateText } from '../context/TranslationContext';
 import { jwtDecode } from 'jwt-decode';
+import { getStoredUserToken } from './authStorage';
 
 export const percentageValue = (value, percentage) =>
   (value * percentage) / 100;
@@ -37,9 +38,7 @@ export const showTranslatedMessage = async ({ msg, language, type }) => {
 };
 
 export const isUserSignedIn = ({ checkExpiry = true } = {}) => {
-  const { token } = localStorage.getItem('userToken')
-    ? JSON.parse(localStorage.getItem('userToken'))
-    : {};
+  const token = getStoredUserToken();
 
   if (!token) return false;
 

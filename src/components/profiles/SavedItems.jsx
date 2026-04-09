@@ -14,6 +14,7 @@ import { CommonButton } from '../global/UIButtons';
 import { getWishLists, removeItemFromWishList } from '../../apis/user/wishList';
 import toast from 'react-hot-toast';
 import { notification } from 'antd';
+import { getStoredUserAuth, getStoredUserId } from '../../utils/authStorage';
 
 const SavedItems = () => {
   const {
@@ -25,9 +26,10 @@ const SavedItems = () => {
   const [wishlistItems, setWishlistItems] = useState([]);
   const [productList, setProductList] = useState([]);
   const navigate = useNavigate();
-  const [userId, setUserId] = useState(() =>
-    JSON.parse(localStorage.getItem('userToken'))
-  );
+  const [userId, setUserId] = useState(() => ({
+    ...getStoredUserAuth(),
+    id: getStoredUserId(),
+  }));
 
   const { data: products } = useQuery({
     queryKey: ['random-products'],
@@ -39,9 +41,6 @@ const SavedItems = () => {
     queryFn: () => getWishLists(userId.id),
     enabled: Boolean(userId?.id),
   });
-
-  console.log('wishList', wishList);
-
   // Update wishlist items
   const updateWishlistItems = async (data, language) => {
     if (!data || !Array.isArray(data)) return;

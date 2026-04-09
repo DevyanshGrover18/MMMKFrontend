@@ -1,16 +1,5 @@
 import axios from 'axios';
-
-const getStoredUserToken = () => {
-  try {
-    const storedToken = localStorage.getItem('userToken');
-    if (!storedToken) return null;
-
-    const parsedToken = JSON.parse(storedToken);
-    return parsedToken?.token || null;
-  } catch {
-    return null;
-  }
-};
+import { getStoredUserToken } from '../../utils/authStorage';
 
 export const createUserApiClient = (basePath, timeout = 10000) => {
   const client = axios.create({

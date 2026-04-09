@@ -7,6 +7,7 @@ import { FiHeart } from 'react-icons/fi';
 import toast from 'react-hot-toast';
 import { notification } from 'antd';
 import { addItemToWishList } from '../../apis/user/wishList';
+import { getStoredUserId } from '../../utils/authStorage';
 
 const ProductGrid = ({ list = [], textColor = 'white' }) => {
   const {
@@ -23,10 +24,8 @@ const ProductGrid = ({ list = [], textColor = 'white' }) => {
     product?.image || product?.images?.[0] || '';
 
   const handleAddWishList = async (id) => {
-    const userId = JSON.parse(localStorage.getItem('userToken'));
-    console.log('wishList function called');
+    const userId = getStoredUserId();
     if (!userId) {
-      console.log('user not logged in');
       notification.error({
         message: common.signInToContinue,
         placement: 'topRight',
@@ -35,11 +34,10 @@ const ProductGrid = ({ list = [], textColor = 'white' }) => {
     }
 
     try {
-      const res = await addItemToWishList({
+      await addItemToWishList({
         productId: id,
-        userId: userId.id,
+        userId,
       });
-      console.log('res', res);
       notification.success({
         message: common.wishlistAdded,
         placement: 'topRight',

@@ -1,12 +1,9 @@
 import { Navigate, useLocation } from 'react-router-dom';
 import { jwtDecode } from 'jwt-decode';
+import { getStoredUserToken } from '../../utils/authStorage';
 
 const useAuth = () => {
-  const userToken = localStorage.getItem('userToken')
-    ? JSON.parse(localStorage.getItem('userToken'))
-    : {};
-
-  const { token } = userToken;
+  const token = getStoredUserToken();
 
   if (!token) return false;
 
