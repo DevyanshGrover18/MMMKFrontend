@@ -1,11 +1,6 @@
-import axios from 'axios';
+import { createUserApiClient } from './client';
 
-// Create Axios instance
-const coupon = axios.create({
-  baseURL: `${import.meta.env?.VITE_BACKEND_URL}/api/v1/user/coupon`,
-  timeout: 30000,
-  withCredentials: true,
-});
+const coupon = createUserApiClient('/api/v1/user/coupon', 30000);
 
 export const getValidTokens = async () => {
   const response = await coupon.get('/get-valid-token');

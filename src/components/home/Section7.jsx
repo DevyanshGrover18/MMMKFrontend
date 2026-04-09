@@ -20,7 +20,6 @@ const section7 = () => {
     queryFn: () => getHomePageBottomSection(),
   });
 
-  console.log('productsQuery.data', productsQuery.data);
 
   let textColor = 'white';
   const getProductName = (product) =>

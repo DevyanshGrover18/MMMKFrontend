@@ -25,7 +25,6 @@ const AuthPage = () => {
   const navigate = useNavigate();
   const { mergeCart } = useCart();
   const { state } = useLocation();
-  console.log('state', state);
   const { setData } = useUserAuthContext();
   const [activeTab, setActiveTab] = useState('signIn');
   const [loading, setLoading] = useState(false);
@@ -61,7 +60,6 @@ const AuthPage = () => {
 
   const handleSignup = async (e) => {
     e.preventDefault();
-    console.log(signUpData);
     if (
       !signUpData.firstName ||
       !signUpData.lastName ||

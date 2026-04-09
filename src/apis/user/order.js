@@ -1,11 +1,6 @@
-import axios from 'axios';
+import { createUserApiClient } from './client';
 
-// Create Axios instance
-const order = axios.create({
-  baseURL: `${import.meta.env.VITE_BACKEND_URL}/api/v1/user/order`,
-  timeout: 30000,
-  withCredentials: true,
-});
+const order = createUserApiClient('/api/v1/user/order', 30000);
 
 export const createManualOrder = async (data) => {
   const response = await order.post('/create', data);

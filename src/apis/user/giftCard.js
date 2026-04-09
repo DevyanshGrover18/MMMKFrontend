@@ -1,11 +1,6 @@
-import axios from 'axios';
+import { createUserApiClient } from './client';
 
-// Create Axios instance
-const card = axios.create({
-  baseURL: `${import.meta.env?.VITE_BACKEND_URL}/api/v1/user/gift-card`,
-  timeout: 30000,
-  withCredentials: true,
-});
+const card = createUserApiClient('/api/v1/user/gift-card', 30000);
 
 export const applyGiftCard = async (code, password) => {
   const response = await card.post('/add-gift-card', { code, password });

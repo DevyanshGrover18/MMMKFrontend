@@ -1,21 +1,6 @@
-import axios from 'axios';
+import { createUserApiClient } from './client';
 
-// Create Axios instance
-const profile = axios.create({
-  baseURL: `${import.meta.env.VITE_BACKEND_URL}/api/v1/user/profile`,
-  timeout: 10000,
-  withCredentials: true,
-});
-
-profile.interceptors.response.use(
-  (response) => response,
-  (error) => {
-    if (error.response && error.response.status === 401) {
-      window.location.href = '/auth';
-    }
-    return Promise.reject(error);
-  }
-);
+const profile = createUserApiClient('/api/v1/user/profile', 10000);
 
 // my account
 export const updateMyAccount = async (data) => {

@@ -1,14 +1,8 @@
-import axios from 'axios';
+import { createUserApiClient } from './client';
 
-// Create Axios instance
-const cart = axios.create({
-  baseURL: `${import.meta.env.VITE_BACKEND_URL}/api/v1/user/wish-list`,
-  timeout: 10000,
-  withCredentials: true,
-});
+const cart = createUserApiClient('/api/v1/user/wish-list', 10000);
 
 export const addItemToWishList = async (data) => {
-  console.log('Data', data);
   const response = await cart.post('/add', data);
   return response.data;
 };
