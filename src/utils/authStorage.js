@@ -1,3 +1,5 @@
+import { jwtDecode } from 'jwt-decode';
+
 export const getStoredUserAuth = () => {
   try {
     const stored = localStorage.getItem('userToken');
@@ -27,6 +29,23 @@ export const getStoredUserId = () => {
   const auth = getStoredUserAuth();
 
   return auth?.id || auth?._id || auth?.userId || auth?.user?.id || auth?.user?._id || null;
+};
+
+export const clearStoredUserAuth = () => {
+  localStorage.removeItem('userToken');
+};
+
+export const isStoredUserTokenExpired = () => {
+  const token = getStoredUserToken();
+
+  if (!token) return true;
+
+  try {
+    const { exp } = jwtDecode(token);
+    return Date.now() >= exp * 1000;
+  } catch {
+    return true;
+  }
 };
 
 export const normalizeUserAuthPayload = (payload) => {

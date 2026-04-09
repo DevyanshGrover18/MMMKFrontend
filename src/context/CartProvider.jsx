@@ -85,6 +85,7 @@ const CartProvider = ({ children }) => {
     queryKey: ['cart'],
     queryFn: () => getCartItems(),
     enabled: isUserSignedIn(),
+    retry: false,
   });
   const navigate = useNavigate();
 
@@ -92,6 +93,12 @@ const CartProvider = ({ children }) => {
     if (isUserSignedIn()) setCartItems({ items: query.data?.data || [] });
     else setCart(JSON.parse(localStorage.getItem('cartItems')) || []);
   }, [query.data]);
+
+  useEffect(() => {
+    if (query.error && isUserSignedIn()) {
+      setCart(JSON.parse(localStorage.getItem('cartItems')) || []);
+    }
+  }, [query.error]);
 
   useEffect(() => {
     if (couponCode) localStorage.setItem(APPLIED_COUPON_CODE_KEY, couponCode);
@@ -195,7 +202,7 @@ const CartProvider = ({ children }) => {
       );
       setCartItems({ items: mergedCart, updateOnBackend: true });
     } catch (error) {
-      console.error('Error merging cart:', error);
+      setCart(JSON.parse(localStorage.getItem('cartItems')) || []);
     }
   };
 

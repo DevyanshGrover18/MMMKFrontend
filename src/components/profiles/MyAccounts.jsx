@@ -50,7 +50,6 @@ const MyAccounts = () => {
 
     try {
       const res = await updateMyAccount(formData);
-      console.log(res);
       updateQueryCache(res?.data);
       setLoading(false);
       message.success('My account updated successfully');
@@ -74,7 +73,6 @@ const MyAccounts = () => {
   };
 
   useEffect(() => {
-    console.log('query.data', query.data);
     if (query.data) {
       const { firstName, lastName, dateOfBirth, contactNumber, email, gender } =
         query?.data?.data;

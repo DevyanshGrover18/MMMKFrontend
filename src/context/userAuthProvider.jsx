@@ -1,15 +1,11 @@
 import React, { useState } from 'react';
 import { createContext, useContext } from 'react';
+import { getStoredUserAuth } from '../utils/authStorage';
 
 const userAuthContext = createContext();
 
 const UserAuthProvider = ({ children }) => {
-  const [data, setData] = useState(() => {
-    if (localStorage.getItem('userToken')) {
-      return JSON.parse(localStorage.getItem('userToken'));
-    }
-    return {};
-  });
+  const [data, setData] = useState(() => getStoredUserAuth());
   return (
     <userAuthContext.Provider value={{ data, setData }}>
       {children}

@@ -107,8 +107,8 @@ const AuthPage = () => {
           password: signUpData.password,
         })
       );
+      await mergeCart();
       setLoading(false);
-      mergeCart();
       return navigate(state?.from || '/');
     } catch (err) {
       console.log(err);
@@ -145,9 +145,8 @@ const AuthPage = () => {
       } else {
         localStorage.removeItem('signinData');
       }
-      // refetchCart();
+      await mergeCart();
       setLoading(false);
-      mergeCart();
       return navigate(state?.from || '/');
     } catch (err) {
       setLoading(false);

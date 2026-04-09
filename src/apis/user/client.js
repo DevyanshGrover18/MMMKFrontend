@@ -1,5 +1,9 @@
 import axios from 'axios';
-import { getStoredUserToken } from '../../utils/authStorage';
+import {
+  clearStoredUserAuth,
+  getStoredUserToken,
+  isStoredUserTokenExpired,
+} from '../../utils/authStorage';
 
 export const createUserApiClient = (basePath, timeout = 10000) => {
   const client = axios.create({
@@ -19,8 +23,8 @@ export const createUserApiClient = (basePath, timeout = 10000) => {
   client.interceptors.response.use(
     (response) => response,
     (error) => {
-      if (error.response?.status === 401) {
-        localStorage.removeItem('userToken');
+      if (error.response?.status === 401 && isStoredUserTokenExpired()) {
+        clearStoredUserAuth();
         window.location.href = '/auth';
       }
       return Promise.reject(error);
