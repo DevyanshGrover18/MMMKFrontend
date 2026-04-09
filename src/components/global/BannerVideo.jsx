@@ -17,7 +17,7 @@ import { useQuery } from '@tanstack/react-query';
 import { getAllCategory } from '../../apis/nonAuth/category';
 import { getUrl } from '../../utils/globalMethods';
 import MenuDrawer from './MenuDrawer';
-import SearchDrawer from './searchDrawer';
+import SearchDrawer from './SearchDrawer';
 import Navbar from './Navbar';
 
 const BannerVideo = ({ children, minHight, bg }) => {

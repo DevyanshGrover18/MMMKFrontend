@@ -7,7 +7,7 @@ import { BsMinecartLoaded } from 'react-icons/bs';
 import { FaUser } from 'react-icons/fa';
 import { IoSearchSharp } from 'react-icons/io5';
 import { useCart } from '../../context/CartProvider';
-import SearchDrawer from './searchDrawer';
+import SearchDrawer from './SearchDrawer';
 import { useTranslationContext } from '../../context/TranslationContext';
 import { LANGUAGES } from '../../utils/staticData';
 
