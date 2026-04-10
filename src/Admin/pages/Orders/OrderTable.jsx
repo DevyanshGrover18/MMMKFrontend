@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Table, Input, Button, Popconfirm, message } from 'antd';
-import { FaSearch, FaEdit, FaEye, FaTrash } from 'react-icons/fa';
-import { deleteOrder } from '../../../apis/admin/order';
+import { FaSearch, FaEdit, FaEye, FaTrash, FaSync } from 'react-icons/fa';
+import { deleteOrder, checkJuraStatus } from '../../../apis/admin/order';
 
 const { Search } = Input;
 
@@ -52,6 +52,22 @@ export default function OrdersTable({ data, tableQuery, setIsEditData }) {
     } catch (err) {
       console.log(err);
       message.error(err?.response?.data?.message || 'Failed to delete order');
+    }
+  };
+
+  const handleSyncStatus = async (record) => {
+    try {
+      message.loading({ content: 'Syncing tracking status...', key: 'syncTracking' });
+      const res = await checkJuraStatus(record.orderId);
+      if (res.success) {
+        message.success({ content: 'Status updated successfully', key: 'syncTracking' });
+        tableQuery.refetch();
+      } else {
+        message.error({ content: res.message || 'Failed to update status', key: 'syncTracking' });
+      }
+    } catch (err) {
+      console.log(err);
+      message.error({ content: err?.response?.data?.message || err.message || 'Failed to sync tracking status', key: 'syncTracking' });
     }
   };
 
@@ -182,6 +198,11 @@ export default function OrdersTable({ data, tableQuery, setIsEditData }) {
       key: 'actions',
       render: (_, record) => (
         <div className="flex space-x-2">
+          <Button
+            type="link"
+            onClick={() => handleSyncStatus(record)}
+            icon={<FaSync className="text-green-500" title="Sync Tracking Status" />}
+          />
           <Button
             type="link"
             onClick={() => onView(record)}

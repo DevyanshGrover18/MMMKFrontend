@@ -79,3 +79,13 @@ export const processReturnExchange = async (orderId, requestId, data) => {
     throw error;
   }
 };
+
+export const checkJuraStatus = async (orderId) => {
+  try {
+    const response = await order.get(`/check-jura-status/${orderId}`);
+    return response.data;
+  } catch (error) {
+    console.error('Error syncing tracking status:', error);
+    throw error;
+  }
+};
