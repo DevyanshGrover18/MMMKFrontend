@@ -17,7 +17,8 @@ import { useTranslationContext } from '../../context/TranslationContext';
 import { CommonButton } from '../global/UIButtons';
 import { loadStripe } from '@stripe/stripe-js';
 import { isUserSignedIn, getPercentageOf } from '../../utils/globalMethods';
-import { formatCurrency, resolveCurrencyCode } from '../../utils/currency';
+import { convertPrice, formatPrice } from '../../utils/currency';
+import { useCurrency } from '../../context/CurrencyContext';
 
 const calculateShippingCharges = (country, weight) => {
   const countryData = Country.getCountryByCode(country);
@@ -136,6 +137,7 @@ export default function CheckoutForm({
     appliedCreditAmount,
     setAppliedCreditAmount,
   } = useCart();
+  const { currency, rates } = useCurrency();
 
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -149,7 +151,8 @@ export default function CheckoutForm({
   // Track which saved address is selected per section ('new' = manual entry)
   const [selectedShippingId, setSelectedShippingId] = useState(null);
   const [selectedBillingId, setSelectedBillingId] = useState(null);
-  const currencyCode = resolveCurrencyCode();
+  const formatConvertedPrice = (amount) =>
+    formatPrice(convertPrice(amount, currency, rates), currency);
 
   const derivedSummary = liveSummary || calculateCartSummary({
     items: cartData,
@@ -157,11 +160,13 @@ export default function CheckoutForm({
     isCouponApply,
     shippingCharges,
     appliedCreditAmount,
-    currencyCode,
+    currency,
+    rates,
   });
 
   const effectiveShippingCharges = shippingChargesProp ?? shippingCharges;
-  const effectiveAppliedCredit = appliedCreditAmountProp ?? appliedCreditAmount;
+  const effectiveAppliedCredit =
+    appliedCreditAmountProp ?? appliedCreditAmount;
   const items = cartItems || cartData;
 
   const query = useQuery({ queryKey: ['address-book'], queryFn: getAddressBook });
@@ -262,9 +267,9 @@ export default function CheckoutForm({
         const data = await createPaymentIntent({
           products: cartData, shippingAddress, billingAddress,
           shippingCharges, couponCode: isCouponApply ? couponCode : null,
-          creditsUsed: appliedCreditAmount,
+          creditsUsed: derivedSummary.creditApplied,
           totalAmount: derivedSummary.total,
-          currency: currencyCode,
+          currency,
         });
 
         if (data?.paidWithCredits && data?.orderId) {
@@ -287,9 +292,9 @@ export default function CheckoutForm({
         const res = await createManualOrder({
           products: cartData, shippingAddress, billingAddress,
           shippingCharges, couponCode: isCouponApply ? couponCode : null,
-          creditsUsed: appliedCreditAmount,
+          creditsUsed: derivedSummary.creditApplied,
           totalAmount: derivedSummary.total,
-          currency: currencyCode,
+          currency,
         });
         message.success(res?.message || checkout.orderPlacedSuccessfully);
         setCouponCode(null); setIsCouponApply(false); setAppliedCreditAmount(0);
@@ -534,21 +539,20 @@ export default function CheckoutForm({
                         <p className="mt-2 text-sm text-black/60">{Object.entries(item.filters).map(([k, v]) => `${k}: ${v}`).join(' | ')}</p>
                       )}
                       <p className="mt-3 text-sm text-black/60">
-                        Qty {item?.quantity} x {formatCurrency(unitPrice, currencyCode)}
+                        Qty {item?.quantity} x {formatConvertedPrice(unitPrice)}
                       </p>
                     </div>
                     <div className="text-left md:text-right">
                       {item?.product?.discount > 0 && (
                         <p className="text-sm text-black/35 line-through">
-                          {formatCurrency(
+                          {formatConvertedPrice(
                             Number(item?.product?.price || 0) *
-                              Number(item?.quantity || 0),
-                            currencyCode
+                              Number(item?.quantity || 0)
                           )}
                         </p>
                       )}
                       <p className="text-xl font-bold md:text-2xl">
-                        {formatCurrency(lineTotal, currencyCode)}
+                        {formatConvertedPrice(lineTotal)}
                       </p>
                     </div>
                   </div>
@@ -560,29 +564,29 @@ export default function CheckoutForm({
           <div className="mt-6 ml-auto w-full max-w-sm space-y-3 text-sm">
             <div className="flex items-center justify-between text-black/60">
               <span>{common.subTotal}</span>
-              <span>{formatCurrency(derivedSummary.subtotal, currencyCode)}</span>
+              <span>{formatPrice(derivedSummary.subtotal, currency)}</span>
             </div>
             {derivedSummary.couponDiscount > 0 && (
               <div className="flex items-center justify-between text-green-700">
                 <span>{common.coupon}</span>
-                <span>-{formatCurrency(derivedSummary.couponDiscount, currencyCode)}</span>
+                <span>-{formatPrice(derivedSummary.couponDiscount, currency)}</span>
               </div>
             )}
-            {Number(effectiveAppliedCredit || 0) > 0 && (
+            {Number(derivedSummary.creditApplied || 0) > 0 && (
               <div className="flex items-center justify-between text-green-700">
                 <span>My Credit</span>
-                <span>-{formatCurrency(Number(effectiveAppliedCredit), currencyCode)}</span>
+                <span>-{formatPrice(Number(derivedSummary.creditApplied), currency)}</span>
               </div>
             )}
             {effectiveShippingCharges > 0 && (
               <div className="flex items-center justify-between text-black/60">
                 <span>Shipping</span>
-                <span>{formatCurrency(effectiveShippingCharges, currencyCode)}</span>
+                <span>{formatPrice(derivedSummary.shipping, currency)}</span>
               </div>
             )}
             <div className="flex items-center justify-between border-t brown-border pt-3 text-lg font-bold">
               <span>{common.total}</span>
-              <span>{formatCurrency(derivedSummary.total, currencyCode)}</span>
+              <span>{formatPrice(derivedSummary.total, currency)}</span>
             </div>
           </div>
         </div>

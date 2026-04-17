@@ -7,7 +7,8 @@ import { getPercentageOf } from '../../utils/globalMethods';
 import { getHomePageBottomSection } from '../../apis/nonAuth/products';
 import { useQuery } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
-import { formatCurrency, resolveCurrencyCode } from '../../utils/currency';
+import { convertPrice, formatPrice } from '../../utils/currency';
+import { useCurrency } from '../../context/CurrencyContext';
 
 const section7 = () => {
   const {
@@ -15,7 +16,9 @@ const section7 = () => {
     content: { common, homepage },
   } = useTranslationContext();
   const navigate = useNavigate();
-  const currencyCode = resolveCurrencyCode();
+  const { currency, rates } = useCurrency();
+  const formatConvertedPrice = (amount) =>
+    formatPrice(convertPrice(amount, currency, rates), currency);
 
   const productsQuery = useQuery({
     queryKey: ['home-bottomSection-products'],
@@ -122,10 +125,10 @@ const section7 = () => {
                   className={`font-medium text-white flex justify-center items-center gap-2`}
                 >
                   <span className="line-through text-sm">
-                    {formatCurrency(product?.price, currencyCode)}
+                    {formatConvertedPrice(product?.price)}
                   </span>
                   <span className="text-lg font-semibold md:text-xl">
-                    {formatCurrency(product?.websitePrice, currencyCode)}
+                    {formatConvertedPrice(product?.websitePrice)}
                   </span>
                 </p>
               ) : (

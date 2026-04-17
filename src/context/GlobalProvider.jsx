@@ -9,13 +9,6 @@ import {
 } from 'react';
 import { getAllCategory } from '../apis/nonAuth/category';
 import { getAllProductsWithFilters } from '../apis/nonAuth/products';
-import {
-  clearManualCurrencyOverride,
-  getCurrencyConfig,
-  persistManualCurrencyCode,
-  persistCurrencyCode,
-  resolveCurrencyCode,
-} from '../utils/currency';
 
 const GlobalContext = createContext(null);
 
@@ -25,7 +18,6 @@ const GlobalProvider = ({ children }) => {
     categories: [],
     recommendedProducts: [],
     randomProducts: [],
-    ...getCurrencyConfig(),
   });
   const updateUtils = (newUtils) => {
     setUtils((prev) => ({ ...prev, ...newUtils }));
@@ -122,26 +114,11 @@ const GlobalProvider = ({ children }) => {
     handleResizeWindow();
   }, []);
 
-  useEffect(() => {
-    const currencyCode = resolveCurrencyCode();
-    const currencyConfig = persistCurrencyCode(currencyCode);
-    updateUtils(getCurrencyConfig(currencyConfig));
-  }, []);
-
   return (
     <GlobalContext.Provider
       value={{
         ...utils,
         updateGlobalContext: updateUtils,
-        setCurrencyCode: (currencyCode) => {
-          const normalizedCode = persistManualCurrencyCode(currencyCode);
-          updateUtils(getCurrencyConfig(normalizedCode));
-        },
-        clearCurrencyOverride: () => {
-          clearManualCurrencyOverride();
-          const detectedCode = resolveCurrencyCode();
-          updateUtils(getCurrencyConfig(detectedCode));
-        },
         reorderCategories,
         categoryOrder,
       }}

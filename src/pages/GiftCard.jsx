@@ -6,7 +6,8 @@ import NewsLetter from '../components/global/NewsLetter';
 import Section10 from '../components/home/Section10';
 import { CommonButton } from '../components/global/UIButtons';
 import { useTranslationContext } from '../context/TranslationContext';
-import { formatCurrency, resolveCurrencyCode } from '../utils/currency';
+import { convertPrice, formatPrice } from '../utils/currency';
+import { useCurrency } from '../context/CurrencyContext';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import bg from '../assets/bg.png';
 import { FiCopy, FiGift, FiPlus, FiSend } from 'react-icons/fi';
@@ -19,7 +20,9 @@ export const GiftCard = () => {
   const {
     content: { common, giftCard },
   } = useTranslationContext();
-  const currencyCode = resolveCurrencyCode();
+  const { currency, rates } = useCurrency();
+  const formatConvertedPrice = (amount) =>
+    formatPrice(convertPrice(amount, currency, rates), currency);
   const [shareModal, setShareModal] = useState({
     open: false,
     giftCardId: null,
@@ -189,7 +192,7 @@ export const GiftCard = () => {
       align: 'center',
       render: (amount) => (
         <div className="flex flex-col">
-          <div className="font-semibold">{formatCurrency(amount, currencyCode)}</div>
+          <div className="font-semibold">{formatConvertedPrice(amount)}</div>
         </div>
       ),
     },
@@ -389,7 +392,7 @@ export const GiftCard = () => {
                 </div>
                 <div className="text-center p-4 bg-blue-50 rounded-lg">
                   <div className="text-2xl font-bold text-blue-600">
-                    {formatCurrency(giftCardsQuery.data.summary.totalValue, currencyCode)}
+                    {formatConvertedPrice(giftCardsQuery.data.summary.totalValue)}
                   </div>
                   <div className="text-sm text-gray-600">
                     {giftCard.totalValue}

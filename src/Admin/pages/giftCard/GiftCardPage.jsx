@@ -26,7 +26,8 @@ import {
 } from '../../UI/Buttons';
 import SearchInTable from '../../UI/SearchInTable';
 import { useGlobalContext } from '../../../context/GlobalProvider';
-import { formatCurrency } from '../../../utils/currency';
+import { convertPrice, formatPrice } from '../../../utils/currency';
+import { useCurrency } from '../../../context/CurrencyContext';
 import { confirmDelete } from '../../UI/Modals';
 import { tablePageSizes } from '../../../utils/staticData';
 import { getFullName } from '../../../utils/globalMethods';
@@ -36,6 +37,7 @@ import { FiCopy } from 'react-icons/fi';
 
 const GiftCardPage = () => {
   const { screenSizeFactor } = useGlobalContext();
+  const { currency, rates } = useCurrency();
   const [utils, setUtils] = useState({
     isModalVisible: false,
     isViewModalVisible: false,
@@ -182,6 +184,7 @@ const GiftCardPage = () => {
         dataIndex: 'amount',
         key: 'amount',
         align: 'center',
+        render: (amount) => formatPrice(convertPrice(amount, currency, rates), currency),
       },
       {
         title: 'Status',
@@ -230,7 +233,7 @@ const GiftCardPage = () => {
         ),
       },
     ],
-    [pagination, screenSizeFactor]
+    [currency, pagination, rates, screenSizeFactor]
   );
 
   return (
@@ -263,7 +266,7 @@ const GiftCardPage = () => {
             <strong>Code:</strong> {utils.currentEditGiftCard?.code}
           </p>
           <p className="flex items-center justify-between">
-            <strong>Amount:</strong> {formatCurrency(utils.currentEditGiftCard?.amount)}
+            <strong>Amount:</strong> {formatPrice(convertPrice(utils.currentEditGiftCard?.amount, currency, rates), currency)}
           </p>
           <p className="flex items-center justify-between">
             <strong>Status:</strong> {utils.currentEditGiftCard?.status}

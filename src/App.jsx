@@ -9,6 +9,7 @@ import { lazy, Suspense } from 'react';
 
 import { ToastContainer } from 'react-toastify';
 import { GlobalProvider } from './context/GlobalProvider';
+import { CurrencyProvider } from './context/CurrencyContext';
 import SiteLoading from './layout/SiteLoading';
 import RootLayout from './layout/RootLayout';
 const SiteRouter = lazy(() => import('./router/SiteRouter'));
@@ -48,12 +49,14 @@ const router = createBrowserRouter(
 
 const App = () => {
   return (
-    <GlobalProvider>
-      <ToastContainer />
-      <div className="overflow-x-hidden">
-        <RouterProvider router={router} />
-      </div>
-    </GlobalProvider>
+    <CurrencyProvider>
+      <GlobalProvider>
+        <ToastContainer />
+        <div className="overflow-x-hidden">
+          <RouterProvider router={router} />
+        </div>
+      </GlobalProvider>
+    </CurrencyProvider>
   );
 };
 

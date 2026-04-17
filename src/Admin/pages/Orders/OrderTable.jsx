@@ -2,14 +2,15 @@ import React, { useEffect, useState } from 'react';
 import { Table, Input, Button, Popconfirm, message } from 'antd';
 import { FaSearch, FaEdit, FaEye, FaTrash, FaSync } from 'react-icons/fa';
 import { deleteOrder, checkJuraStatus } from '../../../apis/admin/order';
-import { formatCurrency, resolveCurrencyCode } from '../../../utils/currency';
+import { convertPrice, formatPrice } from '../../../utils/currency';
+import { useCurrency } from '../../../context/CurrencyContext';
 
 const { Search } = Input;
 
 export default function OrdersTable({ data, tableQuery, setIsEditData }) {
   const [searchText, setSearchText] = useState('');
   const [filteredData, setFilteredData] = useState(data);
-  const currencyCode = resolveCurrencyCode();
+  const { currency, rates } = useCurrency();
 
   // Filter Data
   const handleSearch = (value) => {
@@ -131,7 +132,7 @@ export default function OrdersTable({ data, tableQuery, setIsEditData }) {
       title: 'Amount',
       dataIndex: 'amount',
       key: 'amount',
-      render: (amount) => formatCurrency(amount, currencyCode),
+      render: (amount) => formatPrice(convertPrice(amount, currency, rates), currency),
       sorter: (a, b) => a.amount - b.amount,
     },
     {

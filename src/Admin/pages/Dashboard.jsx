@@ -51,10 +51,175 @@ const chartColors = [
   'rgba(250, 230, 117)',
 ];
 
+const RANGE_TYPE_OPTIONS = [
+  { label: 'Months', value: 'month' },
+  { label: 'Weeks', value: 'week' },
+  { label: 'Days', value: 'date' },
+];
+const MAX_RANGE_UNITS = 7;
+const MAX_RANGE_OFFSET = MAX_RANGE_UNITS - 1;
+
+const getRangeUnit = (rangeType) => (rangeType === 'date' ? 'day' : rangeType);
+
+const getDefaultRange = (rangeType) => {
+  const unit = getRangeUnit(rangeType);
+  switch (rangeType) {
+    case 'date':
+      return [dayjs().subtract(6, 'days').startOf('day'), dayjs().endOf('day')];
+    case 'week':
+      return [dayjs().subtract(5, 'weeks').startOf('week'), dayjs().endOf('week')];
+    case 'month':
+    default:
+      return [dayjs().subtract(5, 'months').startOf('month'), dayjs().endOf(unit)];
+  }
+};
+
+const getPickerFormat = (rangeType) => {
+  switch (rangeType) {
+    case 'date':
+      return 'DD MMM YYYY';
+    case 'week':
+      return 'DD MMM YYYY';
+    case 'month':
+    default:
+      return 'MMM YYYY';
+  }
+};
+
+const formatRangeSubtitle = (range = [], rangeType = 'month') => {
+  if (!Array.isArray(range) || range.length !== 2 || !range[0] || !range[1]) {
+    return '';
+  }
+
+  switch (rangeType) {
+    case 'date':
+      return range.map((item) => dayjs(item).format('DD MMM YYYY')).join(' - ');
+    case 'week':
+      return range
+        .map((item) => dayjs(item).format('DD MMM YYYY'))
+        .join(' - ');
+    case 'month':
+    default:
+      return range.map((item) => dayjs(item).format('MMM YYYY')).join(' - ');
+  }
+};
+
+const getPointDate = (item = {}) =>
+  item.month || item.week || item.day || item.date || item.period || item.label;
+
+const normalizeRange = (range = [], rangeType = 'month') => {
+  if (!Array.isArray(range) || range.length !== 2 || !range[0] || !range[1]) {
+    return range;
+  }
+
+  const unit = getRangeUnit(rangeType);
+  let [start, end] = range.map((item) => dayjs(item));
+
+  if (end.isBefore(start)) {
+    [start, end] = [end, start];
+  }
+
+  const normalizedStart = start.startOf(unit);
+  let normalizedEnd = end.endOf(unit);
+
+  if (normalizedEnd.diff(normalizedStart, unit) > MAX_RANGE_OFFSET) {
+    normalizedEnd = normalizedStart.add(MAX_RANGE_OFFSET, unit).endOf(unit);
+  }
+
+  return [normalizedStart, normalizedEnd];
+};
+
+const formatChartLabel = (value, rangeType = 'month') => {
+  if (!value) return '';
+
+  const parsed = dayjs(value);
+  if (!parsed.isValid()) return String(value);
+
+  switch (rangeType) {
+    case 'date':
+      return parsed.format('DD MMM');
+    case 'week':
+      return `${parsed.startOf('week').format('DD MMM')} - ${parsed
+        .endOf('week')
+        .format('DD MMM')}`;
+    case 'month':
+    default:
+      return parsed.format('MMM YYYY');
+  }
+};
+
+const getSeriesByType = (data, seriesName, rangeType) => {
+  if (!data) return [];
+
+  const candidateKeys = {
+    revenue: [
+      rangeType === 'date' ? 'revenueByDay' : null,
+      rangeType === 'week' ? 'revenueByWeek' : null,
+      rangeType === 'month' ? 'revenueByMonth' : null,
+      'revenueByDate',
+      'revenueByPeriod',
+      'revenueByMonth',
+      'revenueByWeek',
+      'revenueByDay',
+    ],
+    users: [
+      rangeType === 'date' ? 'usersByDay' : null,
+      rangeType === 'week' ? 'usersByWeek' : null,
+      rangeType === 'month' ? 'usersByMonth' : null,
+      'usersByDate',
+      'usersByPeriod',
+      'usersByMonth',
+      'usersByWeek',
+      'usersByDay',
+    ],
+    orders: [
+      rangeType === 'date' ? 'ordersByDay' : null,
+      rangeType === 'week' ? 'ordersByWeek' : null,
+      rangeType === 'month' ? 'ordersByMonth' : null,
+      'ordersByDate',
+      'ordersByPeriod',
+      'ordersByMonth',
+      'ordersByWeek',
+      'ordersByDay',
+    ],
+  };
+
+  const resolvedKey = candidateKeys[seriesName]
+    ?.filter(Boolean)
+    .find((key) => Array.isArray(data?.[key]));
+
+  return resolvedKey ? data[resolvedKey] : [];
+};
+
+const filterSeriesByRange = (series = [], range = [], rangeType = 'month') => {
+  if (!Array.isArray(series) || series.length === 0) return [];
+  if (!Array.isArray(range) || range.length !== 2 || !range[0] || !range[1]) {
+    return series;
+  }
+
+  const unit = getRangeUnit(rangeType);
+  const [rangeStart, rangeEnd] = normalizeRange(range, rangeType);
+
+  return series.filter((item) => {
+    const pointValue = getPointDate(item);
+    const pointDate = dayjs(pointValue);
+
+    if (!pointDate.isValid()) return false;
+
+    const pointStart = pointDate.startOf(unit);
+    const pointEnd = pointDate.endOf(unit);
+
+    return !pointEnd.isBefore(rangeStart) && !pointStart.isAfter(rangeEnd);
+  });
+};
+
 export default function Dashboard() {
+  const defaultRange = getDefaultRange('month');
   const [utils, setUtils] = useState({
-    monthRange: [dayjs().subtract(5, 'months').startOf('month'), dayjs()],
-    monthRangeToShow: [dayjs().subtract(5, 'months').startOf('month'), dayjs()],
+    rangeType: 'month',
+    dateRange: defaultRange,
+    dateRangeToShow: defaultRange,
+    calendarRange: defaultRange,
   });
   const updateUtils = (newUtils) =>
     setUtils((prev) => ({ ...prev, ...newUtils }));
@@ -62,8 +227,23 @@ export default function Dashboard() {
   const Dashboard = useQuery({
     queryKey: ['dashboard'],
     queryFn: async () => {
-      const res = await getDashboardData({ monthRange: utils.monthRange });
-      updateUtils({ monthRangeToShow: utils.monthRange });
+      const normalizedRange = normalizeRange(utils.dateRange, utils.rangeType);
+
+      const filters = {
+        rangeType: utils.rangeType,
+        dateRange: normalizedRange?.map((item) => item.toISOString()),
+        monthRange:
+          utils.rangeType === 'month'
+            ? normalizedRange?.map((item) => item.toISOString())
+            : undefined,
+      };
+
+      const res = await getDashboardData(filters);
+      updateUtils({
+        dateRange: normalizedRange,
+        dateRangeToShow: normalizedRange,
+        calendarRange: normalizedRange,
+      });
       return res;
     },
     refetchOnWindowFocus: false,
@@ -74,9 +254,43 @@ export default function Dashboard() {
     Dashboard.refetch();
   }, []);
 
-  console.log(Dashboard.data);
+  const revenueSeries = getSeriesByType(
+    Dashboard.data,
+    'revenue',
+    utils.rangeType
+  );
+  const userSeries = getSeriesByType(Dashboard.data, 'users', utils.rangeType);
+  const orderSeries = getSeriesByType(
+    Dashboard.data,
+    'orders',
+    utils.rangeType
+  );
+  const filteredRevenueSeries = filterSeriesByRange(
+    revenueSeries,
+    utils.dateRangeToShow,
+    utils.rangeType
+  );
+  const filteredUserSeries = filterSeriesByRange(
+    userSeries,
+    utils.dateRangeToShow,
+    utils.rangeType
+  );
+  const filteredOrderSeries = filterSeriesByRange(
+    orderSeries,
+    utils.dateRangeToShow,
+    utils.rangeType
+  );
+  const activeAnchorDate = utils.calendarRange?.find(Boolean);
 
-  console.log(utils);
+  const disableOutOfMaxRange = (current) => {
+    if (!current || !activeAnchorDate) return false;
+
+    const unit = getRangeUnit(utils.rangeType);
+    const anchor = dayjs(activeAnchorDate).startOf(unit);
+    const currentDate = dayjs(current).startOf(unit);
+
+    return Math.abs(currentDate.diff(anchor, unit)) > MAX_RANGE_OFFSET;
+  };
 
   return (
     <div className="container min-h-screen mx-auto">
@@ -85,12 +299,36 @@ export default function Dashboard() {
         extra={
           <div className="flex items-end gap-2">
             <Space.Compact>
-              <DatePicker.RangePicker
-                format="MMM YYYY"
+              <Select
                 size="small"
-                picker="month"
-                value={utils.monthRange}
-                onChange={(value) => updateUtils({ monthRange: value })}
+                value={utils.rangeType}
+                options={RANGE_TYPE_OPTIONS}
+                onChange={(value) =>
+                  updateUtils({
+                    rangeType: value,
+                    dateRange: getDefaultRange(value),
+                    dateRangeToShow: getDefaultRange(value),
+                    calendarRange: getDefaultRange(value),
+                  })
+                }
+                disabled={Dashboard.isFetching}
+                style={{ minWidth: 110 }}
+              />
+              <DatePicker.RangePicker
+                format={getPickerFormat(utils.rangeType)}
+                size="small"
+                picker={utils.rangeType}
+                value={utils.dateRange}
+                disabledDate={disableOutOfMaxRange}
+                onCalendarChange={(value) =>
+                  updateUtils({ calendarRange: value || [] })
+                }
+                onChange={(value) =>
+                  updateUtils({
+                    dateRange: normalizeRange(value, utils.rangeType),
+                    calendarRange: value || [],
+                  })
+                }
                 disabled={Dashboard.isFetching}
               />
               <Button
@@ -149,20 +387,19 @@ export default function Dashboard() {
             <div className="p-4 border rounded-lg shadow-md card">
               <LineChart
                 title="Revenue"
-                subTitle={utils.monthRangeToShow
-                  .map((item) => dayjs(item).format('MMM YYYY'))
-                  .join(' - ')}
+                subTitle={formatRangeSubtitle(
+                  utils.dateRangeToShow,
+                  utils.rangeType
+                )}
                 labels={
-                  Dashboard.data?.revenueByMonth?.map((item) =>
-                    dayjs(item.month).format('MMM YYYY')
-                  ) || []
+                  filteredRevenueSeries.map((item) =>
+                    formatChartLabel(getPointDate(item), utils.rangeType)
+                  )
                 }
                 values={[
                   {
                     name: 'Revenue',
-                    data: Dashboard.data?.revenueByMonth?.map(
-                      (item) => item.value
-                    ),
+                    data: filteredRevenueSeries.map((item) => item.value),
                   },
                 ]}
                 area
@@ -173,20 +410,19 @@ export default function Dashboard() {
             <div className="p-4 pb-8 border rounded-lg shadow-md card">
               <BarChart
                 title="Users"
-                subTitle={utils.monthRangeToShow
-                  .map((item) => dayjs(item).format('MMM YYYY'))
-                  .join(' - ')}
+                subTitle={formatRangeSubtitle(
+                  utils.dateRangeToShow,
+                  utils.rangeType
+                )}
                 labels={
-                  Dashboard.data?.usersByMonth?.map((item) =>
-                    dayjs(item.month).format('MMM YYYY')
-                  ) || []
+                  filteredUserSeries.map((item) =>
+                    formatChartLabel(getPointDate(item), utils.rangeType)
+                  )
                 }
                 values={[
                   {
                     name: 'Users',
-                    data: Dashboard.data?.usersByMonth?.map(
-                      (item) => item.value
-                    ),
+                    data: filteredUserSeries.map((item) => item.value),
                   },
                 ]}
                 chartColors={[chartColors[3]]}
@@ -196,20 +432,19 @@ export default function Dashboard() {
             <div className="p-4 pb-8 border rounded-lg shadow-md card">
               <LineChart
                 title="Orders"
-                subTitle={utils.monthRangeToShow
-                  .map((item) => dayjs(item).format('MMM YYYY'))
-                  .join(' - ')}
+                subTitle={formatRangeSubtitle(
+                  utils.dateRangeToShow,
+                  utils.rangeType
+                )}
                 labels={
-                  Dashboard.data?.ordersByMonth?.map((item) =>
-                    dayjs(item.month).format('MMM YYYY')
-                  ) || []
+                  filteredOrderSeries.map((item) =>
+                    formatChartLabel(getPointDate(item), utils.rangeType)
+                  )
                 }
                 values={[
                   {
                     name: 'Orders',
-                    data: Dashboard.data?.ordersByMonth?.map(
-                      (item) => item.value
-                    ),
+                    data: filteredOrderSeries.map((item) => item.value),
                   },
                 ]}
                 markerSize={5}

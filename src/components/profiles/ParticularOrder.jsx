@@ -1,19 +1,23 @@
 import dayjs from 'dayjs';
 import { getPercentageOf, percentageValue } from '../../utils/globalMethods';
 import { LuArrowLeft } from 'react-icons/lu';
+import { FaExchangeAlt } from 'react-icons/fa';
 import {
   translate,
   useTranslationContext,
 } from '../../context/TranslationContext';
 import { useEffect } from 'react';
-import { formatCurrency, resolveCurrencyCode } from '../../utils/currency';
+import { convertPrice, formatPrice } from '../../utils/currency';
+import { useCurrency } from '../../context/CurrencyContext';
 
 const ParticularOrder = ({ activeOrder, setActiveOrder }) => {
   const {
     content: { profile, common },
     translateLanguage,
   } = useTranslationContext();
-  const currencyCode = resolveCurrencyCode();
+  const { currency, rates } = useCurrency();
+  const formatConvertedPrice = (amount) =>
+    formatPrice(convertPrice(amount, currency, rates), currency);
   const paymentSummary = {
     subtotal:
       Number(activeOrder?.price?.subtotal) ||
@@ -202,10 +206,9 @@ const ParticularOrder = ({ activeOrder, setActiveOrder }) => {
                       <p className="text-gray-500 text-sm">
                         <span className="line-through">
                           {' '}
-                          {formatCurrency(
+                          {formatConvertedPrice(
                             Number(product?.id?.price || 0) *
-                              Number(product?.quantity || 0),
-                            activeOrder?.currency || currencyCode
+                              Number(product?.quantity || 0)
                           )}
                         </span>
                         <span className="font-[600]">
@@ -217,14 +220,13 @@ const ParticularOrder = ({ activeOrder, setActiveOrder }) => {
 
                     {/* Discounted Price (10% off) */}
                     <h3 className="text-lg font-semibold text-red-600">
-                      {formatCurrency(
+                      {formatConvertedPrice(
                         Number(
                           getPercentageOf(
                             product?.id?.price,
                             product?.id?.discount
                           )
-                        ) * Number(product?.quantity || 0),
-                        activeOrder?.currency || currencyCode
+                        ) * Number(product?.quantity || 0)
                       )}
                     </h3>
 
@@ -352,12 +354,7 @@ const ParticularOrder = ({ activeOrder, setActiveOrder }) => {
             </h4>
             <div className="flex justify-between mb-2 text-gray-600">
               <p>{profile.subTotal}</p>
-              <p>
-                {formatCurrency(
-                  paymentSummary.subtotal,
-                  activeOrder?.currency || currencyCode
-                )}
-              </p>
+              <p>{formatConvertedPrice(paymentSummary.subtotal)}</p>
             </div>
             {activeOrder?.couponCode && (
               <div className="flex justify-between mb-2 text-gray-600">
@@ -368,23 +365,13 @@ const ParticularOrder = ({ activeOrder, setActiveOrder }) => {
             {paymentSummary.couponDiscount > 0 && (
               <div className="flex justify-between mb-2 text-green-700">
                 <p>{common.coupon}</p>
-                <p>
-                  -{formatCurrency(
-                    paymentSummary.couponDiscount,
-                    activeOrder?.currency || currencyCode
-                  )}
-                </p>
+                <p>-{formatConvertedPrice(paymentSummary.couponDiscount)}</p>
               </div>
             )}
             {paymentSummary.shippingCharges > 0 && (
               <div className="flex justify-between mb-2 text-gray-600">
                 <p>Shipping</p>
-                <p>
-                  {formatCurrency(
-                    paymentSummary.shippingCharges,
-                    activeOrder?.currency || currencyCode
-                  )}
-                </p>
+                <p>{formatConvertedPrice(paymentSummary.shippingCharges)}</p>
               </div>
             )}
 
@@ -398,12 +385,7 @@ const ParticularOrder = ({ activeOrder, setActiveOrder }) => {
             </div> */}
             <div className="flex justify-between pt-2 mt-4 font-semibold text-black border-t">
               <p>{profile.totalPaidByCustomer}</p>
-              <p>
-                {formatCurrency(
-                  paymentSummary.total,
-                  activeOrder?.currency || currencyCode
-                )}
-              </p>
+              <p>{formatConvertedPrice(paymentSummary.total)}</p>
             </div>
           </div>
 

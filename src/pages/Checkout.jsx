@@ -10,6 +10,7 @@ import CategoryNavBar from '../components/global/CategoryNavBar';
 import { useTranslationContext } from '../context/TranslationContext';
 import { CommonButton } from '../components/global/UIButtons';
 import { useCart } from '../context/CartProvider';
+import { useCurrency } from '../context/CurrencyContext';
 
 const Checkout = () => {
   const [shippingCharges, setShippingCharges] = useState(0);
@@ -25,6 +26,7 @@ const Checkout = () => {
     couponData,
     isCouponApply,
   } = useCart();
+  const { currency, rates } = useCurrency();
 
   const liveSummary = calculateCartSummary({
     items: cartItems,
@@ -32,6 +34,8 @@ const Checkout = () => {
     isCouponApply,
     appliedCreditAmount,
     shippingCharges,
+    currency,
+    rates,
   });
 
   return (

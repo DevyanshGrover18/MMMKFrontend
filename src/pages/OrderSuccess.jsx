@@ -11,7 +11,8 @@ import { refreshPaymentStatus } from '../apis/user/payment';
 import { useCart } from '../context/CartProvider';
 import { useTranslationContext } from '../context/TranslationContext';
 import { CommonButton } from '../components/global/UIButtons';
-import { formatCurrency } from '../utils/currency';
+import { convertPrice, formatPrice } from '../utils/currency';
+import { useCurrency } from '../context/CurrencyContext';
 
 const OrderSuccess = () => {
   const { orderId } = useParams();
@@ -19,6 +20,7 @@ const OrderSuccess = () => {
   const {
     content: { common, thankYou },
   } = useTranslationContext();
+  const { currency, rates } = useCurrency();
   const [cartCleared, setCartCleared] = useState(false);
   const [refreshingOrder, setRefreshingOrder] = useState(false);
 
@@ -186,9 +188,9 @@ const OrderSuccess = () => {
                         Total
                       </p>
                       <p className="mt-1 text-lg font-semibold text-gray-900">
-                        {formatCurrency(
-                          order.amount || order.price?.total || 0,
-                          order.currency
+                        {formatPrice(
+                          convertPrice(order.amount || order.price?.total || 0, currency, rates),
+                          currency
                         )}
                       </p>
                     </div>

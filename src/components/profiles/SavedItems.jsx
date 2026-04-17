@@ -15,14 +15,17 @@ import { getWishLists, removeItemFromWishList } from '../../apis/user/wishList';
 import toast from 'react-hot-toast';
 import { notification } from 'antd';
 import { getStoredUserAuth, getStoredUserId } from '../../utils/authStorage';
-import { formatCurrency, resolveCurrencyCode } from '../../utils/currency';
+import { convertPrice, formatPrice } from '../../utils/currency';
+import { useCurrency } from '../../context/CurrencyContext';
 
 const SavedItems = () => {
   const {
     content: { profile, common },
     translateLanguage,
   } = useTranslationContext();
-  const currencyCode = resolveCurrencyCode();
+  const { currency, rates } = useCurrency();
+  const formatConvertedPrice = (amount) =>
+    formatPrice(convertPrice(amount, currency, rates), currency);
   const { data, refetch } = useCart();
   const [cartList, setCartList] = useState([]);
   const [wishlistItems, setWishlistItems] = useState([]);
@@ -274,7 +277,7 @@ const SavedItems = () => {
                 {/* Price & Actions */}
                 <div className="w-full sm:w-auto text-center sm:text-right">
                   <h3 className="text-lg font-bold mb-2">
-                    {common.price}: {formatCurrency(item.price, currencyCode)}
+                    {common.price}: {formatConvertedPrice(item.price)}
                   </h3>
                   <p className="text-sm text-gray-500 mb-3">
                     {profile.quantity}: {item.quantity}
@@ -358,7 +361,7 @@ const SavedItems = () => {
                   {product.translated?.productName}
                 </h3>
                 <p className="text-base md:text-lg my-2">
-                  {formatCurrency(product.price, currencyCode)}
+                  {formatConvertedPrice(product.price)}
                 </p>
                 {product.discount > 0 && (
                   <p className="text-sm text-gray-500 rounded-full mb-2">

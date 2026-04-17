@@ -10,22 +10,23 @@ import bg from '../assets/bg.png';
 import { useNavigate } from 'react-router-dom';
 import { createPaymentIntent } from '../apis/user/payment';
 import { loadStripe } from '@stripe/stripe-js';
-import { convertAmount, formatCurrency, resolveCurrencyCode } from '../utils/currency';
+import { convertPrice, formatPrice } from '../utils/currency';
+import { useCurrency } from '../context/CurrencyContext';
 
 const BuyGiftCard = () => {
   const {
     content: { common, buyGiftCard },
   } = useTranslationContext();
   const navigate = useNavigate();
-  const currencyCode = resolveCurrencyCode();
+  const { currency, rates } = useCurrency();
 
   const [form] = Form.useForm();
   const [loading, setLoading] = useState(false);
 
   const giftCardName = Form.useWatch('name', form);
   const amount = Form.useWatch('amount', form);
-  const minAmount = convertAmount(10, currencyCode);
-  const maxAmount = convertAmount(27000, currencyCode);
+  const minAmount = convertPrice(10, currency, rates);
+  const maxAmount = convertPrice(27000, currency, rates);
 
   // Predefined gift card amounts
   const predefinedAmounts = [25, 75, 100, 250, 500, 1000];
@@ -43,7 +44,7 @@ const BuyGiftCard = () => {
 
       if (!normalizedAmount || normalizedAmount < minAmount || normalizedAmount > maxAmount) {
         message.error(
-          `Amount must be between ${formatCurrency(minAmount, currencyCode)} and ${formatCurrency(maxAmount, currencyCode)}`
+          `Amount must be between ${formatPrice(minAmount, currency)} and ${formatPrice(maxAmount, currency)}`
         );
         return;
       }
@@ -83,7 +84,7 @@ const BuyGiftCard = () => {
         couponCode: null,
         creditsUsed: 0,
         totalAmount: normalizedAmount,
-        currency: currencyCode,
+        currency,
         giftCardPurchase: {
           name: normalizedName,
           amount: normalizedAmount,
@@ -173,7 +174,7 @@ const BuyGiftCard = () => {
                         {giftCardName || buyGiftCard.giftCardName}
                       </p>
                       <p className="text-3xl font-bold text-black">
-                        ${amount || '000'}
+                        {formatPrice(amount || 0, currency)}
                       </p>
                       <p className="text-sm text-gray-700 mt-2">
                         {common.validForOnlinePurchases}
@@ -268,20 +269,20 @@ const BuyGiftCard = () => {
                         <button
                           key={value}
                           type="button"
-                          onClick={() => handleAmountSelect(convertAmount(value, currencyCode))}
+                          onClick={() => handleAmountSelect(convertPrice(value, currency, rates))}
                           className={`p-3 border-2 rounded-lg font-semibold transition-all ${
-                            convertAmount(value, currencyCode) === amount
+                            convertPrice(value, currency, rates) === amount
                               ? 'border-orange-200 bg-orange-50 text-orange-800'
                               : 'border-gray-300 hover:border-orange-200'
                           }`}
                         >
-                          {formatCurrency(convertAmount(value, currencyCode), currencyCode)}
+                          {formatPrice(convertPrice(value, currency, rates), currency)}
                         </button>
                       ))}
                     </div>
 
                     <Form.Item
-                      label={`${buyGiftCard.customAmount} (${formatCurrency(minAmount, currencyCode)} - ${formatCurrency(maxAmount, currencyCode)}):`}
+                      label={`${buyGiftCard.customAmount} (${formatPrice(minAmount, currency)} - ${formatPrice(maxAmount, currency)}):`}
                       name="amount"
                       rules={[
                         {
@@ -307,13 +308,13 @@ const BuyGiftCard = () => {
                     <div className="flex justify-between items-center">
                       <span>{buyGiftCard.giftCardAmount}:</span>
                       <span className="font-bold">
-                        {formatCurrency(amount || 0, currencyCode)}
+                        {formatPrice(amount || 0, currency)}
                       </span>
                     </div>
                     <div className="flex justify-between items-center mt-2 pt-2 border-t">
                       <span className="font-semibold">{common.total}:</span>
                       <span className="font-bold text-lg">
-                        {formatCurrency(amount || 0, currencyCode)}
+                        {formatPrice(amount || 0, currency)}
                       </span>
                     </div>
                   </div>

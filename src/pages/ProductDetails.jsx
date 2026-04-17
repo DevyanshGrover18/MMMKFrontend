@@ -27,7 +27,8 @@ import {
   getTranslateProducts,
 } from '../context/TranslationContext';
 import { CommonButton } from '../components/global/UIButtons';
-import { formatCurrency, resolveCurrencyCode } from '../utils/currency';
+import { convertPrice, formatPrice } from '../utils/currency';
+import { useCurrency } from '../context/CurrencyContext';
 
 const ProductDetails = () => {
   const {
@@ -40,7 +41,9 @@ const ProductDetails = () => {
   const navigate = useNavigate();
   const [product, setProduct] = useState({});
   const [selectedSku, setSelectedSku] = useState(null);
-  const currencyCode = resolveCurrencyCode();
+  const { currency, rates } = useCurrency();
+  const formatConvertedPrice = (amount) =>
+    formatPrice(convertPrice(amount, currency, rates), currency);
 
   const query = useQuery({
     queryKey: ['product-details', params.id],
@@ -71,10 +74,9 @@ const ProductDetails = () => {
   );
   const usesProductLevelStock =
     Array.isArray(productData?.filters) && productData.filters.length === 0;
-  const selectedAvailableQuantity =
-    usesProductLevelStock
-      ? Number(productData?.quantity || 0)
-      : skuList.length > 0
+  const selectedAvailableQuantity = usesProductLevelStock
+    ? Number(productData?.quantity || 0)
+    : skuList.length > 0
       ? Number(selectedSkuDetails?.quantity || 0)
       : Number(productData?.quantity || 0);
   const quantityAlreadyInCart = Array.isArray(cartItems)
@@ -136,6 +138,10 @@ const ProductDetails = () => {
       ...data,
       translated,
     });
+
+    const oldList = JSON.parse(sessionStorage.getItem('recentlyViewed')) || [];
+    const newList = [...oldList, data];
+    sessionStorage.setItem('recentlyViewed', JSON.stringify(newList));
   };
 
   useEffect(() => {
@@ -155,7 +161,10 @@ const ProductDetails = () => {
   }, [skuList, selectedSku]);
 
   useEffect(() => {
-    if (remainingSelectableQuantity > 0 && count > remainingSelectableQuantity) {
+    if (
+      remainingSelectableQuantity > 0 &&
+      count > remainingSelectableQuantity
+    ) {
       setCount(remainingSelectableQuantity);
       return;
     }
@@ -187,7 +196,10 @@ const ProductDetails = () => {
         return;
       }
 
-      if (Number(skuDetails.quantity || 0) <= 0 || remainingSelectableQuantity <= 0) {
+      if (
+        Number(skuDetails.quantity || 0) <= 0 ||
+        remainingSelectableQuantity <= 0
+      ) {
         message.warning(common.outOfStock || 'Sold out');
         return;
       }
@@ -248,7 +260,8 @@ const ProductDetails = () => {
               <div className="flex flex-wrap gap-3 mt-2 text-lg md:text-xl md:flex-nowrap md:gap-5">
                 <p className="text-base font-bold md:text-xl">
                   {common.home} {'>'}{' '}
-                  {product?.translated?.category || productData?.category?.name?.en}
+                  {product?.translated?.category ||
+                    productData?.category?.name?.en}
                 </p>
               </div>
             </div>
@@ -261,7 +274,8 @@ const ProductDetails = () => {
               <div className="col-span-1 p-6 border lg:col-span-3 md:p-10">
                 <div className="flex flex-col justify-between">
                   <h3 className="text-base font-bold md:text-xl">
-                    {product?.translated?.productName || productData?.productName?.en}
+                    {product?.translated?.productName ||
+                      productData?.productName?.en}
                   </h3>
                   {/* <p
                   className="my-4 text-sm md:text-base"
@@ -274,12 +288,12 @@ const ProductDetails = () => {
                       <h2 className="text-base font-semibold md:text-lg flex gap-3">
                         {productData?.price && (
                           <span className="line-through text-gray-400 text-sm md:text-base">
-                            {formatCurrency(productData?.price, currencyCode)}
+                            {formatConvertedPrice(productData?.price)}
                           </span>
                         )}
 
                         <span className="font-semibold text-lg md:text-xl">
-                          {formatCurrency(productData?.websitePrice, currencyCode)}
+                          {formatConvertedPrice(productData?.websitePrice)}
                         </span>
                       </h2>
                     </>
@@ -288,38 +302,36 @@ const ProductDetails = () => {
                   )}
 
                   {productData?.filters?.length > 0 && skuList?.length > 0 && (
-                      <div className="mt-4">
-                        {common.chooseOption} {productData?.filters?.join(' / ')}
-                        <div className="flex flex-wrap gap-x-2">
-                          {skuList.map((sku) => (
-                            <CommonButton
-                              key={sku._id}
-                              onClick={() => handleSelectSku(sku._id)}
-                              variant={selectedSku === sku.sku ? 7 : 1}
-                              size="sm"
-                              className="!px-2"
-                              disabled={sku.quantity <= 0}
-                              title={
-                                sku.quantity <= 0 ? common.outOfStock : ''
-                              }
-                            >
-                              <span>
-                                {productData?.filters
-                                  ?.map((filter) => sku.filters[filter])
-                                  .join(' / ')}
+                    <div className="mt-4">
+                      {common.chooseOption} {productData?.filters?.join(' / ')}
+                      <div className="flex flex-wrap gap-x-2">
+                        {skuList.map((sku) => (
+                          <CommonButton
+                            key={sku._id}
+                            onClick={() => handleSelectSku(sku._id)}
+                            variant={selectedSku === sku.sku ? 7 : 1}
+                            size="sm"
+                            className="!px-2"
+                            disabled={sku.quantity <= 0}
+                            title={sku.quantity <= 0 ? common.outOfStock : ''}
+                          >
+                            <span>
+                              {productData?.filters
+                                ?.map((filter) => sku.filters[filter])
+                                .join(' / ')}
+                            </span>
+                            {sku.quantity <= 0 ? (
+                              <span className="block text-[8px]">
+                                {common.outOfStock}
                               </span>
-                              {sku.quantity <= 0 ? (
-                                <span className="block text-[8px]">
-                                  {common.outOfStock}
-                                </span>
-                              ) : (
-                                ''
-                              )}
-                            </CommonButton>
-                          ))}
-                        </div>
+                            ) : (
+                              ''
+                            )}
+                          </CommonButton>
+                        ))}
                       </div>
-                    )}
+                    </div>
+                  )}
 
                   <div>
                     <div className="flex items-center gap-3 mt-5">

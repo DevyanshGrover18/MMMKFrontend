@@ -9,7 +9,8 @@ import { IoSearchSharp } from 'react-icons/io5';
 import { useCart } from '../../context/CartProvider';
 import SearchDrawer from './SearchDrawer';
 import { useTranslationContext } from '../../context/TranslationContext';
-import { LANGUAGES } from '../../utils/staticData';
+import LanguageDropdown from './LanguageDropdown';
+import CurrencyDropdown from './CurrencyDropdown';
 
 export default function Navbar({}) {
   const {
@@ -35,11 +36,6 @@ export default function Navbar({}) {
       document.dir = translateLanguage === 'ar' ? 'rtl' : 'ltr';
     }
   }, [translateLanguage]);
-
-  const changeLanguage = (lng) => {
-    document.dir = lng === 'ar' ? 'rtl' : 'ltr';
-    updateTranslationContext({ translateLanguage: lng });
-  };
 
   return (
     <>
@@ -74,21 +70,10 @@ export default function Navbar({}) {
 
           {/* right - Icons */}
           <div className="flex items-center gap-6 text-3rd">
-            <select
-              className="text-white bg-transparent text-sm tracking-widest"
-              value={translateLanguage}
-              onChange={(e) => changeLanguage(e.target.value)}
-            >
-              {LANGUAGES.map((lang) => (
-                <option
-                  key={lang.code}
-                  value={lang.code}
-                  className="text-black"
-                >
-                  {lang.name}
-                </option>
-              ))}
-            </select>
+            <div className="flex items-center gap-4">
+              <LanguageDropdown />
+              <CurrencyDropdown />
+            </div>
 
             <button
               onClick={() => updateUtils({ isSearchOpen: true })}

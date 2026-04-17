@@ -15,7 +15,7 @@ import {
   showTranslatedMessage,
   isUserSignedIn,
 } from '../utils/globalMethods';
-import { formatCurrency, resolveCurrencyCode } from '../utils/currency';
+import { convertPrice, formatPrice } from '../utils/currency';
 import { applyCoupon, getValidTokens } from '../apis/user/coupon';
 import { getUserCredits } from '../apis/user/profile';
 import { useQuery } from '@tanstack/react-query';
@@ -26,6 +26,8 @@ import {
 } from '../context/TranslationContext';
 import { Button4, CommonButton } from '../components/global/UIButtons';
 import { getProductSkus } from '../apis/nonAuth/products';
+import { useCurrency } from '../context/CurrencyContext';
+import RecentlyViewedSlider from '../components/listing/RecentlyViewedSlider';
 
 const ShoppingCart = () => {
   const {
@@ -79,14 +81,18 @@ const ShoppingCart = () => {
     retry: false,
   });
   const availableCredits = Number(creditsQuery.data?.credits || 0);
-  const currencyCode = resolveCurrencyCode();
+  const { currency, rates } = useCurrency();
+  const formatConvertedPrice = (amount) =>
+    formatPrice(convertPrice(amount, currency, rates), currency);
+  const availableCreditsInCurrency = convertPrice(availableCredits, currency, rates);
 
   const cartSummary = calculateCartSummary({
     items: data,
     couponData,
     isCouponApply,
     appliedCreditAmount,
-    currencyCode,
+    currency,
+    rates,
   });
 
   const handleApplyCoupon = async (coupon) => {
@@ -263,16 +269,23 @@ const ShoppingCart = () => {
       couponData,
       isCouponApply,
       appliedCreditAmount,
-      currencyCode,
+      currency,
+      rates,
     });
     setCheckoutSummary(summary);
     navigate('/checkout', { state: { cartSummary: summary } });
   };
 
   const handleApplyCredits = () => {
+    const baseSummary = calculateCartSummary({
+      items: data,
+      couponData,
+      isCouponApply,
+      appliedCreditAmount: 0,
+    });
     const eligibleAmount = Math.min(
       availableCredits,
-      cartSummary.subtotal - cartSummary.couponDiscount
+      baseSummary.subtotal - baseSummary.couponDiscount
     );
 
     if (eligibleAmount <= 0) {
@@ -281,7 +294,7 @@ const ShoppingCart = () => {
     }
 
     setAppliedCreditAmount(Number(eligibleAmount.toFixed(2)));
-    message.success(`Applied ${formatCurrency(eligibleAmount, currencyCode)} from My Credit`);
+    message.success(`Applied ${formatConvertedPrice(eligibleAmount)} from My Credit`);
   };
 
   const handleRemoveCredits = () => {
@@ -406,9 +419,8 @@ const ShoppingCart = () => {
                             <p className="text-gray-500 text-sm">
                               <span className="line-through">
                                 {' '}
-                              {formatCurrency(
+                              {formatConvertedPrice(
                                 Number(list?.product?.price || 0) * Number(list?.quantity || 0),
-                                currencyCode
                               )}
                               </span>
                               <span className="font-[600]">
@@ -421,23 +433,21 @@ const ShoppingCart = () => {
                           {/* Discounted Price (10% off) */}
                           <h3 className="flex items-end gap-2">
                             <span className="text-lg font-semibold text-red-600">
-                              {formatCurrency(
+                              {formatConvertedPrice(
                                 Number(
                                   getPercentageOf(
                                     list?.product?.price,
                                     list?.product?.discount
                                   )
                                 ) * Number(list.quantity || 0),
-                                currencyCode
                               )}
                             </span>
                             <span className="text-sm text-gray-500">
-                              ({formatCurrency(
+                              ({formatConvertedPrice(
                                 getPercentageOf(
                                   list?.product?.price,
                                   list?.product?.discount
                                 ),
-                                currencyCode
                               )}{' '}
                               * {list.quantity})
                             </span>
@@ -513,7 +523,7 @@ const ShoppingCart = () => {
                   </h3>
                   <div className="flex items-center justify-between my-5 ">
                     <p>{common.subTotal}</p>
-                    <p>{formatCurrency(cartSummary.subtotal, currencyCode)}</p>
+                    <p>{formatPrice(cartSummary.subtotal, currency)}</p>
                   </div>
 
                   {isCouponApply && (
@@ -521,7 +531,7 @@ const ShoppingCart = () => {
                       <div className="flex items-center flex-1 justify-between">
                         <p>{common.coupon}</p>
                         <p className="text-green-500">
-                          - {formatCurrency(cartSummary.couponDiscount, currencyCode)}{' '}
+                          - {formatPrice(cartSummary.couponDiscount, currency)}{' '}
                           ({couponData?.discount}% off)
                         </p>
                       </div>
@@ -545,7 +555,7 @@ const ShoppingCart = () => {
                         <div>
                           <p className="font-semibold">My Credit</p>
                           <p className="text-sm text-gray-500">
-                            Available: {formatCurrency(availableCredits, currencyCode)}
+                            Available: {formatPrice(availableCreditsInCurrency, currency)}
                           </p>
                         </div>
                         {appliedCreditAmount > 0 ? (
@@ -569,7 +579,7 @@ const ShoppingCart = () => {
                       {appliedCreditAmount > 0 && (
                         <div className="mt-3 flex items-center justify-between text-green-600">
                           <p>Applied Credit</p>
-                          <p>- {formatCurrency(appliedCreditAmount, currencyCode)}</p>
+                          <p>- {formatPrice(cartSummary.creditApplied, currency)}</p>
                         </div>
                       )}
                     </div>
@@ -577,7 +587,7 @@ const ShoppingCart = () => {
 
                   <div className="flex items-center justify-between my-5 font-bold ">
                     <p>{common.total}</p>
-                    <p>{formatCurrency(cartSummary.total, currencyCode)}</p>
+                    <p>{formatPrice(cartSummary.total, currency)}</p>
                   </div>
 
                   {/* Promo Code Section */}
@@ -643,7 +653,7 @@ const ShoppingCart = () => {
 
             {/* Product Grid Section */}
             <div className="w-full">
-              <ProductGrid textColor={'black'} />
+              <RecentlyViewedSlider/>
             </div>
           </main>
 
