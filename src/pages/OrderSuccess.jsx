@@ -11,6 +11,7 @@ import { refreshPaymentStatus } from '../apis/user/payment';
 import { useCart } from '../context/CartProvider';
 import { useTranslationContext } from '../context/TranslationContext';
 import { CommonButton } from '../components/global/UIButtons';
+import { formatCurrency } from '../utils/currency';
 
 const OrderSuccess = () => {
   const { orderId } = useParams();
@@ -185,8 +186,10 @@ const OrderSuccess = () => {
                         Total
                       </p>
                       <p className="mt-1 text-lg font-semibold text-gray-900">
-                        {order.currency?.toUpperCase?.() || 'AED'}{' '}
-                        {order.amount || order.price?.total || 0}
+                        {formatCurrency(
+                          order.amount || order.price?.total || 0,
+                          order.currency
+                        )}
                       </p>
                     </div>
                   </div>

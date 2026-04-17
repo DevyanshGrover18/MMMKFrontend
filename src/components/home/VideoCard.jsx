@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { useTranslationContext } from '../../context/TranslationContext';
+import { formatCurrency, resolveCurrencyCode } from '../../utils/currency';
 
 export default function VideoCard() {
   const {
@@ -8,6 +9,7 @@ export default function VideoCard() {
   const [hoveredVideo, setHoveredVideo] = useState(null);
   const [playingStates, setPlayingStates] = useState({});
   const videoRefs = useRef({});
+  const currencyCode = resolveCurrencyCode();
 
   const products = [
     {
@@ -169,10 +171,10 @@ export default function VideoCard() {
               <div className="mt-3">
                 <div className="flex">
                   <p className="text-lg text-gray-700 line-through">
-                    {product.OriginalPrice}
+                    {formatCurrency(product.OriginalPrice, currencyCode)}
                   </p>
                   <p className="ml-3 text-lg text-gray-700">
-                    {product.OfferedPrice}
+                    {formatCurrency(product.OfferedPrice, currencyCode)}
                   </p>
                 </div>
                 <h3 className="text-2xl text-gray-900">{product.title}</h3>

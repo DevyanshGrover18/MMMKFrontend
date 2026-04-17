@@ -38,7 +38,7 @@ const BikiniSection = () => {
           <span>{common.collection}</span>
         </p>
 
-        <Button4 isLink to={getModuleUrl('category', 'Jewelry & Accessories')}>
+        <Button4 isLink to={getModuleUrl('category', 'Design Bikni Swimwear')}>
           {common.shopNow}
         </Button4>
       </div>

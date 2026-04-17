@@ -108,6 +108,24 @@ const CouponPage = () => {
         align: 'center',
       },
       {
+        title: 'Usage Count',
+        dataIndex: 'currentUsage',
+        key: 'currentUsage',
+        align: 'center',
+        render: (value) => Number(value || 0),
+      },
+      {
+        title: 'Visible in Cart',
+        dataIndex: 'showToUsers',
+        key: 'showToUsers',
+        align: 'center',
+        render: (value) => (
+          <Tag color={value === false ? 'red' : 'green'}>
+            {value === false ? 'Hidden' : 'Visible'}
+          </Tag>
+        ),
+      },
+      {
         title: 'Actions',
         key: 'actions',
         align: 'center',

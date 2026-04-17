@@ -8,11 +8,13 @@ import toast from 'react-hot-toast';
 import { notification } from 'antd';
 import { addItemToWishList } from '../../apis/user/wishList';
 import { getStoredUserId } from '../../utils/authStorage';
+import { formatCurrency, resolveCurrencyCode } from '../../utils/currency';
 
 const ProductGrid = ({ list = [], textColor = 'white' }) => {
   const {
     content: { common },
   } = useTranslationContext();
+  const currencyCode = resolveCurrencyCode();
 
   const getProductName = (product) =>
     product?.translated?.productName ||
@@ -109,9 +111,11 @@ const ProductGrid = ({ list = [], textColor = 'white' }) => {
               <p
                 className={`font-medium text-white flex justify-center items-center gap-2`}
               >
-                <span className="line-through text-sm">${product?.price}</span>
+                <span className="line-through text-sm">
+                  {formatCurrency(product?.price, currencyCode)}
+                </span>
                 <span className="text-lg font-semibold md:text-xl">
-                  ${product?.websitePrice}
+                  {formatCurrency(product?.websitePrice, currencyCode)}
                 </span>
               </p>
             ) : (

@@ -7,22 +7,25 @@ import Section10 from '../components/home/Section10';
 import { CommonButton } from '../components/global/UIButtons';
 import { useTranslationContext } from '../context/TranslationContext';
 import bg from '../assets/bg.png';
-import { createGiftCard } from '../apis/user/giftCard';
 import { useNavigate } from 'react-router-dom';
+import { createPaymentIntent } from '../apis/user/payment';
+import { loadStripe } from '@stripe/stripe-js';
+import { convertAmount, formatCurrency, resolveCurrencyCode } from '../utils/currency';
 
 const BuyGiftCard = () => {
   const {
     content: { common, buyGiftCard },
   } = useTranslationContext();
   const navigate = useNavigate();
+  const currencyCode = resolveCurrencyCode();
 
   const [form] = Form.useForm();
-  const [selectedAmount, setSelectedAmount] = useState(null);
-  const [customAmount, setCustomAmount] = useState('');
   const [loading, setLoading] = useState(false);
 
   const giftCardName = Form.useWatch('name', form);
   const amount = Form.useWatch('amount', form);
+  const minAmount = convertAmount(10, currencyCode);
+  const maxAmount = convertAmount(27000, currencyCode);
 
   // Predefined gift card amounts
   const predefinedAmounts = [25, 75, 100, 250, 500, 1000];
@@ -31,46 +34,89 @@ const BuyGiftCard = () => {
     form.setFieldValue('amount', amount);
   };
 
-  const handleCustomAmountChange = (value) => {
-    setCustomAmount(value);
-    setSelectedAmount(null);
-    form.setFieldValue('amount', value);
-  };
-
   const handleSubmit = async (values) => {
+    const normalizedAmount = Number(values.amount || 0);
+    const normalizedName = values.name?.trim();
+
     try {
       setLoading(true);
 
-      if (!values.amount || values.amount < 10 || values.amount > 10000) {
-        message.error('Amount must be between $10 and $10000');
-        setLoading(false);
+      if (!normalizedAmount || normalizedAmount < minAmount || normalizedAmount > maxAmount) {
+        message.error(
+          `Amount must be between ${formatCurrency(minAmount, currencyCode)} and ${formatCurrency(maxAmount, currencyCode)}`
+        );
         return;
       }
 
-      if (!values.name || values.name.trim() === '') {
+      if (!normalizedName) {
         message.error('Gift card name is required');
-        setLoading(false);
         return;
       }
 
-      console.log('Gift Card Purchase Data:', values);
+      const publishableKey = getStripePublishableKey();
+      if (!publishableKey) {
+        throw new Error('Stripe publishable key is not configured');
+      }
 
-      const res = await createGiftCard(values);
+      const stripePromise = await loadStripe(publishableKey);
+      if (!stripePromise) {
+        throw new Error('Stripe checkout could not be initialized');
+      }
+      const paymentIntent = await createPaymentIntent({
+        products: [
+          {
+            product: {
+              _id: 'gift-card',
+              productName: { en: normalizedName },
+              price: normalizedAmount,
+              discount: 0,
+              image: '',
+            },
+            quantity: 1,
+            sku: 'gift-card',
+            filters: {},
+          },
+        ],
+        shippingAddress: buildGiftCardAddress(normalizedName),
+        billingAddress: buildGiftCardAddress(normalizedName),
+        shippingCharges: 0,
+        couponCode: null,
+        creditsUsed: 0,
+        totalAmount: normalizedAmount,
+        currency: currencyCode,
+        giftCardPurchase: {
+          name: normalizedName,
+          amount: normalizedAmount,
+        },
+        orderType: 'gift-card',
+        paymentType: 'card',
+      });
 
-      // Here you would typically call your API
-      // await purchaseGiftCard(giftCardData);
+      if (paymentIntent?.paidWithCredits && paymentIntent?.orderId) {
+        message.success('Gift card purchase completed successfully');
+        form.resetFields();
+        navigate(`/order-success/${paymentIntent.orderId}`);
+        return;
+      }
 
-      message.success(
-        'Gift card purchase initiated! Redirecting to payment...'
-      );
+      if (!paymentIntent?.id) {
+        throw new Error('Payment session could not be created');
+      }
 
-      // Reset form
+      message.success('Gift card purchase initiated! Redirecting to payment...');
+
       form.resetFields();
-      setLoading(false);
-      navigate('/gift-cards');
+      const result = await stripePromise.redirectToCheckout({
+        sessionId: paymentIntent.id,
+      });
+
+      if (result?.error) {
+        throw new Error(result.error.message);
+      }
     } catch (error) {
       console.error('Gift card purchase error:', error);
       message.error('Failed to process gift card purchase');
+    } finally {
       setLoading(false);
     }
   };
@@ -207,12 +253,6 @@ const BuyGiftCard = () => {
                     <Input
                       placeholder={buyGiftCard.namePlaceholder}
                       className="py-3 text-base"
-                      onChange={() => {
-                        // Trigger re-render to update preview
-                        const name = form.getFieldValue('name');
-                        // Force component update by setting state
-                        setSelectedAmount((prev) => prev);
-                      }}
                     />
                   </Form.Item>
 
@@ -228,20 +268,20 @@ const BuyGiftCard = () => {
                         <button
                           key={value}
                           type="button"
-                          onClick={() => handleAmountSelect(value)}
+                          onClick={() => handleAmountSelect(convertAmount(value, currencyCode))}
                           className={`p-3 border-2 rounded-lg font-semibold transition-all ${
-                            value === amount
+                            convertAmount(value, currencyCode) === amount
                               ? 'border-orange-200 bg-orange-50 text-orange-800'
                               : 'border-gray-300 hover:border-orange-200'
                           }`}
                         >
-                          ${value}
+                          {formatCurrency(convertAmount(value, currencyCode), currencyCode)}
                         </button>
                       ))}
                     </div>
 
                     <Form.Item
-                      label={`${buyGiftCard.customAmount} ($10 - $10000):`}
+                      label={`${buyGiftCard.customAmount} (${formatCurrency(minAmount, currencyCode)} - ${formatCurrency(maxAmount, currencyCode)}):`}
                       name="amount"
                       rules={[
                         {
@@ -249,14 +289,14 @@ const BuyGiftCard = () => {
                           message: buyGiftCard.pleaseEnterGiftCardAmount,
                         },
                       ]}
-                    >
-                      <InputNumber
-                        min={10}
-                        max={10000}
-                        placeholder={buyGiftCard.enterAmount}
-                        className="py-2 text-base w-full"
-                      />
-                    </Form.Item>
+                      >
+                        <InputNumber
+                          min={minAmount}
+                          max={maxAmount}
+                          placeholder={buyGiftCard.enterAmount}
+                          className="py-2 text-base w-full"
+                        />
+                      </Form.Item>
                   </div>
 
                   {/* Purchase Summary */}
@@ -266,12 +306,14 @@ const BuyGiftCard = () => {
                     </h3>
                     <div className="flex justify-between items-center">
                       <span>{buyGiftCard.giftCardAmount}:</span>
-                      <span className="font-bold">${amount || '0'}</span>
+                      <span className="font-bold">
+                        {formatCurrency(amount || 0, currencyCode)}
+                      </span>
                     </div>
                     <div className="flex justify-between items-center mt-2 pt-2 border-t">
                       <span className="font-semibold">{common.total}:</span>
                       <span className="font-bold text-lg">
-                        ${amount || '0'}
+                        {formatCurrency(amount || 0, currencyCode)}
                       </span>
                     </div>
                   </div>
@@ -314,3 +356,33 @@ const BuyGiftCard = () => {
 };
 
 export default BuyGiftCard;
+
+const getStripePublishableKey = () => {
+  const mode = (import.meta.env.VITE_STRIPE_MODE || 'live').toLowerCase();
+  if (mode === 'test') {
+    return (
+      import.meta.env.VITE_STRIPE_TEST_API_KEY ||
+      import.meta.env.VITE_STRIPE_API_KEY ||
+      import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY
+    );
+  }
+
+  return (
+    import.meta.env.VITE_STRIPE_LIVE_API_KEY ||
+    import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY ||
+    import.meta.env.VITE_STRIPE_API_KEY
+  );
+};
+
+const buildGiftCardAddress = (name) => ({
+  firstName: name || 'Gift',
+  lastName: 'Card',
+  streetAddress: 'Digital delivery',
+  country: '',
+  state: '',
+  postalCode: '',
+  city: '',
+  company: '',
+  phoneNumber: '',
+  landmark: 'Online purchase',
+});

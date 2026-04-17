@@ -15,6 +15,7 @@ import {
   showTranslatedMessage,
   isUserSignedIn,
 } from '../utils/globalMethods';
+import { formatCurrency, resolveCurrencyCode } from '../utils/currency';
 import { applyCoupon, getValidTokens } from '../apis/user/coupon';
 import { getUserCredits } from '../apis/user/profile';
 import { useQuery } from '@tanstack/react-query';
@@ -67,7 +68,10 @@ const ShoppingCart = () => {
     enabled: isUserSignedIn(),
     retry: false,
   });
-  const availableCoupons = couponsQuery.data?.data || [];
+  const availableCoupons =
+    (couponsQuery.data?.data || []).filter(
+      (coupon) => coupon?.showToUsers !== false
+    );
   const creditsQuery = useQuery({
     queryKey: ['credit'],
     queryFn: getUserCredits,
@@ -75,12 +79,14 @@ const ShoppingCart = () => {
     retry: false,
   });
   const availableCredits = Number(creditsQuery.data?.credits || 0);
+  const currencyCode = resolveCurrencyCode();
 
   const cartSummary = calculateCartSummary({
     items: data,
     couponData,
     isCouponApply,
     appliedCreditAmount,
+    currencyCode,
   });
 
   const handleApplyCoupon = async (coupon) => {
@@ -257,6 +263,7 @@ const ShoppingCart = () => {
       couponData,
       isCouponApply,
       appliedCreditAmount,
+      currencyCode,
     });
     setCheckoutSummary(summary);
     navigate('/checkout', { state: { cartSummary: summary } });
@@ -274,7 +281,7 @@ const ShoppingCart = () => {
     }
 
     setAppliedCreditAmount(Number(eligibleAmount.toFixed(2)));
-    message.success(`Applied $${eligibleAmount.toFixed(2)} from My Credit`);
+    message.success(`Applied ${formatCurrency(eligibleAmount, currencyCode)} from My Credit`);
   };
 
   const handleRemoveCredits = () => {
@@ -399,7 +406,10 @@ const ShoppingCart = () => {
                             <p className="text-gray-500 text-sm">
                               <span className="line-through">
                                 {' '}
-                                ${list?.product?.price * list?.quantity}
+                              {formatCurrency(
+                                Number(list?.product?.price || 0) * Number(list?.quantity || 0),
+                                currencyCode
+                              )}
                               </span>
                               <span className="font-[600]">
                                 {' '}
@@ -411,17 +421,23 @@ const ShoppingCart = () => {
                           {/* Discounted Price (10% off) */}
                           <h3 className="flex items-end gap-2">
                             <span className="text-lg font-semibold text-red-600">
-                              $
-                              {getPercentageOf(
-                                list?.product?.price,
-                                list?.product?.discount
-                              ) * list.quantity}
+                              {formatCurrency(
+                                Number(
+                                  getPercentageOf(
+                                    list?.product?.price,
+                                    list?.product?.discount
+                                  )
+                                ) * Number(list.quantity || 0),
+                                currencyCode
+                              )}
                             </span>
                             <span className="text-sm text-gray-500">
-                              ($
-                              {getPercentageOf(
-                                list?.product?.price,
-                                list?.product?.discount
+                              ({formatCurrency(
+                                getPercentageOf(
+                                  list?.product?.price,
+                                  list?.product?.discount
+                                ),
+                                currencyCode
                               )}{' '}
                               * {list.quantity})
                             </span>
@@ -497,7 +513,7 @@ const ShoppingCart = () => {
                   </h3>
                   <div className="flex items-center justify-between my-5 ">
                     <p>{common.subTotal}</p>
-                    <p>$ {cartSummary.subtotal.toFixed(2)}</p>
+                    <p>{formatCurrency(cartSummary.subtotal, currencyCode)}</p>
                   </div>
 
                   {isCouponApply && (
@@ -505,7 +521,7 @@ const ShoppingCart = () => {
                       <div className="flex items-center flex-1 justify-between">
                         <p>{common.coupon}</p>
                         <p className="text-green-500">
-                          - $ {cartSummary.couponDiscount.toFixed(2)}{' '}
+                          - {formatCurrency(cartSummary.couponDiscount, currencyCode)}{' '}
                           ({couponData?.discount}% off)
                         </p>
                       </div>
@@ -529,7 +545,7 @@ const ShoppingCart = () => {
                         <div>
                           <p className="font-semibold">My Credit</p>
                           <p className="text-sm text-gray-500">
-                            Available: $ {availableCredits.toFixed(2)}
+                            Available: {formatCurrency(availableCredits, currencyCode)}
                           </p>
                         </div>
                         {appliedCreditAmount > 0 ? (
@@ -553,7 +569,7 @@ const ShoppingCart = () => {
                       {appliedCreditAmount > 0 && (
                         <div className="mt-3 flex items-center justify-between text-green-600">
                           <p>Applied Credit</p>
-                          <p>- $ {appliedCreditAmount.toFixed(2)}</p>
+                          <p>- {formatCurrency(appliedCreditAmount, currencyCode)}</p>
                         </div>
                       )}
                     </div>
@@ -561,7 +577,7 @@ const ShoppingCart = () => {
 
                   <div className="flex items-center justify-between my-5 font-bold ">
                     <p>{common.total}</p>
-                    <p>${cartSummary.total.toFixed(2)}</p>
+                    <p>{formatCurrency(cartSummary.total, currencyCode)}</p>
                   </div>
 
                   {/* Promo Code Section */}

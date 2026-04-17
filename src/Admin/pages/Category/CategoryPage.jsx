@@ -1,8 +1,12 @@
 import { useMemo, useState } from 'react';
 import CategoryModal from './CategoryModal';
 import { useQuery } from '@tanstack/react-query';
-import { deleteCategory, getAllCategories } from '../../../apis/admin/category';
-import { Button, Image, message, Popconfirm, Space, Table } from 'antd';
+import {
+  deleteCategory,
+  getAllCategories,
+  reorderCategories,
+} from '../../../apis/admin/category';
+import { Button, Image, message, Space, Table } from 'antd';
 import PageTitle from '../../UI/PageTitle';
 import { DeleteButton, EditButton, RefreshButton } from '../../UI/Buttons';
 import SearchInTable from '../../UI/SearchInTable';
@@ -10,16 +14,84 @@ import { useGlobalContext } from '../../../context/GlobalProvider';
 import { confirmDelete } from '../../UI/Modals';
 import { tablePageSizes } from '../../../utils/staticData';
 
+import {
+  DndContext,
+  closestCenter,
+  PointerSensor,
+  useSensor,
+  useSensors,
+} from '@dnd-kit/core';
+import {
+  SortableContext,
+  useSortable,
+  verticalListSortingStrategy,
+  arrayMove,
+} from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
+import { HolderOutlined } from '@ant-design/icons';
+
+// ─── Drag Handle ─────────────────────────────────────────────────────────────
+
+const RowDragHandle = ({ rowKey }) => {
+  const { listeners, attributes } = useSortable({ id: rowKey });
+  return (
+    <HolderOutlined
+      {...listeners}
+      {...attributes}
+      style={{
+        cursor: 'grab',
+        color: '#999',
+        fontSize: 16,
+        touchAction: 'none',
+      }}
+    />
+  );
+};
+
+// ─── Sortable Row ─────────────────────────────────────────────────────────────
+
+const SortableRow = ({ id, children, ...props }) => {
+  const { setNodeRef, transform, transition, isDragging } = useSortable({ id });
+
+  return (
+    <tr
+      {...props}
+      ref={setNodeRef}
+      style={{
+        ...props.style,
+        transform: CSS.Transform.toString(transform),
+        transition,
+        opacity: isDragging ? 0.5 : 1,
+        background: isDragging ? '#fafafa' : undefined,
+      }}
+    >
+      {children}
+    </tr>
+  );
+};
+
+const tableComponents = {
+  body: {
+    row: ({ children, ...props }) => (
+      <SortableRow id={props['data-row-key']} {...props}>
+        {children}
+      </SortableRow>
+    ),
+  },
+};
+
+// ─── Main Component ───────────────────────────────────────────────────────────
+
 const CategoryPage = () => {
   const { screenSizeFactor } = useGlobalContext();
+  
+
   const [utils, setUtils] = useState({
     isModalVisible: false,
     currentEditCategory: null,
   });
   const updateUtils = (newUtils) =>
     setUtils((prev) => ({ ...prev, ...newUtils }));
-
-  console.log(utils);
 
   const [search, setSearch] = useState({ searchKey: null, searchValue: null });
   const [pagination, setPagination] = useState({
@@ -30,6 +102,9 @@ const CategoryPage = () => {
   const updatePagination = (newPagination) =>
     setPagination((prev) => ({ ...prev, ...newPagination }));
 
+  // Local display order — initialised from server data, updated on drag
+  const [orderedIds, setOrderedIds] = useState(null);
+
   const Categories = useQuery({
     queryKey: [
       'categories',
@@ -39,29 +114,58 @@ const CategoryPage = () => {
     ],
     queryFn: async () => {
       const res = await getAllCategories({ ...search, ...pagination });
-      updatePagination({
-        total: res?.total || 0,
-      });
+      updatePagination({ total: res?.total || 0 });
       return res;
+    },
+    // When fresh server data arrives reset local order so it reflects DB order
+    onSuccess: (res) => {
+      const ids = (res?.data || []).map((c) => c._id);
+      setOrderedIds(ids);
     },
   });
 
-  // Sort categories from oldest to latest so newly added category appears last
-  const sortedData = useMemo(() => {
+  // Map of _id -> category object for quick lookup
+  const categoryMap = useMemo(() => {
     const arr = Categories.data?.data || [];
-    return [...arr].sort((a, b) => {
-      const ta = a?.createdAt ? new Date(a.createdAt).getTime() : 0;
-      const tb = b?.createdAt ? new Date(b.createdAt).getTime() : 0;
-      return ta - tb;
-    });
+    return Object.fromEntries(arr.map((c) => [c._id, c]));
   }, [Categories.data]);
 
-  const handleEdit = (record) => {
-    updateUtils({
-      isModalVisible: true,
-      currentEditCategory: record,
-    });
+  // Apply local drag order over the server data
+  const sortedData = useMemo(() => {
+    if (!orderedIds) return Categories.data?.data || [];
+    return orderedIds.map((id) => categoryMap[id]).filter(Boolean);
+  }, [orderedIds, categoryMap]);
+
+  // ── DnD ──────────────────────────────────────────────────────────────────────
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 5 } })
+  );
+
+  const handleDragEnd = async ({ active, over }) => {
+    if (!orderedIds) return; // 🔥 fix
+    if (!over || active.id === over.id) return;
+
+    const oldIndex = orderedIds.indexOf(active.id);
+    const newIndex = orderedIds.indexOf(over.id);
+
+    if (oldIndex === -1 || newIndex === -1) return;
+
+    const newIds = arrayMove(orderedIds, oldIndex, newIndex);
+    setOrderedIds(newIds);
+
+    try {
+      await reorderCategories(newIds);
+    } catch (err) {
+      message.error('Failed to save new order.');
+      setOrderedIds(orderedIds);
+    }
   };
+
+  // ── CRUD ──────────────────────────────────────────────────────────────────────
+
+  const handleEdit = (record) =>
+    updateUtils({ isModalVisible: true, currentEditCategory: record });
 
   const handleDelete = async (record) => {
     try {
@@ -69,33 +173,32 @@ const CategoryPage = () => {
       Categories.refetch();
       message.success('Category deleted successfully');
     } catch (err) {
-      console.log(err);
       message.error(err.response?.data.message || 'Failed to delete category');
     }
   };
 
-  const handleSubmit = () => {
-    updateUtils({
-      isModalVisible: false,
-    });
-  };
+  const handleSubmit = () => updateUtils({ isModalVisible: false });
 
-  const handleCloseModal = () => {
-    updateUtils({
-      isModalVisible: false,
-      currentEditCategory: null,
-    });
-  };
+  const handleCloseModal = () =>
+    updateUtils({ isModalVisible: false, currentEditCategory: null });
+
+  // ── Columns ───────────────────────────────────────────────────────────────────
 
   const columns = useMemo(
     () => [
       {
+        title: '',
+        key: 'sort',
+        width: 40,
+        align: 'center',
+        render: (_, record) => <RowDragHandle rowKey={record._id} />,
+      },
+      {
         title: 'S/N',
-        dataIndex: 'index',
         key: 'index',
+        width: 80,
         render: (_, __, index) =>
           (pagination.currentPage - 1) * pagination.pageSize + index + 1,
-        width: 80,
       },
       {
         title: 'Name',
@@ -171,7 +274,9 @@ const CategoryPage = () => {
           updateUtils({ isModalVisible: bool, currentEditCategory: null })
         }
       />
+
       <PageTitle title="Category Management" />
+
       <div className="p-4 bg-white shadow-lg rounded-lg overflow-x-auto">
         <div className="flex sm:flex-row flex-col sm:items-center justify-between mb-4">
           <SearchInTable
@@ -206,24 +311,35 @@ const CategoryPage = () => {
           </div>
         </div>
 
-        <Table
-          columns={columns}
-          dataSource={sortedData}
-          loading={Categories.isLoading}
-          bordered
-          rowKey="_id"
-          scroll={{ x: 600 }}
-          pagination={{
-            current: pagination.currentPage,
-            total: pagination.total,
-            pageSize: pagination.pageSize,
-            showSizeChanger: true,
-            pageSizeOptions: tablePageSizes,
-            onChange: (page, pageSize) => {
-              updatePagination({ currentPage: page, pageSize });
-            },
-          }}
-        />
+        <DndContext
+          sensors={sensors}
+          collisionDetection={closestCenter}
+          onDragEnd={handleDragEnd}
+        >
+          <SortableContext
+            items={sortedData.map((c) => c._id)}
+            strategy={verticalListSortingStrategy}
+          >
+            <Table
+              columns={columns}
+              dataSource={sortedData}
+              loading={Categories.isLoading}
+              bordered
+              rowKey="_id"
+              scroll={{ x: 600 }}
+              components={tableComponents}
+              pagination={{
+                current: pagination.currentPage,
+                total: pagination.total,
+                pageSize: pagination.pageSize,
+                showSizeChanger: true,
+                pageSizeOptions: tablePageSizes,
+                onChange: (page, pageSize) =>
+                  updatePagination({ currentPage: page, pageSize }),
+              }}
+            />
+          </SortableContext>
+        </DndContext>
       </div>
     </>
   );

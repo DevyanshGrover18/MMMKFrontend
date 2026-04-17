@@ -14,6 +14,7 @@ import { CommonButton } from '../components/global/UIButtons';
 import { IoCartOutline } from 'react-icons/io5';
 import { useNavigate } from 'react-router-dom';
 import { getPercentageOf } from '../utils/globalMethods';
+import { convertAmount, resolveCurrencyCode } from '../utils/currency';
 
 const cartContext = createContext({});
 const APPLIED_COUPON_CODE_KEY = 'appliedCouponCode';
@@ -27,20 +28,22 @@ const calculateCartSummary = ({
   isCouponApply = false,
   shippingCharges = 0,
   appliedCreditAmount = 0,
+  currencyCode = resolveCurrencyCode(),
 }) => {
-  const subtotal = items.reduce((acc, item) => {
+  const subtotalBase = items.reduce((acc, item) => {
     const unitPrice = Number(
       getPercentageOf(item?.product?.price || 0, item?.product?.discount || 0)
     );
     return acc + unitPrice * Number(item?.quantity || 0);
   }, 0);
+  const subtotal = convertAmount(subtotalBase, currencyCode);
 
   const couponDiscount =
     isCouponApply && couponData?.discount
-      ? (subtotal * Number(couponData.discount || 0)) / 100
+      ? Number(((subtotal * Number(couponData.discount || 0)) / 100).toFixed(2))
       : 0;
 
-  const shipping = Number(shippingCharges || 0);
+  const shipping = convertAmount(shippingCharges || 0, currencyCode);
   const totalBeforeCredits = subtotal - couponDiscount + shipping;
   const creditApplied = Math.min(
     Number(appliedCreditAmount || 0),
@@ -134,6 +137,7 @@ const CartProvider = ({ children }) => {
       couponData,
       isCouponApply,
       appliedCreditAmount,
+      currencyCode: resolveCurrencyCode(),
     });
 
     if (appliedCreditAmount > summaryWithoutShipping.subtotal - summaryWithoutShipping.couponDiscount) {

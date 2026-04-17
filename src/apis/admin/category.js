@@ -24,7 +24,7 @@ export const addCategory = async (data) => {
     const response = await cat.post('/add', data);
     return response.data;
   } catch (error) {
-    console.error('Error fetching categories:', error);
+    console.error('Error adding category:', error);
     throw error;
   }
 };
@@ -44,7 +44,7 @@ export const editCategory = async (id, data) => {
     const response = await cat.post(`/edit/${id}`, data);
     return response.data;
   } catch (error) {
-    console.error('Error fetching categories:', error);
+    console.error('Error editing category:', error);
     throw error;
   }
 };
@@ -54,7 +54,25 @@ export const deleteCategory = async (id) => {
     const response = await cat.get(`/delete/${id}`);
     return response.data;
   } catch (error) {
-    console.error('Error fetching categories:', error);
+    console.error('Error deleting category:', error);
+    throw error;
+  }
+};
+
+/**
+ * Persists drag-and-drop order to the database.
+ * @param {string[]} orderedIds - Array of category _id strings in new order
+ */
+export const reorderCategories = async (orderedIds) => {
+  try {
+    const response = await cat.post(
+      '/reorder',
+      { orderedIds },
+      { headers: { 'Content-Type': 'application/json' } }
+    );
+    return response.data;
+  } catch (error) {
+    console.error('Error reordering categories:', error);
     throw error;
   }
 };

@@ -69,6 +69,22 @@ const CouponTable = ({ data, tableQuery }) => {
       key: 'discount',
     },
     {
+      title: 'Usage Count',
+      dataIndex: 'currentUsage',
+      key: 'currentUsage',
+      render: (value) => Number(value || 0),
+    },
+    {
+      title: 'Visible in Cart',
+      dataIndex: 'showToUsers',
+      key: 'showToUsers',
+      render: (value) => (
+        <Tag color={value === false ? 'red' : 'green'}>
+          {value === false ? 'Hidden' : 'Visible'}
+        </Tag>
+      ),
+    },
+    {
       title: 'Action',
       key: 'action',
       render: (_, record) => (

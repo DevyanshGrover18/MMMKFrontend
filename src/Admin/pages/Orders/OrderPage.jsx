@@ -15,9 +15,10 @@ import OrderFormModal from './OrderFormModal';
 import { useGlobalContext } from '../../../context/GlobalProvider';
 import { confirmDelete } from '../../UI/Modals';
 import { tablePageSizes } from '../../../utils/staticData';
+import { formatCurrency } from '../../../utils/currency';
 
 const OrderPage = () => {
-  const { screenSizeFactor } = useGlobalContext();
+  const { screenSizeFactor, currencyCode } = useGlobalContext();
   const [utils, setUtils] = useState({
     isModalVisible: false,
     currentEditOrder: null,
@@ -143,7 +144,7 @@ const OrderPage = () => {
         key: 'amount',
         width: 120,
         align: 'center',
-        render: (amount) => `$${amount?.toFixed(2)}`,
+        render: (amount) => formatCurrency(amount, currencyCode),
       },
       {
         title: 'Payment Status',

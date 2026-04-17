@@ -26,6 +26,7 @@ import {
 } from '../../UI/Buttons';
 import SearchInTable from '../../UI/SearchInTable';
 import { useGlobalContext } from '../../../context/GlobalProvider';
+import { formatCurrency } from '../../../utils/currency';
 import { confirmDelete } from '../../UI/Modals';
 import { tablePageSizes } from '../../../utils/staticData';
 import { getFullName } from '../../../utils/globalMethods';
@@ -262,7 +263,7 @@ const GiftCardPage = () => {
             <strong>Code:</strong> {utils.currentEditGiftCard?.code}
           </p>
           <p className="flex items-center justify-between">
-            <strong>Amount:</strong> ${utils.currentEditGiftCard?.amount}
+            <strong>Amount:</strong> {formatCurrency(utils.currentEditGiftCard?.amount)}
           </p>
           <p className="flex items-center justify-between">
             <strong>Status:</strong> {utils.currentEditGiftCard?.status}
@@ -275,8 +276,7 @@ const GiftCardPage = () => {
           <p className="flex items-center justify-between">
             <strong>Created By:</strong>{' '}
             {utils.currentEditGiftCard?.createdBy
-              ? `${getFullName(utils.currentEditGiftCard?.createdBy)} (
-            ${utils.currentEditGiftCard?.createdBy?.email})`
+              ? `${getFullName(utils.currentEditGiftCard?.createdBy)} (${utils.currentEditGiftCard?.createdBy?.email})`
               : 'Admin'}
           </p>
           <p className="flex items-center justify-between">

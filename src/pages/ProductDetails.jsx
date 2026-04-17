@@ -27,6 +27,7 @@ import {
   getTranslateProducts,
 } from '../context/TranslationContext';
 import { CommonButton } from '../components/global/UIButtons';
+import { formatCurrency, resolveCurrencyCode } from '../utils/currency';
 
 const ProductDetails = () => {
   const {
@@ -39,6 +40,7 @@ const ProductDetails = () => {
   const navigate = useNavigate();
   const [product, setProduct] = useState({});
   const [selectedSku, setSelectedSku] = useState(null);
+  const currencyCode = resolveCurrencyCode();
 
   const query = useQuery({
     queryKey: ['product-details', params.id],
@@ -272,12 +274,12 @@ const ProductDetails = () => {
                       <h2 className="text-base font-semibold md:text-lg flex gap-3">
                         {productData?.price && (
                           <span className="line-through text-gray-400 text-sm md:text-base">
-                            ${productData?.price}
+                            {formatCurrency(productData?.price, currencyCode)}
                           </span>
                         )}
 
                         <span className="font-semibold text-lg md:text-xl">
-                          {productData?.websitePrice}
+                          {formatCurrency(productData?.websitePrice, currencyCode)}
                         </span>
                       </h2>
                     </>

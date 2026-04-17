@@ -134,7 +134,7 @@ const Footer = () => {
                   </Link>
                 </li>
                 <li>
-                  <Link to="/refund-policy" className="hover:underline">
+                  <Link to="/return-policy" className="hover:underline">
                     {common.refundPolicy}
                   </Link>
                 </li>

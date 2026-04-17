@@ -4,11 +4,13 @@ import { Input, message, Modal } from 'antd';
 import { useState } from 'react';
 import { applyGiftCard } from '../../apis/user/giftCard';
 import { useTranslationContext } from '../../context/TranslationContext';
+import { formatCurrency, resolveCurrencyCode } from '../../utils/currency';
 
 export default function MyCredit() {
   const {
     content: { profile, common },
   } = useTranslationContext();
+  const currencyCode = resolveCurrencyCode();
   const Credit = useQuery({
     queryKey: ['credit'],
     queryFn: getUserCredits,
@@ -112,7 +114,7 @@ export default function MyCredit() {
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-xl font-semibold">{profile.creditBalance}</h3>
             <span className="text-lg font-bold text-green-600">
-              $ {Credit?.data?.credits}
+              {formatCurrency(Credit?.data?.credits || 0, currencyCode)}
             </span>
           </div>
           <p className="text-gray-600">{profile.creditBalanceDescription}</p>

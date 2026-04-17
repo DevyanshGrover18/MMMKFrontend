@@ -9,23 +9,30 @@ import {
 } from 'react';
 import { getAllCategory } from '../apis/nonAuth/category';
 import { getAllProductsWithFilters } from '../apis/nonAuth/products';
+import {
+  clearManualCurrencyOverride,
+  getCurrencyConfig,
+  persistManualCurrencyCode,
+  persistCurrencyCode,
+  resolveCurrencyCode,
+} from '../utils/currency';
 
 const GlobalContext = createContext(null);
 
 const GlobalProvider = ({ children }) => {
   const [utils, setUtils] = useState({
     screenSizeFactor: 3,
-    // addressOptions: {
-    //   countries: Country.getAllCountries(),
-    //   states: { default: [] },
-    // },
     categories: [],
     recommendedProducts: [],
     randomProducts: [],
+    ...getCurrencyConfig(),
   });
   const updateUtils = (newUtils) => {
     setUtils((prev) => ({ ...prev, ...newUtils }));
   };
+
+  // Tracks the drag-and-drop order of category IDs separately from server data
+  const [categoryOrder, setCategoryOrder] = useState(null);
 
   const { pathname } = window.location;
 
@@ -42,43 +49,102 @@ const GlobalProvider = ({ children }) => {
     const newScreenSizeFactor =
       screenSizes.findIndex((item) => innerWidth < item) + 1;
     if (utils.screenSizeFactor !== newScreenSizeFactor)
-      updateUtils({
-        screenSizeFactor: newScreenSizeFactor,
-      });
+      updateUtils({ screenSizeFactor: newScreenSizeFactor });
   };
 
   const Categories = useQuery({
     queryKey: ['getAllCategory'],
     queryFn: getAllCategory,
   });
+
   const recommendedProducts = useQuery({
     queryKey: ['products'],
     queryFn: () => getAllProductsWithFilters({ showOnHomepage: true }),
     enabled: pathname === '/',
   });
 
+  // When server data arrives, initialise order (only if not already set by user drag)
   useEffect(() => {
-    updateUtils({
-      categories: Categories.data?.data || [],
-      recommendedProducts: recommendedProducts.data?.data || [],
-    });
+    const serverCategories = Categories.data?.data || [];
+    if (serverCategories.length > 0) {
+      setCategoryOrder((prev) => {
+        // If user has already reordered, preserve their order;
+        // just append any new IDs from the server at the end.
+        if (prev && prev.length > 0) {
+          const existingIds = new Set(prev);
+          const newIds = serverCategories
+            .map((c) => c._id)
+            .filter((id) => !existingIds.has(id));
+          return newIds.length > 0 ? [...prev, ...newIds] : prev;
+        }
+        // First load — use server order as-is
+        return serverCategories.map((c) => c._id);
+      });
+    }
+    updateUtils({ recommendedProducts: recommendedProducts.data?.data || [] });
   }, [Categories.data, recommendedProducts.data]);
+
+  // Derive the ordered categories array from categoryOrder + server data
+  const orderedCategories = useMemo(() => {
+    const serverCategories = Categories.data?.data || [];
+    if (!categoryOrder || categoryOrder.length === 0) return serverCategories;
+    const map = Object.fromEntries(serverCategories.map((c) => [c._id, c]));
+    return categoryOrder.map((id) => map[id]).filter(Boolean);
+  }, [categoryOrder, Categories.data]);
+
+  // Keep utils.categories in sync with orderedCategories
+  useEffect(() => {
+    updateUtils({ categories: orderedCategories });
+  }, [orderedCategories]);
+
+  /**
+   * Call this from CategoryPage after a drag-end event.
+   * Accepts the new ordered array of category objects OR just their IDs.
+   *
+   * Usage (with dnd-kit arrayMove result):
+   *   reorderCategories(newOrderedArray)          // pass full objects
+   *   reorderCategories(newOrderedArray, true)    // pass IDs only
+   */
+  const reorderCategories = (newOrder, idsOnly = false) => {
+    if (idsOnly) {
+      setCategoryOrder(newOrder);
+    } else {
+      setCategoryOrder(newOrder.map((c) => c._id));
+    }
+  };
 
   useLayoutEffect(() => {
     window.addEventListener('resize', handleResizeWindow);
-
-    return () => {
-      window.removeEventListener('resize', handleResizeWindow);
-    };
+    return () => window.removeEventListener('resize', handleResizeWindow);
   }, [utils.screenSizeFactor]);
 
   useLayoutEffect(() => {
     handleResizeWindow();
   }, []);
 
+  useEffect(() => {
+    const currencyCode = resolveCurrencyCode();
+    const currencyConfig = persistCurrencyCode(currencyCode);
+    updateUtils(getCurrencyConfig(currencyConfig));
+  }, []);
+
   return (
     <GlobalContext.Provider
-      value={{ ...utils, updateGlobalContext: updateUtils }}
+      value={{
+        ...utils,
+        updateGlobalContext: updateUtils,
+        setCurrencyCode: (currencyCode) => {
+          const normalizedCode = persistManualCurrencyCode(currencyCode);
+          updateUtils(getCurrencyConfig(normalizedCode));
+        },
+        clearCurrencyOverride: () => {
+          clearManualCurrencyOverride();
+          const detectedCode = resolveCurrencyCode();
+          updateUtils(getCurrencyConfig(detectedCode));
+        },
+        reorderCategories,
+        categoryOrder,
+      }}
     >
       {children}
     </GlobalContext.Provider>
@@ -92,13 +158,13 @@ const useGlobalContext = () => {
 export { useGlobalContext, GlobalProvider };
 
 const screenSizeFactors = {
-  1: { name: 'extra small mobile', minWidth: 0, maxWidth: 320 }, // Up to 320px
-  2: { name: 'small mobile', minWidth: 321, maxWidth: 480 }, // 321px to 480px
-  3: { name: 'mobile', minWidth: 481, maxWidth: 640 }, // 481px to 640px
-  4: { name: 'small tablet', minWidth: 641, maxWidth: 768 }, // 641px to 768px
-  5: { name: 'tablet', minWidth: 769, maxWidth: 1024 }, // 769px to 1024px
-  6: { name: 'small laptop', minWidth: 1025, maxWidth: 1280 }, // 1025px to 1280px
-  7: { name: 'desktop', minWidth: 1281, maxWidth: 1536 }, // 1281px to 1440px
-  8: { name: 'large desktop', minWidth: 1537, maxWidth: 1920 }, // 1441px to 1920px
-  9: { name: 'ultra wide', minWidth: 1921, maxWidth: 1000000 }, // 1921px and above
+  1: { name: 'extra small mobile', minWidth: 0, maxWidth: 320 },
+  2: { name: 'small mobile', minWidth: 321, maxWidth: 480 },
+  3: { name: 'mobile', minWidth: 481, maxWidth: 640 },
+  4: { name: 'small tablet', minWidth: 641, maxWidth: 768 },
+  5: { name: 'tablet', minWidth: 769, maxWidth: 1024 },
+  6: { name: 'small laptop', minWidth: 1025, maxWidth: 1280 },
+  7: { name: 'desktop', minWidth: 1281, maxWidth: 1536 },
+  8: { name: 'large desktop', minWidth: 1537, maxWidth: 1920 },
+  9: { name: 'ultra wide', minWidth: 1921, maxWidth: 1000000 },
 };

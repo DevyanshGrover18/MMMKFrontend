@@ -21,8 +21,8 @@ const BikiniSection = lazy(() => import('../components/home/BikiniSection'));
 const Section10 = lazy(() => import('../components/home/Section10'));
 const LuxurySection = lazy(() => import('../components/home/LuxurySection'));
 const Section11 = lazy(() => import('../components/home/Section11'));
-const ComingSoonSection = lazy(() =>
-  import('../components/home/ComingSoonSection')
+const ComingSoonSection = lazy(
+  () => import('../components/home/ComingSoonSection')
 );
 const VideoCard = lazy(() => import('../components/home/VideoCard'));
 
@@ -57,18 +57,15 @@ const Home = () => {
       <ShopInstant></ShopInstant>
       <Section6 />
       <Suspense fallback={null}>
-        <BikiniSection />
-      </Suspense>
-      <Section7 />
-      <Section3 />
-      <Section9 />
-      <Enquiry />
-      <Suspense fallback={null}>
         <VideoCard />
       </Suspense>
+      {/* <Section9 /> */}
+      <Section3 />
+      <Enquiry />
       <Suspense fallback={null}>
         <ComingSoonSection />
       </Suspense>
+      <Section7 />
       <Suspense fallback={null}>
         <LuxurySection />
       </Suspense>

@@ -63,6 +63,12 @@ export default function AdminSidebar({ children }) {
         key: '/admin/dashboard',
       },
       {
+        icon: <SlidersHorizontal size={15} />,
+        label: 'Filters',
+        title: 'Filters',
+        key: '/admin/filters',
+      },
+      {
         icon: <Tags size={15} />,
         label: 'Category',
         title: 'Category',
@@ -160,12 +166,7 @@ export default function AdminSidebar({ children }) {
       //     },
       //   ],
       // },
-      {
-        icon: <SlidersHorizontal size={15} />,
-        label: 'Filters',
-        title: 'Filters',
-        key: '/admin/filters',
-      },
+      
       // {
       //   icon: <CreditCard size={15} />,
       //   label: 'Payment',

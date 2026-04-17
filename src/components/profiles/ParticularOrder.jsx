@@ -6,12 +6,14 @@ import {
   useTranslationContext,
 } from '../../context/TranslationContext';
 import { useEffect } from 'react';
+import { formatCurrency, resolveCurrencyCode } from '../../utils/currency';
 
 const ParticularOrder = ({ activeOrder, setActiveOrder }) => {
   const {
     content: { profile, common },
     translateLanguage,
   } = useTranslationContext();
+  const currencyCode = resolveCurrencyCode();
   const paymentSummary = {
     subtotal:
       Number(activeOrder?.price?.subtotal) ||
@@ -200,7 +202,11 @@ const ParticularOrder = ({ activeOrder, setActiveOrder }) => {
                       <p className="text-gray-500 text-sm">
                         <span className="line-through">
                           {' '}
-                          ${product?.id?.price * product?.quantity}
+                          {formatCurrency(
+                            Number(product?.id?.price || 0) *
+                              Number(product?.quantity || 0),
+                            activeOrder?.currency || currencyCode
+                          )}
                         </span>
                         <span className="font-[600]">
                           {' '}
@@ -211,11 +217,15 @@ const ParticularOrder = ({ activeOrder, setActiveOrder }) => {
 
                     {/* Discounted Price (10% off) */}
                     <h3 className="text-lg font-semibold text-red-600">
-                      $
-                      {getPercentageOf(
-                        product?.id?.price,
-                        product?.id?.discount
-                      ) * product?.quantity}
+                      {formatCurrency(
+                        Number(
+                          getPercentageOf(
+                            product?.id?.price,
+                            product?.id?.discount
+                          )
+                        ) * Number(product?.quantity || 0),
+                        activeOrder?.currency || currencyCode
+                      )}
                     </h3>
 
                     {/* Quantity */}
@@ -342,7 +352,12 @@ const ParticularOrder = ({ activeOrder, setActiveOrder }) => {
             </h4>
             <div className="flex justify-between mb-2 text-gray-600">
               <p>{profile.subTotal}</p>
-              <p>${paymentSummary.subtotal.toFixed(2)}</p>
+              <p>
+                {formatCurrency(
+                  paymentSummary.subtotal,
+                  activeOrder?.currency || currencyCode
+                )}
+              </p>
             </div>
             {activeOrder?.couponCode && (
               <div className="flex justify-between mb-2 text-gray-600">
@@ -353,27 +368,42 @@ const ParticularOrder = ({ activeOrder, setActiveOrder }) => {
             {paymentSummary.couponDiscount > 0 && (
               <div className="flex justify-between mb-2 text-green-700">
                 <p>{common.coupon}</p>
-                <p>-${paymentSummary.couponDiscount.toFixed(2)}</p>
+                <p>
+                  -{formatCurrency(
+                    paymentSummary.couponDiscount,
+                    activeOrder?.currency || currencyCode
+                  )}
+                </p>
               </div>
             )}
             {paymentSummary.shippingCharges > 0 && (
               <div className="flex justify-between mb-2 text-gray-600">
                 <p>Shipping</p>
-                <p>${paymentSummary.shippingCharges.toFixed(2)}</p>
+                <p>
+                  {formatCurrency(
+                    paymentSummary.shippingCharges,
+                    activeOrder?.currency || currencyCode
+                  )}
+                </p>
               </div>
             )}
 
             {/* <div className="flex justify-between mb-2 text-gray-600">
               <p>{t("particularOrder.shippingCharges")}</p>
-              <p>$30.00</p>
+              <p>{formatCurrency(30, activeOrder?.currency || currencyCode)}</p>
             </div>
             <div className="flex justify-between mb-2 text-gray-600">
               <p>{t("particularOrder.taxes")}</p>
-              <p>$98.00</p>
+              <p>{formatCurrency(98, activeOrder?.currency || currencyCode)}</p>
             </div> */}
             <div className="flex justify-between pt-2 mt-4 font-semibold text-black border-t">
               <p>{profile.totalPaidByCustomer}</p>
-              <p>${paymentSummary.total.toFixed(2)} </p>
+              <p>
+                {formatCurrency(
+                  paymentSummary.total,
+                  activeOrder?.currency || currencyCode
+                )}
+              </p>
             </div>
           </div>
 

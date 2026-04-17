@@ -54,7 +54,7 @@ const Section8 = () => {
           ))}
         </p>
 
-        <Button4 isLink to={getModuleUrl('category', 'Jewelry & Accessories')}>
+        <Button4 isLink to={getModuleUrl('category', 'Jewellery & Accessories')}>
           {common.shopNow}
         </Button4>
       </div>
@@ -86,7 +86,7 @@ const Section8 = () => {
           </p>
           <Button4
             isLink
-            to={getModuleUrl('category', 'Jewelry & Accessories')}
+            to={getModuleUrl('category', 'Jewellery & Accessories')}
           >
             {common.shopNow}
           </Button4>

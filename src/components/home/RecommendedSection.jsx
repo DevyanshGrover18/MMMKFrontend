@@ -8,13 +8,14 @@ import { Button3, Button4 } from '../global/UIButtons';
 import CustomCarousel from '../global/Carousal';
 import { useTranslationContext } from '../../context/TranslationContext';
 import { useGlobalContext } from '../../context/GlobalProvider';
+import { formatCurrency } from '../../utils/currency';
 
 export default function RecommendedSection() {
   const {
     translateLanguage,
     content: { common, homepage },
   } = useTranslationContext();
-  const { recommendedProducts } = useGlobalContext();
+  const { recommendedProducts, currencyCode } = useGlobalContext();
   const navigate = useNavigate();
   const isArabic = translateLanguage === 'ar';
 
@@ -64,10 +65,10 @@ export default function RecommendedSection() {
                       className={`font-medium text-white flex justify-center items-center gap-2`}
                     >
                       <span className="line-through text-sm">
-                        ${product?.price}
+                        {formatCurrency(product?.price, currencyCode)}
                       </span>
                       <span className="text-lg font-semibold md:text-xl">
-                        {product?.websitePrice}
+                        {formatCurrency(product?.websitePrice, currencyCode)}
                       </span>
                     </p>
                   ) : (

@@ -8,9 +8,9 @@ const Section3 = () => {
     content: { common, homepage },
   } = useTranslationContext();
   return (
-    <div className="grid w-full grid-cols-1 md:grid-cols-2 bg-[rgb(83,49,37)] pb-5 sm:pb-0">
+    <div className="grid w-full grid-cols-1 md:grid-cols-2 bg-[rgb(83,49,37)] sm:pb-0">
       {/* Text Section */}
-      <div className="flex flex-col justify-start px-4 py-10 text-white md:py-20 md:px-8 lg:px-12 lg:py-28 xl:px-16">
+      <div className="flex flex-col justify-start px-4 pt-10 text-white md:pt-20 md:px-8 lg:px-12 lg:pt-28 xl:px-16">
         <h4 className="text-xl font-bold md:text-2xl lg:text-3xl xl:text-4xl">
           {homepage.section11Heading1}
         </h4>

@@ -9,6 +9,8 @@ import Root from '../pages/Root';
 import ComingSoon from '../layout/ComingSoon';
 // Lazy imports for all site pages
 const Home = lazy(() => import('../pages/Home'));
+const PrivacyPolicy = lazy(() => import('../pages/PrivacyPolicy'));
+const ReturnPolicy = lazy(() => import('../pages/ReturnPolicy'));
 const AuthPage = lazy(() => import('../pages/AuthPage'));
 const ForgetPassword = lazy(() => import('../pages/ForgetPassword'));
 const NewPassword = lazy(() => import('../pages/NewPassword'));
@@ -184,9 +186,10 @@ export default function SiteRouter() {
             <Route path="/reset-password/:token" element={<NewPassword />} />
             <Route path="/about-us" element={<AboutUs />} />
             <Route path="/contact-us" element={<ContactUs />} />
+            <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+            <Route path="/return-policy" element={<ReturnPolicy />} />
+            <Route path="/refund-policy" element={<ReturnPolicy />} />
             {...[
-              'privacy-policy',
-              'refund-policy',
               'terms-conditions',
             ].map((path) => (
               <Route key={path} path={`/${path}`} element={<ComingSoon />} />

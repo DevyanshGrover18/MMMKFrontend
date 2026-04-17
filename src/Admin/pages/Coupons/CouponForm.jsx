@@ -41,6 +41,7 @@ const CouponForm = ({ isModalVisible, handleCancel, tableQuery }) => {
         onFinish={handleFinish}
         initialValues={{
           firstOrder: false,
+          showToUsers: true,
         }}
       >
         <Form.Item
@@ -75,6 +76,10 @@ const CouponForm = ({ isModalVisible, handleCancel, tableQuery }) => {
           ]}
         >
           <Input type="number" placeholder="Enter discount percentage" />
+        </Form.Item>
+
+        <Form.Item name="showToUsers" valuePropName="checked">
+          <Checkbox>Show to users in cart</Checkbox>
         </Form.Item>
 
         <Form.Item>
