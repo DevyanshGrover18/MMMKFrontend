@@ -258,7 +258,7 @@ const RecentlyViewedSlider = () => {
                         e.stopPropagation();
                         navigate(`/product-details/${product._id}`);
                       }}
-                      className="mt-2 w-full border border-white text-white text-xs py-2 tracking-widest uppercase
+                      className="mt-2 w-full border border-white text-white text-lg py-2 tracking-widest uppercase
                       hover:bg-white hover:text-black transition-colors duration-200"
                     >
                       {common?.buyNow || 'Buy Now'}

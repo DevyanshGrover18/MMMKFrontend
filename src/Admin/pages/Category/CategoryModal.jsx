@@ -61,6 +61,7 @@ const CategoryModal = ({
 }) => {
   const [form] = Form.useForm();
   const [fileList, setFileList] = useState([]);
+  const [imageFile, setImageFile] = useState(null); // raw File object
   const [utils, setUtils] = useState({
     isTabLoading: false,
     activeTab: 0,
@@ -73,6 +74,7 @@ const CategoryModal = ({
     console.log('Current Edit Category:', currentEditCategory);
     if (isVisible) {
       form.resetFields();
+      setImageFile(null);
       updateUtils({
         isTabLoading: false,
         activeTab: 0,
@@ -141,13 +143,9 @@ const CategoryModal = ({
       console.log('Form Values:', formValues);
       formData.append('filters', JSON.stringify(formValues.filters || []));
 
-      if (
-        formValues.image &&
-        formValues.image.fileList &&
-        formValues.image.fileList[0]
-      ) {
-        const file = formValues.image.fileList[0].originFileObj;
-        formData.append('image', file);
+      // Use the raw File object stored in state (avoids originFileObj issues)
+      if (imageFile) {
+        formData.append('image', imageFile);
       }
       try {
         let res = null;
@@ -159,6 +157,7 @@ const CategoryModal = ({
         onSubmit();
         tableQuery.refetch();
         setCurrentEditCategory(null);
+        setImageFile(null);
         currentEditCategory
           ? message.success('Category updated successfully')
           : message.success('Category added successfully');
@@ -175,18 +174,10 @@ const CategoryModal = ({
     }
   };
 
-  const handleImageUpload = ({ file }) => {
-    if (file.status === 'done' || file.status === 'removed') {
-      updateUtils({
-        fileList: utils.fileList.filter((f) => f.uid !== file.uid),
-      });
-    } else if (file.status === 'error') {
-      console.error('Image upload failed');
-    }
-    return false;
-  };
+  const handleImageUpload = () => false; // prevent auto-upload
 
   const handleRemoveImage = () => {
+    setImageFile(null);
     updateUtils({ fileList: [] });
   };
 
@@ -226,14 +217,21 @@ const CategoryModal = ({
                 onRemove={handleRemoveImage} // Handle image removal
                 maxCount={1} // Restricts to a single image
                 beforeUpload={(file) => {
+                  // Store the real File object for FormData submission
+                  setImageFile(file);
+                  // Generate preview URL
                   const reader = new FileReader();
                   reader.onloadend = () => {
-                    const fileWithPreview = {
-                      ...file,
-                      url: reader.result,
-                    };
                     updateUtils({
-                      fileList: [fileWithPreview],
+                      fileList: [
+                        {
+                          uid: file.uid || String(Date.now()),
+                          name: file.name,
+                          status: 'done',
+                          url: reader.result,
+                          originFileObj: file,
+                        },
+                      ],
                     });
                   };
                   reader.readAsDataURL(file);
