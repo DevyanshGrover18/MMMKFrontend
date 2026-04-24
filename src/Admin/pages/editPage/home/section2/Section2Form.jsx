@@ -13,6 +13,7 @@ import {
 import { PlusOutlined } from '@ant-design/icons';
 import { useForm } from 'antd/es/form/Form';
 import { updateHomeSection2 } from '../../../../../apis/admin/editPage';
+import { resolveAssetUrl } from '../../../../../utils/assetUrl';
 
 const Section2Form = ({ data, query }) => {
   const [form] = useForm();
@@ -74,13 +75,13 @@ const Section2Form = ({ data, query }) => {
 
     if (data?.leftImage) {
       setLeftFileList([
-        { url: import.meta.env.VITE_IMAGE_URL + data?.leftImage },
+        { url: resolveAssetUrl(data?.leftImage) },
       ]);
     }
 
     if (data?.rightImage) {
       setRightFileList([
-        { url: import.meta.env.VITE_IMAGE_URL + data?.rightImage },
+        { url: resolveAssetUrl(data?.rightImage) },
       ]);
     }
   }, [data]);

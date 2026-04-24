@@ -19,6 +19,7 @@ import { loadStripe } from '@stripe/stripe-js';
 import { isUserSignedIn, getPercentageOf } from '../../utils/globalMethods';
 import { convertPrice, formatPrice } from '../../utils/currency';
 import { useCurrency } from '../../context/CurrencyContext';
+import { resolveAssetUrl } from '../../utils/assetUrl';
 
 const calculateShippingCharges = (country, weight) => {
   const countryData = Country.getCountryByCode(country);
@@ -531,7 +532,7 @@ export default function CheckoutForm({
                 return (
                   <div key={`${item?.product?._id}-${item?.sku}`} className="grid gap-4 border-b px-0 py-5 brown-border md:grid-cols-[120px_minmax(0,1fr)_160px] md:items-center">
                     <Link to={`/product-details/${item?.product?._id}`} className="block overflow-hidden border brown-border bg-[#f8f8f8]">
-                      <img src={productImage ? import.meta.env.VITE_IMAGE_URL + productImage : ''} alt={productName || common.productImageAlt} className="h-[100px] w-auto object-cover" />
+                      <img src={productImage ? resolveAssetUrl(productImage) : ''} alt={productName || common.productImageAlt} className="h-[100px] w-auto object-cover" />
                     </Link>
                     <div className="min-w-0">
                       <Link to={`/product-details/${item?.product?._id}`} className="block text-md font-bold text-black transition hover:opacity-70 md:text-xl">{productName}</Link>

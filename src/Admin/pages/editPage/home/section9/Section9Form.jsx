@@ -3,6 +3,7 @@ import { Modal, Form, Input, Button, Upload, Row, Col, message } from 'antd';
 import { PlusOutlined } from '@ant-design/icons';
 import { useForm } from 'antd/es/form/Form';
 import { updateHomeSection9 } from '../../../../../apis/admin/editPage';
+import { resolveAssetUrl } from '../../../../../utils/assetUrl';
 
 const Section9Form = ({ data, query }) => {
   const [form] = useForm();
@@ -63,7 +64,7 @@ const Section9Form = ({ data, query }) => {
     });
 
     if (data?.image) {
-      setFileList([{ url: import.meta.env.VITE_IMAGE_URL + data.image }]);
+      setFileList([{ url: resolveAssetUrl(data.image) }]);
     }
   }, [data, form]);
 

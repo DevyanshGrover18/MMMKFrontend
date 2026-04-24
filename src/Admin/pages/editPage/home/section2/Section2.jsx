@@ -2,6 +2,7 @@ import { useTranslation } from 'react-i18next';
 import Section2Form from './Section2Form';
 import { getHomeSection2 } from '../../../../../apis/admin/editPage';
 import { useQuery } from '@tanstack/react-query';
+import { resolveAssetUrl } from '../../../../../utils/assetUrl';
 
 const Section2 = () => {
   const { t, i18n } = useTranslation();
@@ -18,7 +19,7 @@ const Section2 = () => {
         {/* Image Box 1 */}
         <div className="w-full h-[200px] sm:h-[300px] md:h-auto lg:h-auto">
           <img
-            src={import.meta.env.VITE_IMAGE_URL + query.data?.data?.leftImage}
+            src={resolveAssetUrl(query.data?.data?.leftImage)}
             alt="side1"
             className="object-cover w-full h-full"
           />
@@ -40,7 +41,7 @@ const Section2 = () => {
         {/* Image Box 2 */}
         <div className="w-full h-[200px] sm:h-[300px] md:h-auto lg:h-auto">
           <img
-            src={import.meta.env.VITE_IMAGE_URL + query.data?.data?.rightImage}
+            src={resolveAssetUrl(query.data?.data?.rightImage)}
             alt="side2"
             className="object-cover w-full h-full"
           />

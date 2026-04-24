@@ -14,6 +14,7 @@ import { convertPrice, formatPrice } from '../../utils/currency';
 import { addItemToWishList } from '../../apis/user/wishList';
 import { getStoredUserId } from '../../utils/authStorage';
 import bgImg from '../../assets/bg.png';
+import { resolveAssetUrl } from '../../utils/assetUrl';
 
 const CARD_WIDTH = 280; // px, approximate width of one card including gap
 const VISIBLE_COLS = 4;
@@ -211,7 +212,7 @@ const RecentlyViewedSlider = () => {
                   <div className="h-[320px] md:h-[360px] overflow-hidden bg-gray-950">
                     {img ? (
                       <img
-                        src={import.meta.env.VITE_IMAGE_URL + img}
+                        src={resolveAssetUrl(img)}
                         alt={name}
                         className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
                         loading="lazy"

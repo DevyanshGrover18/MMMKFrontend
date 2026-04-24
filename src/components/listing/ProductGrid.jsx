@@ -10,6 +10,7 @@ import { addItemToWishList } from '../../apis/user/wishList';
 import { getStoredUserId } from '../../utils/authStorage';
 import { convertPrice, formatPrice } from '../../utils/currency';
 import { useCurrency } from '../../context/CurrencyContext';
+import { resolveAssetUrl } from '../../utils/assetUrl';
 
 const ProductGrid = ({ list = [], textColor = 'white' }) => {
   const {
@@ -89,7 +90,7 @@ const ProductGrid = ({ list = [], textColor = 'white' }) => {
               <img
                 src={
                   getProductImage(product)
-                    ? import.meta.env.VITE_IMAGE_URL + getProductImage(product)
+                    ? resolveAssetUrl(getProductImage(product))
                     : ''
                 }
                 alt={getProductName(product)}

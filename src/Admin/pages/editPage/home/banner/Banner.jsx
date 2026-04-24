@@ -15,6 +15,7 @@ import { NavLink } from 'react-router-dom';
 import BannerForm from './BannerForm';
 import { getHomeBanner } from '../../../../../apis/admin/editPage';
 import { useQuery } from '@tanstack/react-query';
+import { resolveAssetUrl } from '../../../../../utils/assetUrl';
 
 const Banner = ({ children, minHight = '300px', bg }) => {
   const { t, i18n } = useTranslation();
@@ -77,7 +78,7 @@ const Banner = ({ children, minHight = '300px', bg }) => {
         className={`w-full min-h-[${minHight}vh] text-white relative md:py-24 py-6`}
         style={{
           backgroundImage: `url(${
-            import.meta.env.VITE_IMAGE_URL + query?.data?.home?.banner?.image
+            resolveAssetUrl(query?.data?.home?.banner?.image)
           })`,
           backgroundPosition: 'center',
           backgroundRepeat: 'no-repeat',

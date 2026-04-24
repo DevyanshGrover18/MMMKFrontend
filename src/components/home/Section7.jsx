@@ -9,6 +9,7 @@ import { useQuery } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import { convertPrice, formatPrice } from '../../utils/currency';
 import { useCurrency } from '../../context/CurrencyContext';
+import { resolveAssetUrl } from '../../utils/assetUrl';
 
 const section7 = () => {
   const {
@@ -103,7 +104,7 @@ const section7 = () => {
             <div className="text-center min-h-[350px] flex flex-col">
               <div className="flex-1">
                 <img
-                  src={import.meta.env.VITE_IMAGE_URL + product?.image}
+                  src={resolveAssetUrl(product?.image)}
                   alt={getProductName(product) || common.productImageAlt}
                   className="h-full min-h-[300px] w-full mb-4 object-cover"
                 />

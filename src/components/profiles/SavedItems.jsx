@@ -17,6 +17,7 @@ import { notification } from 'antd';
 import { getStoredUserAuth, getStoredUserId } from '../../utils/authStorage';
 import { convertPrice, formatPrice } from '../../utils/currency';
 import { useCurrency } from '../../context/CurrencyContext';
+import { resolveAssetUrl } from '../../utils/assetUrl';
 
 const SavedItems = () => {
   const {
@@ -54,7 +55,7 @@ const SavedItems = () => {
     const newData = data?.map((item, index) => {
       return {
         id: item._id || index,
-        img: import.meta.env.VITE_IMAGE_URL + item?.images[0],
+        img: resolveAssetUrl(item?.images[0]),
         title: item?.productName?.en,
         gender: item?.gender,
         price: item?.price,
@@ -107,7 +108,7 @@ const SavedItems = () => {
     const newData = data?.map((list, index) => {
       return {
         id: index,
-        img: import.meta.env.VITE_IMAGE_URL + list?.product?.images[0],
+        img: resolveAssetUrl(list?.product?.images[0]),
         title: list?.product?.productName?.en,
         gender: list?.product?.gender,
         brand: list?.product?.brandName?.en,
@@ -353,7 +354,7 @@ const SavedItems = () => {
             >
               <div className="text-center">
                 <img
-                  src={import.meta.env.VITE_IMAGE_URL + product.images[0]}
+                  src={resolveAssetUrl(product.images[0])}
                   alt={product.translated?.productName}
                   className="mx-auto w-32 h-32 sm:w-36 sm:h-36 md:w-40 md:h-40 object-contain mb-3 sm:mb-4"
                 />

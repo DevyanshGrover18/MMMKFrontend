@@ -15,6 +15,7 @@ import {
   UploadOutlined,
 } from '@ant-design/icons';
 import { updateFooter } from '../../../../../apis/admin/editPage';
+import { resolveAssetUrl } from '../../../../../utils/assetUrl';
 
 const { Option } = Select;
 
@@ -36,13 +37,13 @@ const FooterForm = ({ data, query }) => {
         footerLinks: updateFooterLinks,
         socialLinks: data?.socialLinks,
         footerImage:
-          import.meta.env.VITE_IMAGE_URL + data.image
+          resolveAssetUrl(data.image)
             ? [
                 {
                   uid: '-1',
                   name: 'Footer Image',
                   status: 'done',
-                  url: import.meta.env.VITE_IMAGE_URL + data.image,
+                  url: resolveAssetUrl(data.image),
                 },
               ]
             : [],
@@ -254,7 +255,7 @@ const FooterForm = ({ data, query }) => {
                         uid: '-1', // Unique identifier
                         name: 'Footer Image', // Name displayed in the file list
                         status: 'done', // Marks the file as uploaded
-                        url: data.footerImage, // URL for the uploaded image
+                        url: resolveAssetUrl(data.footerImage),
                       },
                     ]
                   : []

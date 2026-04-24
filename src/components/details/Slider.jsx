@@ -9,6 +9,7 @@ import product1 from '../../assets/Home/model1.png';
 import product2 from '../../assets/Home/model6.png';
 import product3 from '../../assets/Home/model7.png';
 import product4 from '../../assets/Home/model3.png';
+import { resolveAssetUrl } from '../../utils/assetUrl';
 
 export default function Slider({ images }) {
   const [thumbsSwiper, setThumbsSwiper] = useState(null);
@@ -49,7 +50,7 @@ export default function Slider({ images }) {
         {images?.map((img, index) => (
           <SwiperSlide key={`main-slide-${index}`}>
             <img
-              src={import.meta.env.VITE_IMAGE_URL + img}
+              src={resolveAssetUrl(img)}
               alt={`Slide ${index + 1}`}
               className="object-cover w-[100%] h-auto shadow-md"
             />
@@ -84,7 +85,7 @@ export default function Slider({ images }) {
         {images?.map((img, index) => (
           <SwiperSlide key={`thumb-slide-${index}`}>
             <img
-              src={import.meta.env.VITE_IMAGE_URL + img}
+              src={resolveAssetUrl(img)}
               alt={`Thumbnail ${index + 1}`}
               className="object-contain w-full h-[70px] shadow-sm cursor-pointer relative"
               style={{

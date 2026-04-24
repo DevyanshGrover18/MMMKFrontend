@@ -10,6 +10,7 @@ import { useTranslationContext } from '../../context/TranslationContext';
 import { useGlobalContext } from '../../context/GlobalProvider';
 import { convertPrice, formatPrice } from '../../utils/currency';
 import { useCurrency } from '../../context/CurrencyContext';
+import { resolveAssetUrl } from '../../utils/assetUrl';
 
 export default function RecommendedSection() {
   const {
@@ -48,7 +49,7 @@ export default function RecommendedSection() {
                 className="w-full h-full overflow-hidden"
                 style={{
                   backgroundImage: `url(${
-                    import.meta.env.VITE_IMAGE_URL + product.image
+                    resolveAssetUrl(product.image)
                   })`,
                   // backgroundImage: `url("/section2Left.jpg")`,
                   backgroundSize: 'cover',

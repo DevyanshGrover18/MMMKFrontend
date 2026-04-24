@@ -20,6 +20,7 @@ import { getTranslatedFields } from '../../../utils/getTranslatedFields';
 import { FormTabs } from '../../UI/Tabs';
 import { useQuery } from '@tanstack/react-query';
 import { getAllFilters } from '../../../apis/admin/filter';
+import { resolveAssetUrl } from '../../../utils/assetUrl';
 
 const FilterDropdown = ({ value, onChange }) => {
   const filtersQuery = useQuery({
@@ -85,7 +86,7 @@ const CategoryModal = ({
                 name: 'category-image.jpg',
                 status: 'done',
                 url:
-                  import.meta.env.VITE_IMAGE_URL + currentEditCategory?.image,
+                  resolveAssetUrl(currentEditCategory?.image),
               },
             ]
           : [],
@@ -143,7 +144,6 @@ const CategoryModal = ({
       console.log('Form Values:', formValues);
       formData.append('filters', JSON.stringify(formValues.filters || []));
 
-      // Use the raw File object stored in state (avoids originFileObj issues)
       if (imageFile) {
         formData.append('image', imageFile);
       }

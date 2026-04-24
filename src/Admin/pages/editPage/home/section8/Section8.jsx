@@ -5,6 +5,7 @@ import { Link } from 'react-router-dom';
 import Section8Form from './Section8Form';
 import { getHomeSection8 } from '../../../../../apis/admin/editPage';
 import { useQuery } from '@tanstack/react-query';
+import { resolveAssetUrl } from '../../../../../utils/assetUrl';
 const Section8 = () => {
   const { t, i18n } = useTranslation();
 
@@ -22,7 +23,7 @@ const Section8 = () => {
           className="flex items-center justify-center h-[400px] md:h-auto col-span-12 md:col-span-5"
           style={{
             backgroundImage: `url(${
-              import.meta.env.VITE_IMAGE_URL + query?.data?.data?.leftImage
+              resolveAssetUrl(query?.data?.data?.leftImage)
             })`,
             backgroundSize: 'cover',
             backgroundPosition: 'center',
@@ -65,7 +66,7 @@ const Section8 = () => {
           className="flex items-center justify-center h-[400px] md:h-auto col-span-12 md:col-span-5"
           style={{
             backgroundImage: `url(${
-              import.meta.env.VITE_IMAGE_URL + query?.data?.data?.rightImage
+              resolveAssetUrl(query?.data?.data?.rightImage)
             })`,
             backgroundSize: 'cover',
             backgroundPosition: 'center',

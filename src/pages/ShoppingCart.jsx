@@ -28,6 +28,7 @@ import { Button4, CommonButton } from '../components/global/UIButtons';
 import { getProductSkus } from '../apis/nonAuth/products';
 import { useCurrency } from '../context/CurrencyContext';
 import RecentlyViewedSlider from '../components/listing/RecentlyViewedSlider';
+import { resolveAssetUrl } from '../utils/assetUrl';
 
 const ShoppingCart = () => {
   const {
@@ -390,8 +391,7 @@ const ShoppingCart = () => {
                       {/* Product Image */}
                       <img
                         src={
-                          import.meta.env.VITE_IMAGE_URL +
-                          list?.product?.images?.[0]
+                          resolveAssetUrl(list?.product?.images?.[0])
                         }
                         className="object-cover rounded-lg shadow-md w-[180px] md:w-[220px] border"
                         alt={list.translated?.productName}

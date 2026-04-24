@@ -3,6 +3,7 @@ import { Modal, Form, Input, Button, message, Upload } from 'antd';
 import { updateHomeBanner } from '../../../../../apis/admin/editPage';
 import { useForm } from 'antd/es/form/Form';
 import { PlusOutlined } from '@ant-design/icons';
+import { resolveAssetUrl } from '../../../../../utils/assetUrl';
 
 const BannerForm = ({ data, query }) => {
   const [isModalVisible, setIsModalVisible] = useState(false);
@@ -53,7 +54,7 @@ const BannerForm = ({ data, query }) => {
         uid: '-1',
         name: data?.home?.banner?.image,
         status: 'done',
-        url: import.meta.env.VITE_IMAGE_URL + data?.home?.banner?.image,
+        url: resolveAssetUrl(data?.home?.banner?.image),
       },
     ]);
   }, [data]);

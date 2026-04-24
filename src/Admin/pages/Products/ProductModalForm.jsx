@@ -23,6 +23,7 @@ import { AddButton, DeleteButton } from '../../UI/Buttons';
 import { LANGUAGECODES, LANGUAGECODETONAME } from '../../../utils/staticData';
 import { FormTabs } from '../../UI/Tabs';
 import { getTranslatedFields } from '../../../utils/getTranslatedFields';
+import { resolveAssetUrl } from '../../../utils/assetUrl';
 
 const { Option } = Select;
 
@@ -64,7 +65,7 @@ const ProductModalForm = ({
               uid: list,
               name: list,
               status: 'done',
-              url: import.meta.env.VITE_IMAGE_URL + list,
+              url: resolveAssetUrl(list),
             };
           }) || [];
         const image = [
@@ -72,7 +73,7 @@ const ProductModalForm = ({
             uid: selected?.image,
             name: selected?.image,
             status: 'done',
-            url: import.meta.env.VITE_IMAGE_URL + selected?.image,
+            url: resolveAssetUrl(selected?.image),
           },
         ];
         form.setFieldsValue({
@@ -328,7 +329,6 @@ const ProductModalForm = ({
         return;
       }
       const formData = new FormData();
-
       images.forEach((file) => {
         if (file.originFileObj) formData.append('images', file.originFileObj);
       });
@@ -545,7 +545,7 @@ const PrimaryDetails = ({
               uid: list,
               name: list,
               status: 'done',
-              url: import.meta.env.VITE_IMAGE_URL + list,
+              url: resolveAssetUrl(list),
             };
           }) || [],
         primaryImageList: [
@@ -553,7 +553,7 @@ const PrimaryDetails = ({
             uid: selected?.image,
             name: selected?.image,
             status: 'done',
-            url: import.meta.env.VITE_IMAGE_URL + selected?.image,
+            url: resolveAssetUrl(selected?.image),
           },
         ],
         subCategoryOptions: [],

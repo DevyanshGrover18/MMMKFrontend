@@ -6,6 +6,7 @@ import Section12Form from './Section12Form';
 import { getHomeSection12 } from '../../../../../apis/admin/editPage';
 import { useQuery } from '@tanstack/react-query';
 import PageTitle from '../../../../UI/PageTitle';
+import { resolveAssetUrl } from '../../../../../utils/assetUrl';
 
 const Section12 = () => {
   const [dataSource, setDataSource] = useState([]);
@@ -20,7 +21,7 @@ const Section12 = () => {
       setDataSource(() =>
         query.data?.data?.videos.map((video, index) => ({
           id: index,
-          videoSrc: import.meta.env.VITE_IMAGE_URL + video,
+          videoSrc: resolveAssetUrl(video),
         }))
       );
     }

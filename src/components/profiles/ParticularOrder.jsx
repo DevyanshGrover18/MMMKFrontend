@@ -9,6 +9,7 @@ import {
 import { useEffect } from 'react';
 import { convertPrice, formatPrice } from '../../utils/currency';
 import { useCurrency } from '../../context/CurrencyContext';
+import { resolveAssetUrl } from '../../utils/assetUrl';
 
 const ParticularOrder = ({ activeOrder, setActiveOrder }) => {
   const {
@@ -187,7 +188,7 @@ const ParticularOrder = ({ activeOrder, setActiveOrder }) => {
             >
               <div className="flex">
                 <img
-                  src={import.meta.env.VITE_IMAGE_URL + product?.id?.images[0]}
+                  src={resolveAssetUrl(product?.id?.images[0])}
                   className="object-cover w-20 h-20 mr-4 rounded"
                 />
                 <div>

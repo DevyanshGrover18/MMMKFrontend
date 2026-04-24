@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import Section9Form from './Section9Form';
 import { useQuery } from '@tanstack/react-query';
 import { getHomeSection9 } from '../../../../../apis/admin/editPage';
+import { resolveAssetUrl } from '../../../../../utils/assetUrl';
 
 const Section9 = () => {
   const { t, i18n } = useTranslation();
@@ -39,7 +40,7 @@ const Section9 = () => {
           className="w-full h-[300px] md:h-[900px] flex items-center justify-center"
           style={{
             backgroundImage: `url(${
-              import.meta.env.VITE_IMAGE_URL + query.data?.data?.image
+              resolveAssetUrl(query.data?.data?.image)
             })`,
             backgroundSize: 'cover',
             backgroundPosition: 'center',

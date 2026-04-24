@@ -4,6 +4,7 @@ import { Link } from 'react-router-dom';
 import Section11Form from './Section11Form';
 import { useQuery } from '@tanstack/react-query';
 import { getHomeSection9 } from '../../../../../apis/admin/editPage';
+import { resolveAssetUrl } from '../../../../../utils/assetUrl';
 
 const Section11 = () => {
   const { t, i18n } = useTranslation();
@@ -19,7 +20,7 @@ const Section11 = () => {
         className="relative flex items-center justify-center h-screen px-4 bg-center bg-cover md:justify-end sm:px-8"
         style={{
           backgroundImage: `url(${
-            import.meta.env.VITE_IMAGE_URL + query.data?.data?.image
+            resolveAssetUrl(query.data?.data?.image)
           })`,
         }}
       >

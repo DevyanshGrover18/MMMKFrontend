@@ -28,6 +28,7 @@ import {
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { HolderOutlined } from '@ant-design/icons';
+import { resolveAssetUrl } from '../../../utils/assetUrl';
 
 const RowDragHandle = ({ rowKey, disabled = false }) => {
   const { listeners, attributes } = useSortable({ id: rowKey });
@@ -228,7 +229,7 @@ const CategoryPage = () => {
         align: 'center',
         render: (image) => (
           <Image
-            src={`${import.meta.env.VITE_IMAGE_URL}${image}`}
+            src={resolveAssetUrl(image)}
             alt="category"
             width={50}
             height={50}

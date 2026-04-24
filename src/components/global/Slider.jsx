@@ -7,6 +7,7 @@ import CustomCarousel from './Carousal';
 import { useTranslationContext } from '../../context/TranslationContext';
 import { useGlobalContext } from '../../context/GlobalProvider';
 import { getCategoryLabel } from '../../utils/categoryTranslation';
+import { resolveAssetUrl } from '../../utils/assetUrl';
 
 export default function Slider() {
   const {
@@ -73,7 +74,7 @@ export default function Slider() {
                 <div
                   className="w-full h-full overflow-hidden"
                   style={{
-                    backgroundImage: `url(${import.meta.env.VITE_IMAGE_URL + product.image})`,
+                    backgroundImage: `url(${resolveAssetUrl(product.image)})`,
                     // backgroundImage: `url("/section2Left.jpg")`,
                     backgroundSize: 'cover',
                     backgroundPosition: 'center',
