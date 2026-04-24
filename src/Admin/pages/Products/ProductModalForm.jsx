@@ -504,8 +504,9 @@ const PrimaryDetails = ({
     const isImage = file.type.startsWith('image/');
     if (!isImage) {
       message.error(`${file.name} is not an image file`);
+      return Upload.LIST_IGNORE;
     }
-    return isImage || Upload.LIST_IGNORE;
+    return false;
   };
 
   const handlePreview = async (file) => {
