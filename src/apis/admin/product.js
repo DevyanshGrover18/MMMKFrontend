@@ -1,23 +1,7 @@
-import axios from 'axios';
+import { createAdminApiClient } from './client';
 
-// Create Axios instance
-const product = axios.create({
-  baseURL: `${import.meta.env.VITE_BACKEND_URL}/api/v1/admin/product`,
-  timeout: 10000,
-  headers: {
-    'Content-Type': 'multipart/form-data',
-  },
-  withCredentials: true,
-});
-
-product.interceptors.response.use(
-  (response) => response,
-  (error) => {
-    if (error.response && error.response.status === 401) {
-      window.location.href = '/admin/login';
-    }
-    return Promise.reject(error);
-  }
+const product = createAdminApiClient(
+  `${import.meta.env.VITE_BACKEND_URL}/api/v1/admin/product`
 );
 
 export const createProduct = async (data) => {
@@ -66,6 +50,20 @@ export const deleteProduct = async (id) => {
     return response.data;
   } catch (error) {
     console.error('Error fetching products:', error);
+    throw error;
+  }
+};
+
+export const reorderProducts = async (orderedItems, options = {}) => {
+  try {
+    const response = await product.post(
+      '/reorder',
+      { orderedItems, ...options },
+      { headers: { 'Content-Type': 'application/json' } }
+    );
+    return response.data;
+  } catch (error) {
+    console.error('Error reordering products:', error);
     throw error;
   }
 };

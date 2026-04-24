@@ -28,6 +28,12 @@ const BuyGiftCard = () => {
   const minAmount = convertPrice(10, currency, rates);
   const maxAmount = convertPrice(27000, currency, rates);
 
+  const expiryDate = new Intl.DateTimeFormat('en-GB', {
+    day: '2-digit',
+    month: 'short',
+    year: 'numeric',
+  }).format(new Date(Date.now() + 365 * 24 * 60 * 60 * 1000));
+
   // Predefined gift card amounts
   const predefinedAmounts = [25, 75, 100, 250, 500, 1000];
 
@@ -42,7 +48,11 @@ const BuyGiftCard = () => {
     try {
       setLoading(true);
 
-      if (!normalizedAmount || normalizedAmount < minAmount || normalizedAmount > maxAmount) {
+      if (
+        !normalizedAmount ||
+        normalizedAmount < minAmount ||
+        normalizedAmount > maxAmount
+      ) {
         message.error(
           `Amount must be between ${formatPrice(minAmount, currency)} and ${formatPrice(maxAmount, currency)}`
         );
@@ -104,7 +114,9 @@ const BuyGiftCard = () => {
         throw new Error('Payment session could not be created');
       }
 
-      message.success('Gift card purchase initiated! Redirecting to payment...');
+      message.success(
+        'Gift card purchase initiated! Redirecting to payment...'
+      );
 
       form.resetFields();
       const result = await stripePromise.redirectToCheckout({
@@ -181,9 +193,13 @@ const BuyGiftCard = () => {
                       </p>
                     </div>
 
-                    <div className="text-left">
+                    <div className="flex items-end justify-between">
                       <p className="text-xs text-gray-600">
                         • {buyGiftCard.termsApply}
+                      </p>
+                      <p className="text-xs text-gray-700 text-right">
+                        <span className="block font-medium">Valid until</span>
+                        {expiryDate}
                       </p>
                     </div>
                   </div>
@@ -269,14 +285,21 @@ const BuyGiftCard = () => {
                         <button
                           key={value}
                           type="button"
-                          onClick={() => handleAmountSelect(convertPrice(value, currency, rates))}
+                          onClick={() =>
+                            handleAmountSelect(
+                              convertPrice(value, currency, rates)
+                            )
+                          }
                           className={`p-3 border-2 rounded-lg font-semibold transition-all ${
                             convertPrice(value, currency, rates) === amount
                               ? 'border-orange-200 bg-orange-50 text-orange-800'
                               : 'border-gray-300 hover:border-orange-200'
                           }`}
                         >
-                          {formatPrice(convertPrice(value, currency, rates), currency)}
+                          {formatPrice(
+                            convertPrice(value, currency, rates),
+                            currency
+                          )}
                         </button>
                       ))}
                     </div>
@@ -290,14 +313,14 @@ const BuyGiftCard = () => {
                           message: buyGiftCard.pleaseEnterGiftCardAmount,
                         },
                       ]}
-                      >
-                        <InputNumber
-                          min={minAmount}
-                          max={maxAmount}
-                          placeholder={buyGiftCard.enterAmount}
-                          className="py-2 text-base w-full"
-                        />
-                      </Form.Item>
+                    >
+                      <InputNumber
+                        min={minAmount}
+                        max={maxAmount}
+                        placeholder={buyGiftCard.enterAmount}
+                        className="py-2 text-base w-full"
+                      />
+                    </Form.Item>
                   </div>
 
                   {/* Purchase Summary */}

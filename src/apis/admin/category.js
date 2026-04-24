@@ -1,22 +1,7 @@
-import axios from 'axios';
+import { createAdminApiClient } from './client';
 
-const cat = axios.create({
-  baseURL: `${import.meta.env.VITE_BACKEND_URL}/api/v1/admin/category`,
-  timeout: 10000,
-  withCredentials: true,
-  headers: {
-    'Content-Type': 'multipart/form-data',
-  },
-});
-
-cat.interceptors.response.use(
-  (response) => response,
-  (error) => {
-    if (error.response && error.response.status === 401) {
-      window.location.href = '/admin/login';
-    }
-    return Promise.reject(error);
-  }
+const cat = createAdminApiClient(
+  `${import.meta.env.VITE_BACKEND_URL}/api/v1/admin/category`
 );
 
 export const addCategory = async (data) => {
@@ -61,13 +46,13 @@ export const deleteCategory = async (id) => {
 
 /**
  * Persists drag-and-drop order to the database.
- * @param {string[]} orderedIds - Array of category _id strings in new order
+ * @param {{id: string, order: number}[]} orderedItems - Array of category ids with persisted order values
  */
-export const reorderCategories = async (orderedIds) => {
+export const reorderCategories = async (orderedItems) => {
   try {
     const response = await cat.post(
       '/reorder',
-      { orderedIds },
+      { orderedItems },
       { headers: { 'Content-Type': 'application/json' } }
     );
     return response.data;

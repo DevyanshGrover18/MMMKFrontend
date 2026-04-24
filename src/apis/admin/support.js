@@ -1,20 +1,7 @@
-import axios from 'axios';
+import { createAdminApiClient } from './client';
 
-// Create Axios instance
-const support = axios.create({
-  baseURL: `${import.meta.env.VITE_BACKEND_URL}/api/v1/admin/support`,
-  timeout: 10000,
-  withCredentials: true,
-});
-
-support.interceptors.response.use(
-  (response) => response,
-  (error) => {
-    if (error.response && error.response.status === 401) {
-      window.location.href = '/admin/login';
-    }
-    return Promise.reject(error);
-  }
+const support = createAdminApiClient(
+  `${import.meta.env.VITE_BACKEND_URL}/api/v1/admin/support`
 );
 
 export const createSupport = async (data) => {

@@ -1,20 +1,7 @@
-import axios from 'axios';
+import { createAdminApiClient } from './client';
 
-// Create Axios instance
-const payment = axios.create({
-  baseURL: `${import.meta.env.VITE_BACKEND_URL}/api/v1/admin/payment`,
-  timeout: 10000,
-  withCredentials: true,
-});
-
-payment.interceptors.response.use(
-  (response) => response,
-  (error) => {
-    if (error.response && error.response.status === 401) {
-      window.location.href = '/admin/login';
-    }
-    return Promise.reject(error);
-  }
+const payment = createAdminApiClient(
+  `${import.meta.env.VITE_BACKEND_URL}/api/v1/admin/payment`
 );
 
 export const createPayment = async (data) => {

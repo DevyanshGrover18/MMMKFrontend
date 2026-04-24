@@ -7,6 +7,7 @@ import { useForm } from 'antd/es/form/Form';
 import { adminLogin } from '../../apis/nonAuth/adminAuth';
 import '../../css/adminLogin.css';
 import bannerVideo from '../../assets/banner/banner.mp4';
+import { isStoredAdminTokenValid } from '../../utils/adminAuth';
 
 const Login = () => {
   const [form] = useForm();
@@ -30,7 +31,7 @@ const Login = () => {
   };
 
   useEffect(() => {
-    if (localStorage.getItem('adminAuthToken')) {
+    if (isStoredAdminTokenValid()) {
       navigate('/admin/dashboard');
     }
   }, []);

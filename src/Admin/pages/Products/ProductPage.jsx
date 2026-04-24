@@ -1,7 +1,11 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import ProductModalForm from './ProductModalForm';
-import { Button, message, Popconfirm, Select, Space, Table } from 'antd';
-import { deleteProduct, getAllProducts } from '../../../apis/admin/product';
+import { Button, message, Select, Space, Table } from 'antd';
+import {
+  deleteProduct,
+  getAllProducts,
+  reorderProducts,
+} from '../../../apis/admin/product';
 import { useQuery } from '@tanstack/react-query';
 import PageTitle from '../../UI/PageTitle';
 import SearchInTable from '../../UI/SearchInTable';
@@ -10,6 +14,68 @@ import { useGlobalContext } from '../../../context/GlobalProvider';
 import { confirmDelete } from '../../UI/Modals';
 import { tablePageSizes } from '../../../utils/staticData';
 import { getAllCategories } from '../../../apis/admin/category';
+import {
+  DndContext,
+  PointerSensor,
+  closestCenter,
+  useSensor,
+  useSensors,
+} from '@dnd-kit/core';
+import {
+  SortableContext,
+  arrayMove,
+  useSortable,
+  verticalListSortingStrategy,
+} from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
+import { HolderOutlined } from '@ant-design/icons';
+
+const RowDragHandle = ({ rowKey, disabled = false }) => {
+  const { listeners, attributes } = useSortable({ id: rowKey });
+
+  return (
+    <HolderOutlined
+      {...(!disabled ? listeners : {})}
+      {...(!disabled ? attributes : {})}
+      style={{
+        cursor: disabled ? 'not-allowed' : 'grab',
+        color: disabled ? '#d9d9d9' : '#999',
+        fontSize: 16,
+        touchAction: 'none',
+      }}
+    />
+  );
+};
+
+const SortableRow = ({ id, children, ...props }) => {
+  const { setNodeRef, transform, transition, isDragging } = useSortable({ id });
+
+  return (
+    <tr
+      {...props}
+      ref={setNodeRef}
+      style={{
+        ...props.style,
+        transform: CSS.Transform.toString(transform),
+        transition,
+        opacity: isDragging ? 0.5 : 1,
+        background: isDragging ? '#fafafa' : undefined,
+      }}
+    >
+      {children}
+    </tr>
+  );
+};
+
+const tableComponents = {
+  body: {
+    row: ({ children, ...props }) => (
+      <SortableRow id={props['data-row-key']} {...props}>
+        {children}
+      </SortableRow>
+    ),
+  },
+};
 
 export default function AdminProductPage() {
   const { screenSizeFactor } = useGlobalContext();
@@ -32,6 +98,8 @@ export default function AdminProductPage() {
     currentPage: 1,
     total: 0,
   });
+  const [orderedIds, setOrderedIds] = useState([]);
+
   const updatePagination = (newPagination) =>
     setPagination((prev) => ({ ...prev, ...newPagination }));
 
@@ -46,10 +114,30 @@ export default function AdminProductPage() {
     },
   });
 
+  useEffect(() => {
+    const ids = (Products.data?.data || []).map((product) => product._id);
+    setOrderedIds(ids);
+  }, [Products.data]);
+
   const categories = useQuery({
     queryKey: ['getAllCategories'],
     queryFn: getAllCategories,
   });
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 5 } })
+  );
+  const isReorderDisabled = Boolean(search.searchKey || search.searchValue);
+
+  const productMap = useMemo(() => {
+    const data = Products.data?.data || [];
+    return Object.fromEntries(data.map((product) => [product._id, product]));
+  }, [Products.data]);
+
+  const sortedData = useMemo(() => {
+    if (!orderedIds.length) return Products.data?.data || [];
+    return orderedIds.map((id) => productMap[id]).filter(Boolean);
+  }, [orderedIds, productMap, Products.data]);
 
   const handleEdit = (record) => {
     updateUtils({
@@ -66,6 +154,39 @@ export default function AdminProductPage() {
     } catch (err) {
       console.log(err);
       message.error(err?.response?.data?.message || 'Failed to delete');
+    }
+  };
+
+  const handleDragEnd = async ({ active, over }) => {
+    if (!orderedIds.length) return;
+    if (isReorderDisabled) {
+      message.warning('Clear search before reordering products.');
+      return;
+    }
+    if (!over || active.id === over.id) return;
+
+    const oldIndex = orderedIds.indexOf(active.id);
+    const newIndex = orderedIds.indexOf(over.id);
+
+    if (oldIndex === -1 || newIndex === -1) return;
+
+    const previousIds = [...orderedIds];
+    const newIds = arrayMove(orderedIds, oldIndex, newIndex);
+    setOrderedIds(newIds);
+
+    try {
+      const pageOffset = (pagination.currentPage - 1) * pagination.pageSize;
+      await reorderProducts(
+        newIds.map((id, index) => ({
+          id,
+          order: pageOffset + index,
+        })),
+        { category: search.category || null }
+      );
+      await Products.refetch();
+    } catch (err) {
+      message.error('Failed to save product order.');
+      setOrderedIds(previousIds);
     }
   };
 
@@ -93,6 +214,15 @@ export default function AdminProductPage() {
   const columns = useMemo(
     () => [
       {
+        title: '',
+        key: 'sort',
+        width: 40,
+        align: 'center',
+        render: (_, record) => (
+          <RowDragHandle rowKey={record._id} disabled={isReorderDisabled} />
+        ),
+      },
+      {
         title: 'S/N',
         dataIndex: 'key',
         render: (text, record, index) =>
@@ -102,8 +232,7 @@ export default function AdminProductPage() {
       {
         title: 'Product Name',
         dataIndex: 'productName',
-        // render: (text, record) => `${record._id} ${record?.productName?.en}`,
-        render: (text, record) => text?.en,
+        render: (text) => text?.en,
         width: 150,
       },
       {
@@ -157,7 +286,7 @@ export default function AdminProductPage() {
         ),
       },
     ],
-    [pagination, screenSizeFactor]
+    [isReorderDisabled, pagination, screenSizeFactor]
   );
 
   return (
@@ -228,24 +357,36 @@ export default function AdminProductPage() {
           </div>
         </div>
 
-        <Table
-          columns={columns}
-          dataSource={Products.data?.data || []}
-          loading={Products.isLoading}
-          bordered
-          rowKey="_id"
-          scroll={{ x: 600 }}
-          pagination={{
-            current: pagination.currentPage,
-            total: pagination.total,
-            pageSize: pagination.pageSize,
-            showSizeChanger: true,
-            pageSizeOptions: tablePageSizes,
-            onChange: (page, pageSize) => {
-              updatePagination({ currentPage: page, pageSize });
-            },
-          }}
-        />
+        <DndContext
+          sensors={sensors}
+          collisionDetection={closestCenter}
+          onDragEnd={handleDragEnd}
+        >
+          <SortableContext
+            items={sortedData.map((product) => product._id)}
+            strategy={verticalListSortingStrategy}
+          >
+            <Table
+              columns={columns}
+              dataSource={sortedData}
+              loading={Products.isLoading}
+              bordered
+              rowKey="_id"
+              scroll={{ x: 600 }}
+              components={tableComponents}
+              pagination={{
+                current: pagination.currentPage,
+                total: pagination.total,
+                pageSize: pagination.pageSize,
+                showSizeChanger: true,
+                pageSizeOptions: tablePageSizes,
+                onChange: (page, pageSize) => {
+                  updatePagination({ currentPage: page, pageSize });
+                },
+              }}
+            />
+          </SortableContext>
+        </DndContext>
       </div>
     </>
   );

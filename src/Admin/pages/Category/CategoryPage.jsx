@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import CategoryModal from './CategoryModal';
 import { useQuery } from '@tanstack/react-query';
 import {
@@ -13,42 +13,38 @@ import SearchInTable from '../../UI/SearchInTable';
 import { useGlobalContext } from '../../../context/GlobalProvider';
 import { confirmDelete } from '../../UI/Modals';
 import { tablePageSizes } from '../../../utils/staticData';
-
 import {
   DndContext,
-  closestCenter,
   PointerSensor,
+  closestCenter,
   useSensor,
   useSensors,
 } from '@dnd-kit/core';
 import {
   SortableContext,
+  arrayMove,
   useSortable,
   verticalListSortingStrategy,
-  arrayMove,
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { HolderOutlined } from '@ant-design/icons';
 
-// ─── Drag Handle ─────────────────────────────────────────────────────────────
-
-const RowDragHandle = ({ rowKey }) => {
+const RowDragHandle = ({ rowKey, disabled = false }) => {
   const { listeners, attributes } = useSortable({ id: rowKey });
+
   return (
     <HolderOutlined
-      {...listeners}
-      {...attributes}
+      {...(!disabled ? listeners : {})}
+      {...(!disabled ? attributes : {})}
       style={{
-        cursor: 'grab',
-        color: '#999',
+        cursor: disabled ? 'not-allowed' : 'grab',
+        color: disabled ? '#d9d9d9' : '#999',
         fontSize: 16,
         touchAction: 'none',
       }}
     />
   );
 };
-
-// ─── Sortable Row ─────────────────────────────────────────────────────────────
 
 const SortableRow = ({ id, children, ...props }) => {
   const { setNodeRef, transform, transition, isDragging } = useSortable({ id });
@@ -80,11 +76,8 @@ const tableComponents = {
   },
 };
 
-// ─── Main Component ───────────────────────────────────────────────────────────
-
 const CategoryPage = () => {
   const { screenSizeFactor } = useGlobalContext();
-  
 
   const [utils, setUtils] = useState({
     isModalVisible: false,
@@ -99,11 +92,10 @@ const CategoryPage = () => {
     currentPage: 1,
     total: 0,
   });
+  const [orderedIds, setOrderedIds] = useState([]);
+
   const updatePagination = (newPagination) =>
     setPagination((prev) => ({ ...prev, ...newPagination }));
-
-  // Local display order — initialised from server data, updated on drag
-  const [orderedIds, setOrderedIds] = useState(null);
 
   const Categories = useQuery({
     queryKey: [
@@ -117,33 +109,34 @@ const CategoryPage = () => {
       updatePagination({ total: res?.total || 0 });
       return res;
     },
-    // When fresh server data arrives reset local order so it reflects DB order
-    onSuccess: (res) => {
-      const ids = (res?.data || []).map((c) => c._id);
-      setOrderedIds(ids);
-    },
   });
 
-  // Map of _id -> category object for quick lookup
-  const categoryMap = useMemo(() => {
-    const arr = Categories.data?.data || [];
-    return Object.fromEntries(arr.map((c) => [c._id, c]));
+  useEffect(() => {
+    const ids = (Categories.data?.data || []).map((category) => category._id);
+    setOrderedIds(ids);
   }, [Categories.data]);
 
-  // Apply local drag order over the server data
-  const sortedData = useMemo(() => {
-    if (!orderedIds) return Categories.data?.data || [];
-    return orderedIds.map((id) => categoryMap[id]).filter(Boolean);
-  }, [orderedIds, categoryMap]);
+  const categoryMap = useMemo(() => {
+    const data = Categories.data?.data || [];
+    return Object.fromEntries(data.map((category) => [category._id, category]));
+  }, [Categories.data]);
 
-  // ── DnD ──────────────────────────────────────────────────────────────────────
+  const sortedData = useMemo(() => {
+    if (!orderedIds.length) return Categories.data?.data || [];
+    return orderedIds.map((id) => categoryMap[id]).filter(Boolean);
+  }, [orderedIds, categoryMap, Categories.data]);
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } })
   );
+  const isReorderDisabled = Boolean(search.searchKey || search.searchValue);
 
   const handleDragEnd = async ({ active, over }) => {
-    if (!orderedIds) return; // 🔥 fix
+    if (!orderedIds.length) return;
+    if (isReorderDisabled) {
+      message.warning('Clear search before reordering categories.');
+      return;
+    }
     if (!over || active.id === over.id) return;
 
     const oldIndex = orderedIds.indexOf(active.id);
@@ -151,18 +144,24 @@ const CategoryPage = () => {
 
     if (oldIndex === -1 || newIndex === -1) return;
 
+    const previousIds = [...orderedIds];
     const newIds = arrayMove(orderedIds, oldIndex, newIndex);
     setOrderedIds(newIds);
 
     try {
-      await reorderCategories(newIds);
+      const pageOffset = (pagination.currentPage - 1) * pagination.pageSize;
+      await reorderCategories(
+        newIds.map((id, index) => ({
+          id,
+          order: pageOffset + index,
+        }))
+      );
+      await Categories.refetch();
     } catch (err) {
       message.error('Failed to save new order.');
-      setOrderedIds(orderedIds);
+      setOrderedIds(previousIds);
     }
   };
-
-  // ── CRUD ──────────────────────────────────────────────────────────────────────
 
   const handleEdit = (record) =>
     updateUtils({ isModalVisible: true, currentEditCategory: record });
@@ -182,8 +181,6 @@ const CategoryPage = () => {
   const handleCloseModal = () =>
     updateUtils({ isModalVisible: false, currentEditCategory: null });
 
-  // ── Columns ───────────────────────────────────────────────────────────────────
-
   const columns = useMemo(
     () => [
       {
@@ -191,7 +188,9 @@ const CategoryPage = () => {
         key: 'sort',
         width: 40,
         align: 'center',
-        render: (_, record) => <RowDragHandle rowKey={record._id} />,
+        render: (_, record) => (
+          <RowDragHandle rowKey={record._id} disabled={isReorderDisabled} />
+        ),
       },
       {
         title: 'S/N',
@@ -259,7 +258,7 @@ const CategoryPage = () => {
         ),
       },
     ],
-    [pagination, screenSizeFactor]
+    [isReorderDisabled, pagination, screenSizeFactor]
   );
 
   return (
@@ -317,7 +316,7 @@ const CategoryPage = () => {
           onDragEnd={handleDragEnd}
         >
           <SortableContext
-            items={sortedData.map((c) => c._id)}
+            items={sortedData.map((category) => category._id)}
             strategy={verticalListSortingStrategy}
           >
             <Table

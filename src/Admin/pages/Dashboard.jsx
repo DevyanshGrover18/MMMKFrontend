@@ -129,23 +129,11 @@ const normalizeRange = (range = [], rangeType = 'month') => {
   return [normalizedStart, normalizedEnd];
 };
 
-const formatChartLabel = (value, rangeType = 'month') => {
-  if (!value) return '';
+const getSequentialChartLabels = (series = [], rangeType = 'month') => {
+  const prefix =
+    rangeType === 'date' ? 'Day' : rangeType === 'week' ? 'Week' : 'Month';
 
-  const parsed = dayjs(value);
-  if (!parsed.isValid()) return String(value);
-
-  switch (rangeType) {
-    case 'date':
-      return parsed.format('DD MMM');
-    case 'week':
-      return `${parsed.startOf('week').format('DD MMM')} - ${parsed
-        .endOf('week')
-        .format('DD MMM')}`;
-    case 'month':
-    default:
-      return parsed.format('MMM YYYY');
-  }
+  return series.map((_, index) => `${prefix} ${index + 1}`);
 };
 
 const getSeriesByType = (data, seriesName, rangeType) => {
@@ -280,6 +268,18 @@ export default function Dashboard() {
     utils.dateRangeToShow,
     utils.rangeType
   );
+  const revenueLabels = getSequentialChartLabels(
+    filteredRevenueSeries,
+    utils.rangeType
+  );
+  const userLabels = getSequentialChartLabels(
+    filteredUserSeries,
+    utils.rangeType
+  );
+  const orderLabels = getSequentialChartLabels(
+    filteredOrderSeries,
+    utils.rangeType
+  );
   const activeAnchorDate = utils.calendarRange?.find(Boolean);
 
   const disableOutOfMaxRange = (current) => {
@@ -391,11 +391,7 @@ export default function Dashboard() {
                   utils.dateRangeToShow,
                   utils.rangeType
                 )}
-                labels={
-                  filteredRevenueSeries.map((item) =>
-                    formatChartLabel(getPointDate(item), utils.rangeType)
-                  )
-                }
+                labels={revenueLabels}
                 values={[
                   {
                     name: 'Revenue',
@@ -414,11 +410,7 @@ export default function Dashboard() {
                   utils.dateRangeToShow,
                   utils.rangeType
                 )}
-                labels={
-                  filteredUserSeries.map((item) =>
-                    formatChartLabel(getPointDate(item), utils.rangeType)
-                  )
-                }
+                labels={userLabels}
                 values={[
                   {
                     name: 'Users',
@@ -436,11 +428,7 @@ export default function Dashboard() {
                   utils.dateRangeToShow,
                   utils.rangeType
                 )}
-                labels={
-                  filteredOrderSeries.map((item) =>
-                    formatChartLabel(getPointDate(item), utils.rangeType)
-                  )
-                }
+                labels={orderLabels}
                 values={[
                   {
                     name: 'Orders',

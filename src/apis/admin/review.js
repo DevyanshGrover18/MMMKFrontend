@@ -1,20 +1,7 @@
-import axios from 'axios';
+import { createAdminApiClient } from './client';
 
-// Create Axios instance
-const review = axios.create({
-  baseURL: `${import.meta.env.VITE_BACKEND_URL}/api/v1/admin/review`,
-  timeout: 10000,
-  withCredentials: true,
-});
-
-review.interceptors.response.use(
-  (response) => response,
-  (error) => {
-    if (error.response && error.response.status === 401) {
-      window.location.href = '/admin/login';
-    }
-    return Promise.reject(error);
-  }
+const review = createAdminApiClient(
+  `${import.meta.env.VITE_BACKEND_URL}/api/v1/admin/review`
 );
 
 export const getAllReview = async (options) => {

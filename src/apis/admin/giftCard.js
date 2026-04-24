@@ -1,20 +1,8 @@
-import axios from 'axios';
+import { createAdminApiClient } from './client';
 
-// Create Axios instance
-const giftCard = axios.create({
-  baseURL: `${import.meta.env.VITE_BACKEND_URL}/api/v1/admin/giftCard`,
-  timeout: 2000,
-  withCredentials: true,
-});
-
-giftCard.interceptors.response.use(
-  (response) => response,
-  (error) => {
-    if (error.response && error.response.status === 401) {
-      window.location.href = '/admin/login';
-    }
-    return Promise.reject(error);
-  }
+const giftCard = createAdminApiClient(
+  `${import.meta.env.VITE_BACKEND_URL}/api/v1/admin/giftCard`,
+  2000
 );
 
 // functions

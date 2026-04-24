@@ -1,22 +1,7 @@
-import axios from 'axios';
+import { createAdminApiClient } from './client';
 
-const dash = axios.create({
-  baseURL: `${import.meta.env.VITE_BACKEND_URL}/api/v1/admin/dashboard`,
-  timeout: 10000,
-  withCredentials: true,
-  headers: {
-    'Content-Type': 'multipart/form-data',
-  },
-});
-
-dash.interceptors.response.use(
-  (response) => response,
-  (error) => {
-    if (error.response && error.response.status === 401) {
-      window.location.href = '/admin/login';
-    }
-    return Promise.reject(error);
-  }
+const dash = createAdminApiClient(
+  `${import.meta.env.VITE_BACKEND_URL}/api/v1/admin/dashboard`
 );
 
 export const getDashboardData = async (filters) => {

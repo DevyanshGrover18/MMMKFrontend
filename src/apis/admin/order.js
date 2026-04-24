@@ -1,20 +1,7 @@
-import axios from 'axios';
+import { createAdminApiClient } from './client';
 
-// Create Axios instance
-const order = axios.create({
-  baseURL: `${import.meta.env.VITE_BACKEND_URL}/api/v1/admin/order`,
-  timeout: 10000,
-  withCredentials: true,
-});
-
-order.interceptors.response.use(
-  (response) => response,
-  (error) => {
-    if (error.response && error.response.status === 401) {
-      window.location.href = '/admin/login';
-    }
-    return Promise.reject(error);
-  }
+const order = createAdminApiClient(
+  `${import.meta.env.VITE_BACKEND_URL}/api/v1/admin/order`
 );
 
 export const createOrder = async (data) => {

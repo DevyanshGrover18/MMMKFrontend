@@ -1,15 +1,11 @@
 import React, { useState } from 'react';
 import { createContext, useContext } from 'react';
+import { getStoredAdminAuth } from '../utils/adminAuth';
 
 const adminAuthContext = createContext();
 
 const AdminAuthProvider = ({ children }) => {
-  const [data, setData] = useState(() => {
-    if (localStorage.getItem('adminAuthToken')) {
-      return JSON.parse(localStorage.getItem('adminAuthToken'));
-    }
-    return {};
-  });
+  const [data, setData] = useState(() => getStoredAdminAuth() || {});
   return (
     <adminAuthContext.Provider value={{ data, setData }}>
       {children}
