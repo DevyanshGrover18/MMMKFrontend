@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from 'react';
 import { useTranslationContext } from '../../context/TranslationContext';
 import { convertPrice, formatPrice } from '../../utils/currency';
 import { useCurrency } from '../../context/CurrencyContext';
+import { useNavigate } from 'react-router-dom';
 
 export default function VideoCard() {
   const {
@@ -13,6 +14,7 @@ export default function VideoCard() {
   const { currency, rates } = useCurrency();
   const formatConvertedPrice = (amount) =>
     formatPrice(convertPrice(amount, currency, rates), currency);
+  const navigate = useNavigate()
 
   const products = [
     {
@@ -22,8 +24,9 @@ export default function VideoCard() {
       isNew: true,
       type: 'product',
       title: 'Maaliyah',
-      OriginalPrice: '$418',
-      OfferedPrice: '$379',
+      OriginalPrice: 418,
+      OfferedPrice: 379,
+      productId : "6932b828f831c31cc6425581"
     },
     {
       id: 2,
@@ -32,8 +35,9 @@ export default function VideoCard() {
       isNew: true,
       type: 'product',
       title: 'Mada',
-      OriginalPrice: '$59',
-      OfferedPrice: '$54',
+      OriginalPrice: 59,
+      OfferedPrice: 54,
+      productId : ""
     },
     {
       id: 3,
@@ -42,8 +46,9 @@ export default function VideoCard() {
       isNew: true,
       type: 'product',
       title: 'Mandingo',
-      OriginalPrice: '$268',
-      OfferedPrice: '$245',
+      OriginalPrice: 268,
+      OfferedPrice: 245,
+      productId : "692424ab4a1b8d3378c91467"
     },
     {
       id: 4,
@@ -54,8 +59,9 @@ export default function VideoCard() {
       type: 'model',
       hasQuickShop: true,
       title: 'Maelhys',
-      OriginalPrice: '$216',
-      OfferedPrice: '$197',
+      OriginalPrice: 216,
+      OfferedPrice: 197,
+      productId : "6932b8a6f831c31cc64255a9"
     },
   ];
 
@@ -149,7 +155,8 @@ export default function VideoCard() {
 
         <div className="grid grid-cols-1 gap-6 md:grid-cols-3 lg:grid-cols-4">
           {products.map((product) => (
-            <div
+            <button onClick={()=> navigate(`/product-details/${product.productId}`)} >
+              <div
               key={product.id}
               className="group cursor-pointer"
               onMouseEnter={() => handleVideoHover(product.id, true)}
@@ -186,6 +193,7 @@ export default function VideoCard() {
                 </h3>
               </div>
             </div>
+            </button>
           ))}
         </div>
       </div>

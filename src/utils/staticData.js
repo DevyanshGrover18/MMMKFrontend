@@ -40,6 +40,6 @@ export const LANGUAGES = [
 ];
 
 export const PRODUCTIDS = {
-  melMoney: '685146be366f5ccebb1b661e',
-  silkyMusk: '685264ec321062a20722d02b ',
+  melMoney: '690c95062db5b6e58f73efdd',
+  silkyMusk: '690c93f32db5b6e58f73efd0 ',
 };

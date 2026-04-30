@@ -59,19 +59,12 @@ const ProductGrid = ({ list = [], textColor = 'white' }) => {
 
   const navigate = useNavigate();
   return list?.length > 0 ? (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 ">
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4">
       {list.map((product, index) => (
         <div
           key={product._id}
           className="relative p-4 text-white border border-white"
         >
-          {/* Display discount badge only on the first product as an example
-          // {product.discount > 0 && (
-          //   <div className="absolute top-[-20px] right-[-2%] z-10 bg-black text-white h-20 lg:h-16 lg:w-16 w-20 md:h-20 md:w-20 flex items-center justify-center rounded-full">
-          //     <p className="text-[16px] md:text-[22px]"> {product.discount}%</p>
-          //   </div>
-          // )} */}
-
           <button
             title={common.addToWishlist}
             onClick={() => {
@@ -85,8 +78,9 @@ const ProductGrid = ({ list = [], textColor = 'white' }) => {
             />
           </button>
 
-          <div className="text-center md:h-[450px] h-[550px] flex flex-col">
-            <div className="flex-1">
+          <div className="text-center flex flex-col gap-2">
+            {/* Fixed image container */}
+            <div className="overflow-hidden h-[350px]">
               <img
                 src={
                   getProductImage(product)
@@ -94,27 +88,15 @@ const ProductGrid = ({ list = [], textColor = 'white' }) => {
                     : ''
                 }
                 alt={getProductName(product)}
-                className="h-full w-full mb-4 object-cover"
+                className="h-full w-full object-cover object-top"
                 loading="lazy"
                 decoding="async"
               />
             </div>
-            {/* <p
-              className={`font-medium text-${textColor} flex justify-center items-center gap-2`}
-            >
-              {product?.price && (
-                <span className="text-sm text-gray-400 line-through md:text-base">
-                  ${product.price}
-                </span>
-              )}
-              <span className="text-lg font-semibold md:text-xl">
-                {product?.discount ? product?.discount : "Coming Soon"}
-              </span>
-            </p> */}
+
+            {/* Price */}
             {product.price && product.websitePrice ? (
-              <p
-                className={`font-medium text-white flex justify-center items-center gap-2`}
-              >
+              <p className="font-medium text-white flex justify-center items-center gap-2">
                 <span className="line-through text-sm">
                   {formatConvertedPrice(product?.price)}
                 </span>
@@ -123,18 +105,22 @@ const ProductGrid = ({ list = [], textColor = 'white' }) => {
                 </span>
               </p>
             ) : (
-              common.itemUnavailable
+              <p className="text-white">{common.itemUnavailable}</p>
             )}
+
+            {/* Product Name */}
             <h3 className={`text-base md:text-xl font-bold text-${textColor}`}>
               {getProductName(product)}
             </h3>
 
+            {/* Brand */}
             {product.brand && (
               <p className={`text-sm font-bold text-${textColor}`}>
                 {product.brand}
               </p>
             )}
 
+            {/* Buy Now Button */}
             <Button4
               onClick={() => navigate(`/product-details/${product._id}`)}
               className="!top-0 !py-2 !border"

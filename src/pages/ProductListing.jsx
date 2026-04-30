@@ -126,6 +126,12 @@ const ProductListing = () => {
       return getAllProducts(utils, { translateLanguage });
     },
   });
+  console.log(query.data)
+
+  useEffect(() => {
+    const element = document.getElementById('categories-navbar');
+    element.scrollIntoView({ top: 0, behavior: 'smooth' });
+  }, [query.data]);
 
   const translateProductNames = async (list, language) => {
     if (!list || !list.length) return setProducts([]);
@@ -187,7 +193,10 @@ const ProductListing = () => {
       <Banner bg={bg}>
         <div className="w-full md:mt-32 mt-36">
           {/* Navbar */}
-          <div className="flex items-center z-30 justify-start gap-3 px-6 py-8 border-t border-b lg:px-10 overflow-x-auto whitespace-nowrap no-scrollbar">
+          <div
+            id="categories-navbar"
+            className="flex items-center z-30 justify-start gap-3 px-6 py-8 border-t border-b lg:px-10 overflow-x-auto whitespace-nowrap no-scrollbar"
+          >
             {Array.isArray(categories) && categories.length > 0 ? (
               categories.map((item) => {
                 if (!item || !item.name) return null;

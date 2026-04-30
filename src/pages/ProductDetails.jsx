@@ -100,7 +100,9 @@ const ProductDetails = () => {
       : remainingSelectableQuantity <= 0;
   const productImages = [
     ...(productData?.image ? [productData.image] : []),
-    ...(Array.isArray(productData?.images) ? productData.images : []),
+    ...(Array.isArray(productData?.images)
+      ? productData.images.filter((img) => img !== productData.image)
+      : []),
   ].filter(Boolean);
 
   const handleTranslateProductData = async (data, language) => {

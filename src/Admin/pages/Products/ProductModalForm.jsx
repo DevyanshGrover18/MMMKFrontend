@@ -338,6 +338,7 @@ const ProductModalForm = ({
       console.log(product);
 
       Object.keys(product).forEach((key) => {
+        if (['images', 'image'].includes(key)) return;
         if (product[key])
           formData.append(
             key,
@@ -886,7 +887,7 @@ const PrimaryDetails = ({
       </Form.Item>
 
       <Form.Item
-        label="Upload Primary Images"
+        label="Upload Primary Image"
         name="image"
         rules={[
           {
@@ -916,12 +917,12 @@ const PrimaryDetails = ({
         </Upload>
       </Form.Item>
       <Form.Item
-        label="Upload Product Images"
+        label="Upload Product Images (Gallery)"
         name="images"
         rules={[
           {
-            required: true,
-            message: 'Please upload at least one product image',
+            required: false,
+            message: 'Please upload product images',
           },
         ]}
         valuePropName="fileList"
