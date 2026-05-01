@@ -4,6 +4,7 @@ import { updateHomeBanner } from '../../../../../apis/admin/editPage';
 import { useForm } from 'antd/es/form/Form';
 import { PlusOutlined } from '@ant-design/icons';
 import { resolveAssetUrl } from '../../../../../utils/assetUrl';
+import { appendCompressedImage } from '../../../../../utils/imageCompression';
 
 const BannerForm = ({ data, query }) => {
   const [isModalVisible, setIsModalVisible] = useState(false);
@@ -63,12 +64,15 @@ const BannerForm = ({ data, query }) => {
     try {
       const formData = new FormData();
       Object.keys(values).forEach((key) => {
-        if (key == 'image') {
-          formData.append(key, values?.image?.fileList[0]?.originFileObj);
-        } else {
+        if (key !== 'image') {
           formData.append(key, values[key]);
         }
       });
+      await appendCompressedImage(
+        formData,
+        'image',
+        values?.image?.fileList?.[0]
+      );
       const res = await updateHomeBanner(formData);
 
       query.refetch();

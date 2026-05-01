@@ -1,9 +1,7 @@
-/* eslint-disable no-unused-vars */
 import { useEffect, useState } from 'react';
 import { MdOutlineFilterList } from 'react-icons/md';
 
 import Banner from '../components/global/Banner';
-import Filter from '../components/listing/Filter';
 import ProductGrid from '../components/listing/ProductGrid';
 import NewsLetter from '../components/global/NewsLetter';
 import bg from '../assets/bg.png';
@@ -11,37 +9,37 @@ import Pagination from '../components/global/Pagination';
 import { useQuery } from '@tanstack/react-query';
 import { getAllProducts } from '../apis/nonAuth/products';
 import SidebarFilter from '../components/listing/SidebarFilter';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useSearchParams } from 'react-router-dom';
 import { useGlobalContext } from '../context/GlobalProvider';
 import {
-  translate,
   translateText,
   useTranslationContext,
-  getTranslateProducts,
 } from '../context/TranslationContext';
 
 import SkeletonCard from '../components/listing/SkeletonCard';
 import { getCategoryLabel } from '../utils/categoryTranslation';
 
+
 const ProductListing = () => {
-  const navigate = useNavigate();
   const { categories } = useGlobalContext();
-  console.log('Categories from GlobalContext:', categories);
   const {
     content: { common },
     translateLanguage,
   } = useTranslationContext();
 
-  useEffect(() => {
-    console.log('Categories updated:', categories);
-  }, [categories]);
   const [isFilterSidebarOpen, setIsFilterSidebarOpen] = useState(false);
 
   const [utils, setUtils] = useState({
     currentPage: 1,
+    categories: [],
+    gender: [],
+    price: [],
+    discount: [],
+    category: [],
+    brand: [],
+    sort: '',
+    q: null,
   });
-
-  console.log('product listing utils', utils);
 
   const updateUtils = (newData) =>
     setUtils((prevData) => ({ ...prevData, ...newData }));
@@ -56,6 +54,7 @@ const ProductListing = () => {
     const discount = searchParams.get('discount');
     const category = searchParams.get('category');
     const q = searchParams.get('q');
+    const sort = searchParams.get('sort');
 
     // Extract all other params as potential custom filters
     const knownParams = [
@@ -65,6 +64,7 @@ const ProductListing = () => {
       'price',
       'discount',
       'category',
+      'sort',
       'q',
     ];
     const customFilters = {};
@@ -76,23 +76,6 @@ const ProductListing = () => {
 
     const searchedCats =
       searchedCategories?.split(',').map((item) => item.trim()) || [];
-    if (searchedCats.length > 0)
-      setSelectedCategory(
-        searchedCategories
-          ? categories
-              ?.filter((item) => searchedCats.includes(item.name.en))
-              .map((item) => getCategoryLabel(item, translateLanguage))
-              .join(', ')
-          : null
-      );
-    else setSelectedCategory(q ? `Search: ${q}` : null);
-    setSelectedCategoryIds(
-      searchedCats.length > 0
-        ? categories
-            ?.filter((item) => searchedCats.includes(item.name.en))
-            .map((item) => item._id)
-        : []
-    );
 
     updateUtils({
       categories: searchedCats,
@@ -101,16 +84,16 @@ const ProductListing = () => {
       discount: discount ? discount.split(',') : [],
       category: category ? category.split(',') : [],
       brand: brand ? brand.split(',') : [],
+      sort: sort || '',
       q: q || null,
       ...customFilters,
       currentPage: 1,
     });
-  }, [searchParams, translateLanguage, categories]);
+  }, [searchParams]);
 
   const [selectedCategory, setSelectedCategory] = useState(null);
-  const [selectedCategoryIds, setSelectedCategoryIds] = useState(null);
+  const [selectedCategoryIds, setSelectedCategoryIds] = useState([]);
   const [resultsText, setResultsText] = useState(null);
-  const [products, setProducts] = useState([]);
 
   const onPageChange = (value) => {
     setUtils((prevData) => {
@@ -121,31 +104,13 @@ const ProductListing = () => {
   // fetching paginated products
   const query = useQuery({
     queryKey: ['products', utils, translateLanguage],
-    queryFn: () => {
-      console.log('Fetching products with utils:', utils);
-      return getAllProducts(utils, { translateLanguage });
-    },
+    queryFn: () => getAllProducts(utils, { translateLanguage }),
   });
-  console.log(query.data)
 
   useEffect(() => {
     const element = document.getElementById('categories-navbar');
-    element.scrollIntoView({ top: 0, behavior: 'smooth' });
+    element?.scrollIntoView({ top: 0, behavior: 'smooth' });
   }, [query.data]);
-
-  const translateProductNames = async (list, language) => {
-    if (!list || !list.length) return setProducts([]);
-
-    const names = list.map((item) => item.productName.en);
-    const translatedNames =
-      language === 'en' ? names : await translate(names, language);
-    setProducts(
-      list.map((item, index) => ({
-        ...item,
-        nameInLanguage: translatedNames[index],
-      }))
-    );
-  };
 
   const getResultText = async (length, total, language) => {
     if (!total) return null;
@@ -156,7 +121,6 @@ const ProductListing = () => {
   };
 
   useEffect(() => {
-    // translateProductNames(query.data?.data, translateLanguage);
     getResultText(
       query.data?.data?.length,
       query.data?.pagination?.total,
@@ -164,13 +128,36 @@ const ProductListing = () => {
     );
   }, [query.data, translateLanguage]);
 
+  useEffect(() => {
+    const matchedCategories =
+      categories?.filter((item) => utils.categories?.includes(item.name.en)) || [];
+
+    if (matchedCategories.length > 0) {
+      setSelectedCategory(
+        matchedCategories
+          .map((item) => getCategoryLabel(item, translateLanguage))
+          .join(', ')
+      );
+    } else {
+      setSelectedCategory(utils.q ? `Search: ${utils.q}` : null);
+    }
+
+    setSelectedCategoryIds(matchedCategories.map((item) => item._id));
+  }, [categories, translateLanguage, utils.categories, utils.q]);
+
   const handleSelectCategory = (item) => {
-    const currentCategories = utils.categories || [];
-    if (!currentCategories.includes(item.name.en))
-      searchParams.set('categories', item.name.en);
-    else searchParams.delete('categories');
-    // setSelectedCategory(item.nameInLanguage[translateLanguage]);
-    navigate(`/product-listings?${searchParams.toString()}`);
+    setUtils((prevData) => {
+      const currentCategories = prevData.categories || [];
+      const nextCategories = currentCategories.includes(item.name.en)
+        ? currentCategories.filter((name) => name !== item.name.en)
+        : [...currentCategories, item.name.en];
+
+      return {
+        ...prevData,
+        categories: nextCategories,
+        currentPage: 1,
+      };
+    });
   };
 
   const toggleFilterSidebar = () => {
@@ -233,46 +220,35 @@ const ProductListing = () => {
                 </p>
               </div>
             </div>
-            {/* <div className="flex items-center gap-3 -mt-4 md:mt-0">
-              <span className="text-base md:text-lg">{common.sort}</span>
-              <button className="px-2 py-0.5 text-black duration-300 bg-white border font-bold border-black md:px-4 text-base md:text-lg hover:bg-gray-200">
-                {common.bestSellers}
-              </button>
-            </div> */}
+            
           </div>
 
           {/* Main Content Section */}
-          <main
-            className={`grid w-full grid-cols-1 ${selectedCategoryIds?.length > 0 ? 'md:grid-cols-12' : ''}`}
-          >
-            {selectedCategoryIds?.length > 0 && (
-              <div className="w-full md:col-span-3 lg:col-span-2 md:border-b-0">
-                {/* Desktop Filter */}
-                <div className="hidden md:block">
-                  <SidebarFilter
-                    categories={selectedCategoryIds}
-                    utils={utils}
-                    setUtils={setUtils}
-                  />
-                </div>
-
-                {/* Mobile Filter Button */}
-                <div className="flex items-end justify-end mr-2 md:hidden">
-                  <button
-                    onClick={toggleFilterSidebar}
-                    className="flex items-center justify-center px-3 py-1 space-x-2 text-center text-white bg-transparent text-bold hover:bg-gray-300"
-                  >
-                    <MdOutlineFilterList className="text-xl" />
-                    <span>{common.filters}</span>
-                  </button>
-                </div>
+          <main className="grid w-full grid-cols-1 md:grid-cols-12">
+            <div className="w-full md:col-span-3 lg:col-span-2 md:border-b-0">
+              {/* Desktop Filter */}
+              <div className="hidden md:block">
+                <SidebarFilter
+                  categories={selectedCategoryIds}
+                  utils={utils}
+                  setUtils={setUtils}
+                />
               </div>
-            )}
+
+              {/* Mobile Filter Button */}
+              <div className="flex items-end justify-end mr-2 md:hidden">
+                <button
+                  onClick={toggleFilterSidebar}
+                  className="flex items-center justify-center px-3 py-1 space-x-2 text-center text-white bg-transparent text-bold hover:bg-gray-300"
+                >
+                  <MdOutlineFilterList className="text-xl" />
+                  <span>{common.filters}</span>
+                </button>
+              </div>
+            </div>
 
             {/* Right (ProductGrid component) */}
-            <div
-              className={`w-full ${selectedCategoryIds?.length > 0 ? 'md:col-span-9 lg:col-span-10' : ''}`}
-            >
+            <div className="w-full md:col-span-9 lg:col-span-10">
               {query.isLoading ? (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4">
                   {[...Array(8)].map((_, i) => (
@@ -289,6 +265,7 @@ const ProductListing = () => {
                         totalItems={query.data?.pagination?.total || 0}
                         itemsPerPage={12}
                         onPageChange={onPageChange}
+                        currentPage={utils.currentPage}
                       />
                     </div>
                   )}
@@ -298,32 +275,30 @@ const ProductListing = () => {
           </main>
 
           {/* Sidebar Filter (Mobile Only) */}
-          {selectedCategoryIds?.length > 0 && (
-            <div
-              className={`fixed inset-y-0 right-0 z-[30] w-[80%] max-w-sm bg-black border-l border-white p-5 transform transition-transform duration-300 ${
-                isFilterSidebarOpen ? 'translate-x-0' : 'translate-x-full'
-              } md:hidden`}
-            >
-              <div className="flex items-center justify-between pb-4 border-b border-gray-600">
-                <h3 className="text-xl font-bold text-white">
-                  {common.filters}
-                </h3>
-                <button
-                  onClick={toggleFilterSidebar}
-                  className="text-white hover:text-yellow-500"
-                >
-                  {common.close}
-                </button>
-              </div>
-              <div className="mt-5">
-                <SidebarFilter
-                  categories={selectedCategoryIds}
-                  utils={utils}
-                  setUtils={setUtils}
-                />
-              </div>
+          <div
+            className={`fixed inset-y-0 right-0 z-[30] w-[80%] max-w-sm bg-black border-l border-white p-5 transform transition-transform duration-300 ${
+              isFilterSidebarOpen ? 'translate-x-0' : 'translate-x-full'
+            } md:hidden`}
+          >
+            <div className="flex items-center justify-between pb-4 border-b border-gray-600">
+              <h3 className="text-xl font-bold text-white">
+                {common.filters}
+              </h3>
+              <button
+                onClick={toggleFilterSidebar}
+                className="text-white hover:text-yellow-500"
+              >
+                {common.close}
+              </button>
             </div>
-          )}
+            <div className="mt-5">
+              <SidebarFilter
+                categories={selectedCategoryIds}
+                utils={utils}
+                setUtils={setUtils}
+              />
+            </div>
+          </div>
 
           {/* Overlay for Sidebar (Mobile Only) */}
           {isFilterSidebarOpen && (

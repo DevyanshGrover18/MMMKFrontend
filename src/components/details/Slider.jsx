@@ -52,7 +52,7 @@ export default function Slider({ images }) {
             <img
               src={resolveAssetUrl(img)}
               alt={`Slide ${index + 1}`}
-              className="object-cover w-[100%] h-auto shadow-md"
+              className="object-cover max-h-[400px] w-auto shadow-md mx-auto"
             />
           </SwiperSlide>
         ))}

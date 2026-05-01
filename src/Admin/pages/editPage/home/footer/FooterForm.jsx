@@ -16,6 +16,7 @@ import {
 } from '@ant-design/icons';
 import { updateFooter } from '../../../../../apis/admin/editPage';
 import { resolveAssetUrl } from '../../../../../utils/assetUrl';
+import { appendCompressedImage } from '../../../../../utils/imageCompression';
 
 const { Option } = Select;
 
@@ -56,7 +57,7 @@ const FooterForm = ({ data, query }) => {
       const values = await form.validateFields();
       console.log('values', values);
       const formData = new FormData();
-      formData.append('image', values?.footerImage[0]?.originFileObj);
+      await appendCompressedImage(formData, 'image', values?.footerImage?.[0]);
       formData.append('footerContent', JSON.stringify(values?.footerContent));
       formData.append('footerLinks', JSON.stringify(values?.footerLinks));
       formData.append('socialLinks', JSON.stringify(values?.socialLinks));

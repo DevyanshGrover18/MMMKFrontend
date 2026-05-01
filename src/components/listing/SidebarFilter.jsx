@@ -5,9 +5,11 @@ import {
   translate,
   useTranslationContext,
 } from '../../context/TranslationContext';
+import { useGlobalContext } from '../../context/GlobalProvider';
+import { getCategoryLabel } from '../../utils/categoryTranslation';
 
 const SidebarFilter = ({ utils, setUtils, categories = [] }) => {
-  const [activeSection, setActiveSection] = useState(null);
+  const { categories: allCategories } = useGlobalContext();
   const {
     content: { common },
     translateLanguage,
@@ -86,10 +88,6 @@ const SidebarFilter = ({ utils, setUtils, categories = [] }) => {
     });
   };
 
-  const toggleSection = (section) => {
-    setActiveSection(activeSection === section ? null : section);
-  };
-
   // Clear all filters function
   const clearAllFilters = () => {
     const clearedFilters = Object.keys(filters).reduce((acc, key) => {
@@ -99,6 +97,7 @@ const SidebarFilter = ({ utils, setUtils, categories = [] }) => {
     setUtils((prevData) => ({
       ...prevData,
       currentPage: 1,
+      categories: [],
       ...clearedFilters,
     }));
   };
@@ -111,6 +110,12 @@ const SidebarFilter = ({ utils, setUtils, categories = [] }) => {
       [filterType]: [],
     }));
   };
+
+  const categoryOptions =
+    allCategories?.map((category) => ({
+      label: getCategoryLabel(category, translateLanguage),
+      value: category?.name?.en,
+    })) || [];
 
   return (
     <div className="flex flex-col w-full bg-black p-4 h-[80vh] md:h-full overflow-y-auto">
@@ -127,6 +132,40 @@ const SidebarFilter = ({ utils, setUtils, categories = [] }) => {
             {common.clearAll || 'Clear All'}
           </button>
         </div>
+
+        {categoryOptions.length > 0 && (
+          <div>
+            <div className="flex justify-between items-center">
+              <h3 className="text-xl mb-3 mt-2">
+                {common.collection || 'Categories'}
+              </h3>
+              {utils?.categories?.length > 0 && (
+                <button
+                  onClick={() => clearSpecificFilter('categories')}
+                  className="text-xs text-gray-400 hover:text-white"
+                >
+                  Clear
+                </button>
+              )}
+            </div>
+            <div className="flex flex-col gap-2">
+              {categoryOptions.map((item) => (
+                <label
+                  key={item.value}
+                  className="flex items-center cursor-pointer"
+                >
+                  <input
+                    type="checkbox"
+                    className="mr-2"
+                    checked={utils?.categories?.includes(item.value)}
+                    onChange={() => handleCheckbox('categories', item.value)}
+                  />
+                  {item.label}
+                </label>
+              ))}
+            </div>
+          </div>
+        )}
 
         {/* Dynamic Filters */}
         {Object.entries(filters).map(

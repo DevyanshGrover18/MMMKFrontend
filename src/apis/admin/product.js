@@ -1,7 +1,8 @@
 import { createAdminApiClient } from './client';
 
 const product = createAdminApiClient(
-  `${import.meta.env.VITE_BACKEND_URL}/api/v1/admin/product`
+  `${import.meta.env.VITE_BACKEND_URL}/api/v1/admin/product`,
+  120000
 );
 
 export const createProduct = async (data) => {

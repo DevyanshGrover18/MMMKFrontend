@@ -1,4 +1,5 @@
 import { createAdminApiClient } from './client';
+import { appendCompressedImages } from '../../utils/imageCompression';
 
 const SHARED_UPLOAD_BASE_URL = (
   import.meta.env.VITE_SHARED_UPLOAD_BASE_URL ||
@@ -16,11 +17,7 @@ export const uploadAdminFiles = async (files) => {
   }
 
   const formData = new FormData();
-  files.forEach((file) => {
-    if (file) {
-      formData.append('files', file);
-    }
-  });
+  await appendCompressedImages(formData, 'files', files);
 
   const response = await uploadApi.post('/images', formData);
   return response?.data?.data?.files || [];

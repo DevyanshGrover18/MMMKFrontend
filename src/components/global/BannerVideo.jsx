@@ -8,7 +8,7 @@ import Navbar from './Navbar';
 
 const BannerVideo = ({ children, minHight, bg }) => {
   const { i18n } = useTranslation();
-  const [isMuted, setIsMuted] = useState(false); // Start muted by default
+  const [isMuted, setIsMuted] = useState(true);
   const videoRef = useRef(null);
 
   useEffect(() => {
@@ -20,8 +20,15 @@ const BannerVideo = ({ children, minHight, bg }) => {
     }
   }, [i18n.language]);
 
+  useEffect(() => {
+    if (!videoRef.current) return;
+
+    videoRef.current.muted = isMuted;
+    videoRef.current.defaultMuted = isMuted;
+  }, [isMuted]);
+
   const toggleMute = () => {
-    setIsMuted(!isMuted);
+    setIsMuted((prevState) => !prevState);
   };
 
   return (
@@ -38,6 +45,7 @@ const BannerVideo = ({ children, minHight, bg }) => {
           loop
           playsInline
           preload="metadata"
+          defaultMuted={isMuted}
           muted={isMuted}
           aria-hidden="true"
         ></video>

@@ -21,6 +21,7 @@ import { FormTabs } from '../../UI/Tabs';
 import { useQuery } from '@tanstack/react-query';
 import { getAllFilters } from '../../../apis/admin/filter';
 import { resolveAssetUrl } from '../../../utils/assetUrl';
+import { appendCompressedImage } from '../../../utils/imageCompression';
 
 const FilterDropdown = ({ value, onChange }) => {
   const filtersQuery = useQuery({
@@ -144,9 +145,7 @@ const CategoryModal = ({
       console.log('Form Values:', formValues);
       formData.append('filters', JSON.stringify(formValues.filters || []));
 
-      if (imageFile) {
-        formData.append('image', imageFile);
-      }
+      await appendCompressedImage(formData, 'image', imageFile);
       try {
         let res = null;
         if (currentEditCategory) {

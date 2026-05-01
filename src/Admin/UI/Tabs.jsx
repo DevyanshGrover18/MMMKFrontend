@@ -8,6 +8,7 @@ export const FormTabs = ({
   activeTab,
   updateUtils,
   isLoading = false,
+  isActionDisabled = false,
 }) => {
   return (
     <div className="relative flex flex-col gap-2">
@@ -32,6 +33,7 @@ export const FormTabs = ({
         </Button>
         {activeTab >= items.length - 1 ? (
           <Button
+            disabled={isActionDisabled}
             loading={isLoading}
             icon={<LuSave />}
             type="primary"
@@ -41,6 +43,7 @@ export const FormTabs = ({
           </Button>
         ) : (
           <Button
+            disabled={isActionDisabled}
             loading={isLoading}
             icon={<LuArrowRight />}
             iconPosition="end"

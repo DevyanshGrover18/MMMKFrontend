@@ -2,12 +2,13 @@
 import { useState } from 'react';
 import { useTranslationContext } from '../../context/TranslationContext';
 
-const Pagination = ({ totalItems, itemsPerPage, onPageChange }) => {
+const Pagination = ({ totalItems, itemsPerPage, onPageChange, currentPage: controlledCurrentPage }) => {
   const [currentPage, setCurrentPage] = useState(1);
   const {
     content: { common },
   } = useTranslationContext();
 
+  const activePage = controlledCurrentPage || currentPage;
   const totalPages = Math.ceil(totalItems / itemsPerPage);
 
   const handlePageClick = (page) => {
@@ -16,14 +17,14 @@ const Pagination = ({ totalItems, itemsPerPage, onPageChange }) => {
   };
 
   const handleNext = () => {
-    if (currentPage < totalPages) {
-      handlePageClick(currentPage + 1);
+    if (activePage < totalPages) {
+      handlePageClick(activePage + 1);
     }
   };
 
   const handlePrev = () => {
-    if (currentPage > 1) {
-      handlePageClick(currentPage - 1);
+    if (activePage > 1) {
+      handlePageClick(activePage - 1);
     }
   };
 
@@ -31,9 +32,9 @@ const Pagination = ({ totalItems, itemsPerPage, onPageChange }) => {
     <div className="flex items-center justify-center gap-3 bg-[rgba(40,18,11,.3)] py-3 px-4 rounded-md md:mb-0 -mb-16">
       <button
         onClick={handlePrev}
-        disabled={currentPage === 1}
+        disabled={activePage === 1}
         className={`text-white text-sm md:text-lg cursor-pointer ${
-          currentPage === 1 ? 'opacity-50 cursor-not-allowed' : 'underline'
+          activePage === 1 ? 'opacity-50 cursor-not-allowed' : 'underline'
         }`}
       >
         {common.previous}
@@ -48,7 +49,7 @@ const Pagination = ({ totalItems, itemsPerPage, onPageChange }) => {
               key={page}
               onClick={() => handlePageClick(page)}
               className={`text-white text-sm md:text-lg ${
-                currentPage === page ? 'font-bold' : ''
+                activePage === page ? 'font-bold' : ''
               }`}
             >
               {page}
@@ -59,9 +60,9 @@ const Pagination = ({ totalItems, itemsPerPage, onPageChange }) => {
 
       <button
         onClick={handleNext}
-        disabled={currentPage === totalPages}
+        disabled={activePage === totalPages}
         className={`text-white text-sm md:text-lg cursor-pointer ${
-          currentPage === totalPages
+          activePage === totalPages
             ? 'opacity-50 cursor-not-allowed'
             : 'underline'
         }`}

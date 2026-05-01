@@ -13,6 +13,7 @@ import {
   Table,
   InputNumber,
   Switch,
+  Spin,
 } from 'antd';
 import { CKEditor } from '@ckeditor/ckeditor5-react';
 import ClassicEditor from '@ckeditor/ckeditor5-build-classic';
@@ -24,8 +25,11 @@ import { LANGUAGECODES, LANGUAGECODETONAME } from '../../../utils/staticData';
 import { FormTabs } from '../../UI/Tabs';
 import { getTranslatedFields } from '../../../utils/getTranslatedFields';
 import { resolveAssetUrl } from '../../../utils/assetUrl';
+import { uploadSingleAdminFile } from '../../../apis/admin/upload';
 
 const { Option } = Select;
+
+const getUniqueImageNames = (images = []) => [...new Set(images.filter(Boolean))];
 
 const ProductModalForm = ({
   onClose,
@@ -35,14 +39,34 @@ const ProductModalForm = ({
   isOpen = false,
 }) => {
   const [form] = Form.useForm();
+  const primaryImageFiles = Form.useWatch('image', form) || [];
+  const galleryImageFiles = Form.useWatch('images', form) || [];
 
   const [utils, setUtils] = useState({
     activeTab: 0,
     isTabLoading: false,
     deletedImages: [],
+    activeImageUploads: 0,
   });
   const updateUtils = (newUtils) =>
-    setUtils((prev) => ({ ...prev, ...newUtils }));
+    setUtils((prev) =>
+      typeof newUtils === 'function' ? newUtils(prev) : { ...prev, ...newUtils }
+    );
+
+  const isImageUploadPending =
+    utils.activeImageUploads > 0 ||
+    [...primaryImageFiles, ...galleryImageFiles].some(
+      (file) => file?.status === 'uploading'
+    );
+  const hasImageUploadError = [...primaryImageFiles, ...galleryImageFiles].some(
+    (file) => file?.status === 'error'
+  );
+  const isPrimaryImageReady =
+    primaryImageFiles.length > 0 &&
+    primaryImageFiles.every((file) => file?.status === 'done');
+  const isActionDisabled =
+    utils.activeTab === 0 &&
+    (isImageUploadPending || hasImageUploadError || !isPrimaryImageReady);
 
   const handleAutoTranslate = async (fieldName) => {
     try {
@@ -60,7 +84,7 @@ const ProductModalForm = ({
     if (isOpen) {
       if (selected) {
         const images =
-          selected?.images?.map((list) => {
+          getUniqueImageNames(selected?.images).map((list) => {
             return {
               uid: list,
               name: list,
@@ -105,7 +129,12 @@ const ProductModalForm = ({
           image: [],
         });
       }
-      updateUtils({ activeTab: 0, isTabsLoading: false, deletedImages: [] });
+      updateUtils({
+        activeTab: 0,
+        isTabsLoading: false,
+        deletedImages: [],
+        activeImageUploads: 0,
+      });
     }
   }, [isOpen]);
 
@@ -123,6 +152,8 @@ const ProductModalForm = ({
               updateUtils({ deletedImages: [...utils.deletedImages, image] })
             }
             handleAutoTranslate={handleAutoTranslate}
+            isUploadingImages={isImageUploadPending}
+            updateUtils={updateUtils}
           />
         ),
       },
@@ -262,7 +293,7 @@ const ProductModalForm = ({
         ),
       },
     ],
-    [form, selected, isOpen]
+    [form, selected, isOpen, isImageUploadPending, utils.deletedImages]
   );
 
   const handleTranslateTab = async (tabIndex) => {
@@ -328,12 +359,32 @@ const ProductModalForm = ({
         message.error('Please upload a primary image');
         return;
       }
+      if (isImageUploadPending) {
+        message.error('Uploading images. Please wait.');
+        updateUtils({ isTabLoading: false });
+        return;
+      }
+      if (hasImageUploadError) {
+        message.error('One or more images failed to upload.');
+        updateUtils({ isTabLoading: false });
+        return;
+      }
       const formData = new FormData();
-      images.forEach((file) => {
-        if (file.originFileObj) formData.append('images', file.originFileObj);
-      });
-      if (image[0]?.originFileObj)
-        formData.append('image', image[0].originFileObj);
+      const uploadedPrimaryImage =
+        image[0]?.response?.uploadedFile || image[0]?.uid || image[0]?.name;
+      const uploadedGalleryImages = images
+        .map((file) => file?.response?.uploadedFile || file?.uid || file?.name)
+        .filter(Boolean)
+        .filter((fileName) => fileName !== uploadedPrimaryImage);
+
+      if (uploadedPrimaryImage) {
+        formData.append('image', uploadedPrimaryImage);
+      }
+
+      if (uploadedGalleryImages.length) {
+        formData.append('images', JSON.stringify(uploadedGalleryImages));
+      }
+      formData.append('finalImages', JSON.stringify(uploadedGalleryImages));
 
       console.log(product);
 
@@ -367,9 +418,20 @@ const ProductModalForm = ({
         } else {
           res = await createProduct(formData);
         }
-        message.success('Product created successfully');
-        refetchTable();
+        message.success(
+          selected
+            ? 'Product updated successfully'
+            : 'Product created successfully'
+        );
         onClose();
+        try {
+          await refetchTable();
+        } catch (refetchError) {
+          console.error('Failed to refresh product table:', refetchError);
+          message.warning(
+            'Product saved successfully, but the table refresh failed.'
+          );
+        }
       } catch (err) {
         console.log(err);
         message.error(
@@ -404,6 +466,7 @@ const ProductModalForm = ({
         <FormTabs
           items={tabs}
           isLoading={utils.isTabLoading}
+          isActionDisabled={isActionDisabled}
           activeTab={utils.activeTab}
           updateUtils={updateUtils}
           onCancel={onClose}
@@ -422,6 +485,8 @@ const PrimaryDetails = ({
   isOpen,
   addDeletedImage,
   handleAutoTranslate,
+  isUploadingImages,
+  updateUtils,
 }) => {
   const skus = Form.useWatch('skus', form);
   const filters = Form.useWatch('filters', form);
@@ -507,7 +572,49 @@ const PrimaryDetails = ({
       message.error(`${file.name} is not an image file`);
       return Upload.LIST_IGNORE;
     }
-    return false;
+    return true;
+  };
+
+  const normalizeUploadedFileList = (fileList = []) =>
+    fileList.map((file) => {
+      const uploadedFile =
+        file?.response?.uploadedFile || file?.uid || file?.name || null;
+
+      if (!uploadedFile || file?.status !== 'done') {
+        return file;
+      }
+
+      return {
+        ...file,
+        uid: uploadedFile,
+        name: uploadedFile,
+        status: 'done',
+        url: resolveAssetUrl(uploadedFile),
+        response: { uploadedFile },
+      };
+    });
+
+  const runImageUpload = async ({ file, onSuccess, onError }) => {
+    updateUtils((prev) => ({
+      ...prev,
+      activeImageUploads: prev.activeImageUploads + 1,
+    }));
+
+    try {
+      const uploadedFile = await uploadSingleAdminFile(file);
+      if (!uploadedFile) {
+        throw new Error('Image upload failed');
+      }
+      onSuccess?.({ uploadedFile });
+    } catch (error) {
+      onError?.(error);
+      message.error(error?.response?.data?.message || 'Failed to upload image');
+    } finally {
+      updateUtils((prev) => ({
+        ...prev,
+        activeImageUploads: Math.max(0, prev.activeImageUploads - 1),
+      }));
+    }
   };
 
   const handlePreview = async (file) => {
@@ -541,7 +648,7 @@ const PrimaryDetails = ({
       });
       updateDynamicData({
         fileList:
-          selected?.images?.map((list) => {
+          getUniqueImageNames(selected?.images).map((list) => {
             return {
               uid: list,
               name: list,
@@ -899,11 +1006,10 @@ const PrimaryDetails = ({
       >
         <Upload
           listType="picture-card"
-          // fileList={dynamicData.primaryImageList}
+          customRequest={runImageUpload}
           onPreview={handlePreview}
           onChange={({ fileList }) => {
-            form.setFieldsValue({ image: fileList });
-            // updateDynamicData({ primaryImageList: fileList });
+            form.setFieldsValue({ image: normalizeUploadedFileList(fileList) });
           }}
           beforeUpload={beforeUpload}
           onRemove={(val) => handleDeleteImage(val, 'image')}
@@ -929,11 +1035,12 @@ const PrimaryDetails = ({
       >
         <Upload
           listType="picture-card"
-          // fileList={dynamicData.fileList}
+          customRequest={runImageUpload}
           onPreview={handlePreview}
           onChange={({ fileList }) => {
-            form.setFieldsValue({ images: fileList });
-            // updateDynamicData({ fileList });
+            form.setFieldsValue({
+              images: normalizeUploadedFileList(fileList),
+            });
           }}
           beforeUpload={beforeUpload}
           multiple
@@ -947,6 +1054,12 @@ const PrimaryDetails = ({
           )}
         </Upload>
       </Form.Item>
+      {isUploadingImages && (
+        <div className="mb-4 flex items-center gap-2 text-sm text-slate-600">
+          <Spin size="small" />
+          <span>Uploading images...</span>
+        </div>
+      )}
 
       <Form.Item
         label="Show Product on Homepage"

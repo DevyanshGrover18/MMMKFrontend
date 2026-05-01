@@ -12,7 +12,7 @@ const product = axios.create({
 });
 
 export const getAllProducts = async (
-  { currentPage, categories, gender, brand, price, discount, q, ...customFilters },
+  { currentPage, categories, gender, brand, price, discount, sort, q, ...customFilters },
   { translateLanguage } = {}
 ) => {
   const response = await product.get(`/all-products`, {
@@ -23,6 +23,7 @@ export const getAllProducts = async (
       brand,
       price,
       discount,
+      sort,
       q,
       ...customFilters,
     },

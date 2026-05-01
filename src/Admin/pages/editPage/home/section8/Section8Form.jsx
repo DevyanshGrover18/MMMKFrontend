@@ -4,6 +4,7 @@ import { PlusOutlined } from '@ant-design/icons';
 import { useForm } from 'antd/es/form/Form';
 import { updateHomeSection8 } from '../../../../../apis/admin/editPage';
 import { resolveAssetUrl } from '../../../../../utils/assetUrl';
+import { appendCompressedImage } from '../../../../../utils/imageCompression';
 
 const Section8Form = ({ data, query }) => {
   const [form] = useForm();
@@ -21,14 +22,20 @@ const Section8Form = ({ data, query }) => {
   const handleFinish = async (values) => {
     const formData = new FormData();
     Object.keys(values).forEach((key) => {
-      if (key.includes('Image')) {
-        if (values[key]) {
-          formData.append(key, values[key]?.fileList[0]?.originFileObj);
-        }
-      } else {
+      if (!key.includes('Image')) {
         formData.append(key, values[key]);
       }
     });
+    await appendCompressedImage(
+      formData,
+      'leftImage',
+      values?.leftImage?.fileList?.[0]
+    );
+    await appendCompressedImage(
+      formData,
+      'rightImage',
+      values?.rightImage?.fileList?.[0]
+    );
 
     try {
       const res = await updateHomeSection8(formData);
