@@ -28,6 +28,7 @@ const calculateCartSummary = ({
   isCouponApply = false,
   shippingCharges = 0,
   appliedCreditAmount = 0,
+  isBagAdded = false,
   currency = BASE_CURRENCY,
   rates = {},
 }) => {
@@ -45,8 +46,9 @@ const calculateCartSummary = ({
       : 0;
 
   const shipping = convertPrice(shippingCharges || 0, currency, rates);
+  const bagFee = convertPrice(isBagAdded ? 1.79 : 0, currency, rates);
   const convertedCredit = convertPrice(appliedCreditAmount || 0, currency, rates);
-  const totalBeforeCredits = subtotal - couponDiscount + shipping;
+  const totalBeforeCredits = subtotal - couponDiscount + shipping + bagFee;
   const creditApplied = Math.min(
     Number(convertedCredit || 0),
     Math.max(Number(totalBeforeCredits.toFixed(2)), 0)
@@ -57,6 +59,7 @@ const calculateCartSummary = ({
     subtotal: Number(subtotal.toFixed(2)),
     couponDiscount: Number(couponDiscount.toFixed(2)),
     shipping: Number(shipping.toFixed(2)),
+    bagFee: Number(bagFee.toFixed(2)),
     creditApplied: Number(creditApplied.toFixed(2)),
     total: Number(total.toFixed(2)),
   };
@@ -80,11 +83,15 @@ const CartProvider = ({ children }) => {
     subtotal: 0,
     couponDiscount: 0,
     shipping: 0,
+    bagFee: 0,
     creditApplied: 0,
     total: 0,
   });
   const [appliedCreditAmount, setAppliedCreditAmount] = useState(() =>
     Number(localStorage.getItem(APPLIED_CREDIT_KEY) || 0)
+  );
+  const [isBagAdded, setIsBagAdded] = useState(() => 
+    localStorage.getItem('isBagAdded') === 'true'
   );
   const query = useQuery({
     queryKey: ['cart'],
@@ -113,6 +120,10 @@ const CartProvider = ({ children }) => {
   useEffect(() => {
     localStorage.setItem(APPLIED_COUPON_FLAG_KEY, String(Boolean(isCouponApply)));
   }, [isCouponApply]);
+
+  useEffect(() => {
+    localStorage.setItem('isBagAdded', String(Boolean(isBagAdded)));
+  }, [isBagAdded]);
 
   useEffect(() => {
     if (couponData && Object.keys(couponData).length > 0) {
@@ -144,7 +155,7 @@ const CartProvider = ({ children }) => {
     if (appliedCreditAmount > summaryWithoutShipping.subtotal - summaryWithoutShipping.couponDiscount) {
       setAppliedCreditAmount(summaryWithoutShipping.total + summaryWithoutShipping.creditApplied);
     }
-  }, [cart, couponData, isCouponApply, appliedCreditAmount]);
+  }, [cart, couponData, isCouponApply, isBagAdded, appliedCreditAmount]);
 
   const showNotfication = ({ type, productName, quantity }) =>
     notification.open({
@@ -302,11 +313,13 @@ const CartProvider = ({ children }) => {
       subtotal: 0,
       couponDiscount: 0,
       shipping: 0,
+      bagFee: 0,
       creditApplied: 0,
       total: 0,
     });
     setAppliedCreditAmount(0);
     localStorage.removeItem(APPLIED_CREDIT_KEY);
+    setIsBagAdded(false);
     if (updateOnBackend && isUserSignedIn()) {
       for (const item of localCart) {
         removeCartItems(item.product._id, item.sku, item.quantity).catch(
@@ -400,6 +413,8 @@ const CartProvider = ({ children }) => {
         setCheckoutSummary,
         appliedCreditAmount,
         setAppliedCreditAmount,
+        isBagAdded,
+        setIsBagAdded,
       }}
     >
       {children}

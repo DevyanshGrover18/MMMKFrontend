@@ -25,6 +25,7 @@ const Checkout = () => {
     calculateCartSummary,
     couponData,
     isCouponApply,
+    isBagAdded,
   } = useCart();
   const { currency, rates } = useCurrency();
 
@@ -33,6 +34,7 @@ const Checkout = () => {
     couponData,
     isCouponApply,
     appliedCreditAmount,
+    isBagAdded,
     shippingCharges,
     currency,
     rates,

@@ -137,6 +137,7 @@ export default function CheckoutForm({
     setCheckoutSummary,
     appliedCreditAmount,
     setAppliedCreditAmount,
+    isBagAdded,
   } = useCart();
   const { currency, rates } = useCurrency();
 
@@ -159,6 +160,7 @@ export default function CheckoutForm({
     items: cartData,
     couponData,
     isCouponApply,
+    isBagAdded,
     shippingCharges,
     appliedCreditAmount,
     currency,
@@ -583,6 +585,12 @@ export default function CheckoutForm({
               <div className="flex items-center justify-between text-black/60">
                 <span>Shipping</span>
                 <span>{formatPrice(derivedSummary.shipping, currency)}</span>
+              </div>
+            )}
+            {derivedSummary.bagFee > 0 && (
+              <div className="flex items-center justify-between text-black/60">
+                <span>Bag Fee</span>
+                <span>+ {formatPrice(derivedSummary.bagFee, currency)}</span>
               </div>
             )}
             <div className="flex items-center justify-between border-t brown-border pt-3 text-lg font-bold">

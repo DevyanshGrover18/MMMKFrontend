@@ -50,6 +50,8 @@ const ShoppingCart = () => {
     setCheckoutSummary,
     appliedCreditAmount,
     setAppliedCreditAmount,
+    isBagAdded,
+    setIsBagAdded,
   } = useCart();
   const navigate = useNavigate();
   const [couponInput, setCouponInput] = useState(null);
@@ -92,6 +94,7 @@ const ShoppingCart = () => {
     couponData,
     isCouponApply,
     appliedCreditAmount,
+    isBagAdded,
     currency,
     rates,
   });
@@ -270,6 +273,7 @@ const ShoppingCart = () => {
       couponData,
       isCouponApply,
       appliedCreditAmount,
+      isBagAdded,
       currency,
       rates,
     });
@@ -282,6 +286,7 @@ const ShoppingCart = () => {
       items: data,
       couponData,
       isCouponApply,
+      isBagAdded,
       appliedCreditAmount: 0,
     });
     const eligibleAmount = Math.min(
@@ -513,6 +518,33 @@ const ShoppingCart = () => {
                     </div>
                   );
                 })}
+
+                {/* Add Bag Option */}
+                <div className="w-full py-6 px-6 md:px-10 mb-10 bg-white shadow-lg rounded-lg flex items-center justify-between border border-gray-200 mt-4">
+                  <div className="flex items-center gap-4">
+                    <img 
+                      src="/mmmk-bag.jpeg" 
+                      alt="MMMK Bag" 
+                      className="w-16 h-16 object-cover rounded shadow border"
+                      onError={(e) => { e.target.style.display = 'none'; }}
+                    />
+                    <div>
+                      <h3 className="font-semibold text-lg text-gray-800">Add a Bag</h3>
+                      <p className="text-sm text-gray-500">Includes an exclusive MMMK bag with your order.</p>
+                      <p className="font-semibold">{formatConvertedPrice(1.79)}</p>
+                    </div>
+                  </div>
+                  <div>
+                    <CommonButton 
+                      variant={isBagAdded ? 'danger1' : 'primary1'} 
+                      onClick={() => setIsBagAdded(!isBagAdded)}
+                      size="sm"
+                    >
+                      {isBagAdded ? 'Remove Bag' : 'Add Bag'}
+                    </CommonButton>
+                  </div>
+                </div>
+
               </div>
 
               {/* Right Side: Payment Breakdown */}
@@ -525,6 +557,13 @@ const ShoppingCart = () => {
                     <p>{common.subTotal}</p>
                     <p>{formatPrice(cartSummary.subtotal, currency)}</p>
                   </div>
+
+                  {cartSummary.bagFee > 0 && (
+                    <div className="flex items-center justify-between my-5 text-gray-600">
+                      <p>Bag Fee</p>
+                      <p>+ {formatPrice(cartSummary.bagFee, currency)}</p>
+                    </div>
+                  )}
 
                   {isCouponApply && (
                     <div className="flex items-center my-5 gap-2">

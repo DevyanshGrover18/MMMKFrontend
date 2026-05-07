@@ -4,7 +4,7 @@ import { Link } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import MenuDrawer from './MenuDrawer';
 import { BsMinecartLoaded } from 'react-icons/bs';
-import { FaUser } from 'react-icons/fa';
+import { FaHeart, FaUser } from 'react-icons/fa';
 import { IoSearchSharp } from 'react-icons/io5';
 import { useCart } from '../../context/CartProvider';
 import SearchDrawer from './SearchDrawer';
@@ -86,6 +86,9 @@ export default function Navbar({}) {
               className="flex items-center text-sm text-white bg-transparent outline-none"
             >
               <TbGiftCardFilled size={24} className="text-white" />
+            </Link>
+            <Link to={'/profile/saved-items'}>
+              <FaHeart />
             </Link>
             <Link to={'/profile/my-account'}>
               <FaUser size={17} className="text-white" />
