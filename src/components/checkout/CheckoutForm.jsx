@@ -138,6 +138,7 @@ export default function CheckoutForm({
     appliedCreditAmount,
     setAppliedCreditAmount,
     isBagAdded,
+    clearCart,
   } = useCart();
   const { currency, rates } = useCurrency();
 
@@ -570,9 +571,24 @@ export default function CheckoutForm({
               <span>{formatPrice(derivedSummary.subtotal, currency)}</span>
             </div>
             {derivedSummary.couponDiscount > 0 && (
-              <div className="flex items-center justify-between text-green-700">
-                <span>{common.coupon}</span>
-                <span>-{formatPrice(derivedSummary.couponDiscount, currency)}</span>
+              <div className="flex flex-col gap-1">
+                <div className="flex items-center justify-between text-green-700">
+                  <span>{common.coupon}</span>
+                  <span>
+                    -{formatPrice(derivedSummary.couponDiscount, currency)}
+                  </span>
+                </div>
+                {couponData?.scope && couponData.scope !== 'All' && (
+                  <p className="text-right text-[10px] text-gray-500 italic">
+                    Applied to:{' '}
+                    {couponData.scope === 'Category'
+                      ? couponData.scopeCategory?.name?.[translateLanguage] ||
+                        couponData.scopeCategory?.name?.en
+                      : couponData.scopeProduct?.productName?.[
+                          translateLanguage
+                        ] || couponData.scopeProduct?.productName?.en}
+                  </p>
+                )}
               </div>
             )}
             {Number(derivedSummary.creditApplied || 0) > 0 && (

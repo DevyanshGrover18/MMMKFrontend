@@ -165,14 +165,7 @@ const OrderSuccess = () => {
                         {order.paymentStatus || 'Pending'}
                       </p>
                     </div>
-                    <div>
-                      <p className="text-xs uppercase tracking-[0.3em] text-gray-500">
-                        Jura Sync
-                      </p>
-                      <p className="mt-1 text-lg font-semibold text-gray-900">
-                        {juraSyncStatus}
-                      </p>
-                    </div>
+                    
                     {juraOrderId && (
                       <div>
                         <p className="text-xs uppercase tracking-[0.3em] text-gray-500">

@@ -105,6 +105,29 @@ const ShoppingCart = () => {
     try {
       const res = await applyCoupon(coupon);
       const validCoupon = res?.data;
+
+      // Check if coupon is eligible for current cart items
+      const tempSummary = calculateCartSummary({
+        items: data,
+        couponData: validCoupon,
+        isCouponApply: true,
+        currency,
+        rates,
+      });
+
+      if (
+        validCoupon.scope &&
+        validCoupon.scope !== 'All' &&
+        tempSummary.couponDiscount <= 0
+      ) {
+        showTranslatedMessage({
+          msg: 'this coupon is not eligible for your cart',
+          language: translateLanguage,
+          type: 'error',
+        });
+        return;
+      }
+
       setCouponData(validCoupon);
       setCouponInput('');
       setCouponCode(validCoupon?.couponCode);
@@ -566,25 +589,39 @@ const ShoppingCart = () => {
                   )}
 
                   {isCouponApply && (
-                    <div className="flex items-center my-5 gap-2">
-                      <div className="flex items-center flex-1 justify-between">
-                        <p>{common.coupon}</p>
-                        <p className="text-green-500">
-                          - {formatPrice(cartSummary.couponDiscount, currency)}{' '}
-                          ({couponData?.discount}% off)
-                        </p>
+                    <div className="flex flex-col my-5 gap-1">
+                      <div className="flex items-center gap-2">
+                        <div className="flex items-center flex-1 justify-between">
+                          <p>{common.coupon}</p>
+                          <p className="text-green-500">
+                            - {formatPrice(cartSummary.couponDiscount, currency)}{' '}
+                            ({couponData?.discount}% off)
+                          </p>
+                        </div>
+                        <button
+                          className="mb-2"
+                          onClick={() => {
+                            setCouponInput('');
+                            setCouponCode(null);
+                            setIsCouponApply(false);
+                            setCouponData({});
+                          }}
+                        >
+                          <LuX />
+                        </button>
                       </div>
-                      <button
-                        className="mb-2"
-                        onClick={() => {
-                          setCouponInput('');
-                          setCouponCode(null);
-                          setIsCouponApply(false);
-                          setCouponData({});
-                        }}
-                      >
-                        <LuX />
-                      </button>
+                      {couponData?.scope && couponData.scope !== 'All' && (
+                        <p className="text-xs text-gray-500 italic">
+                          Applied to:{' '}
+                          {couponData.scope === 'Category'
+                            ? couponData.scopeCategory?.name?.[
+                                translateLanguage
+                              ] || couponData.scopeCategory?.name?.en
+                            : couponData.scopeProduct?.productName?.[
+                                translateLanguage
+                              ] || couponData.scopeProduct?.productName?.en}
+                        </p>
+                      )}
                     </div>
                   )}
 

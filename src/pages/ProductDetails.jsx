@@ -141,8 +141,20 @@ const ProductDetails = () => {
       translated,
     });
 
-    const oldList = JSON.parse(sessionStorage.getItem('recentlyViewed')) || [];
-    const newList = [...oldList, data];
+    let oldList = [];
+    try {
+      const raw = sessionStorage.getItem('recentlyViewed');
+      oldList = raw ? JSON.parse(raw) : [];
+      if (!Array.isArray(oldList)) oldList = [];
+    } catch (e) {
+      oldList = [];
+    }
+
+    // Filter out the current product if it's already in the list to avoid duplicates
+    // and to move it to the start (most recent)
+    const filteredList = oldList.filter((item) => item?._id !== data?._id);
+    const newList = [data, ...filteredList].slice(0, 20);
+
     sessionStorage.setItem('recentlyViewed', JSON.stringify(newList));
   };
 

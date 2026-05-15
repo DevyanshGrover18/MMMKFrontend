@@ -40,7 +40,16 @@ const RecentlyViewedSlider = () => {
     try {
       const raw = sessionStorage.getItem('recentlyViewed');
       const parsed = raw ? JSON.parse(raw) : [];
-      setProducts(Array.isArray(parsed) ? parsed : []);
+      if (Array.isArray(parsed)) {
+        // deduplicate just in case
+        const unique = parsed.filter(
+          (item, index, self) =>
+            item?._id && index === self.findIndex((t) => t._id === item._id)
+        );
+        setProducts(unique);
+      } else {
+        setProducts([]);
+      }
     } catch {
       setProducts([]);
     }

@@ -69,6 +69,28 @@ const CouponTable = ({ data, tableQuery }) => {
       key: 'discount',
     },
     {
+      title: 'Scope',
+      dataIndex: 'scope',
+      key: 'scope',
+      render: (scope, record) => {
+        if (scope === 'Category') {
+          const catName =
+            record.scopeCategory?.name?.en ||
+            record.scopeCategory?.name ||
+            'Unknown Category';
+          return <Tag color="purple">Category: {catName}</Tag>;
+        }
+        if (scope === 'Product') {
+          const prodName =
+            record.scopeProduct?.productName?.en ||
+            record.scopeProduct?.productName ||
+            'Unknown Product';
+          return <Tag color="orange">Product: {prodName}</Tag>;
+        }
+        return <Tag color="green">All Products</Tag>;
+      },
+    },
+    {
       title: 'Usage Count',
       dataIndex: 'currentUsage',
       key: 'currentUsage',

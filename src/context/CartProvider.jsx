@@ -40,10 +40,51 @@ const calculateCartSummary = ({
   }, 0);
   const subtotal = convertPrice(subtotalBase, currency, rates);
 
-  const couponDiscount =
-    isCouponApply && couponData?.discount
-      ? Number(((subtotal * Number(couponData.discount || 0)) / 100).toFixed(2))
-      : 0;
+  let couponDiscount = 0;
+  if (isCouponApply && couponData?.discount) {
+    if (!couponData.scope || couponData.scope === 'All') {
+      couponDiscount = (subtotal * Number(couponData.discount || 0)) / 100;
+    } else {
+      items.forEach((item) => {
+        let isEligible = false;
+        if (couponData.scope === 'Category') {
+          const itemCatId =
+            item.product?.category?._id || item.product?.category;
+          const targetCatId =
+            couponData.scopeCategory?._id || couponData.scopeCategory;
+          if (String(itemCatId) === String(targetCatId)) {
+            isEligible = true;
+          }
+        } else if (couponData.scope === 'Product') {
+          const itemProductId = item.product?._id || item.product;
+          const targetProductId =
+            couponData.scopeProduct?._id || couponData.scopeProduct;
+          if (String(itemProductId) === String(targetProductId)) {
+            isEligible = true;
+          }
+        }
+
+        if (isEligible) {
+          const unitPriceBase = Number(
+            getPercentageOf(
+              item?.product?.price || 0,
+              item?.product?.discount || 0,
+            ),
+          );
+          const unitPriceConverted = convertPrice(
+            unitPriceBase,
+            currency,
+            rates,
+          );
+          couponDiscount +=
+            (unitPriceConverted *
+              Number(item?.quantity || 0) *
+              Number(couponData.discount || 0)) /
+            100;
+        }
+      });
+    }
+  }
 
   const shipping = convertPrice(shippingCharges || 0, currency, rates);
   const bagFee = convertPrice(isBagAdded ? 1.79 : 0, currency, rates);
