@@ -102,29 +102,53 @@ const CouponPage = () => {
         ),
       },
       {
-        title: 'Discount (%)',
-        dataIndex: 'discount',
-        key: 'discount',
+        title: 'Product Discount',
+        key: 'productDiscount',
         align: 'center',
+        render: (_, record) => {
+          if (record.applyToProducts === false) return '-';
+          const type = record.discountType === 'amount' ? 'Fixed' : '%';
+          return `${record.discount || 0}${type === '%' ? '%' : ''} (${type})`;
+        }
+      },
+      {
+        title: 'Delivery Discount',
+        key: 'deliveryDiscount',
+        align: 'center',
+        render: (_, record) => {
+          if (!record.applyToDelivery) return '-';
+          const type = record.deliveryDiscountType === 'amount' ? 'Fixed' : '%';
+          return `${record.deliveryDiscount || 0}${type === '%' ? '%' : ''} (${type})`;
+        }
       },
       {
         title: 'Scope',
         dataIndex: 'scope',
         key: 'scope',
+        width: 200,
         render: (scope, record) => {
+          if (record.applyToProducts === false) return <Tag color="default">N/A</Tag>;
           if (scope === 'Category') {
             const catName =
               record.scopeCategory?.name?.en ||
               record.scopeCategory?.name ||
               'Unknown Category';
-            return <Tag color="purple">Category: {catName}</Tag>;
+            return (
+              <Tag color="purple" className="max-w-[180px] truncate" title={`Category: ${catName}`}>
+                Category: {catName}
+              </Tag>
+            );
           }
           if (scope === 'Product') {
             const prodName =
               record.scopeProduct?.productName?.en ||
               record.scopeProduct?.productName ||
               'Unknown Product';
-            return <Tag color="orange">Product: {prodName}</Tag>;
+            return (
+              <Tag color="orange" className="max-w-[180px] truncate" title={`Product: ${prodName}`}>
+                Product: {prodName}
+              </Tag>
+            );
           }
           return <Tag color="green">All Products</Tag>;
         },
@@ -152,9 +176,14 @@ const CouponPage = () => {
         key: 'actions',
         align: 'center',
         fixed: screenSizeFactor > 3 && 'right',
-        width: 80,
+        width: 120,
         render: (_, record) => (
           <div className="flex items-center gap-2 justify-center">
+            <EditButton
+              onClick={() =>
+                updateUtils({ isModalVisible: true, currentEditCoupon: record })
+              }
+            />
             <DeleteButton
               onClick={() =>
                 confirmDelete({

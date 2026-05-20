@@ -33,9 +33,10 @@ const ProductGrid = ({ list = [], textColor = 'white' }) => {
     const userId = getStoredUserId();
     if (!userId) {
       notification.error({
-        message: common.signInToContinue,
+        message: common.signInToContinue || 'Please sign in to continue',
         placement: 'topRight',
       });
+      navigate('/auth', { state: { from: window.location.pathname } });
       return null;
     }
 

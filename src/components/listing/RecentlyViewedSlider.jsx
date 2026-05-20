@@ -93,6 +93,7 @@ const RecentlyViewedSlider = () => {
         message: common?.signInToContinue || 'Sign in to continue',
         placement: 'topRight',
       });
+      navigate('/auth', { state: { from: window.location.pathname } });
       return;
     }
     try {

@@ -18,7 +18,11 @@ import {
 import { useCart } from '../context/CartProvider';
 import CategoryNavBar from '../components/global/CategoryNavBar';
 import { IoCartOutline } from 'react-icons/io5';
-import { getPercentageOf } from '../utils/globalMethods';
+import {
+  isUserSignedIn,
+  percentageValue,
+  getPercentageOf,
+} from '../utils/globalMethods';
 import ProductReview from '../components/details/ProductReview';
 import {
   translate,
@@ -190,6 +194,12 @@ const ProductDetails = () => {
 
   const handleAddToWishList = async (e) => {
     try {
+      if (!isUserSignedIn()) {
+        message.info(common.pleaseLoginToContinue || 'Please login to continue');
+        navigate('/auth', { state: { from: window.location.pathname } });
+        return;
+      }
+
       if (isOutOfStock) {
         message.warning(common.outOfStock || 'Sold out');
         return;

@@ -14,6 +14,16 @@ export const createCoupon = async (data) => {
   }
 };
 
+export const updateCoupon = async (id, data) => {
+  try {
+    const response = await coupon.post(`/update/${id}`, data);
+    return response.data;
+  } catch (error) {
+    console.error('Error updating coupon:', error);
+    throw error;
+  }
+};
+
 export const getAllCoupon = async (options) => {
   try {
     const response = await coupon.get('/get-all', { params: options });

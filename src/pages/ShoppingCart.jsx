@@ -622,6 +622,15 @@ const ShoppingCart = () => {
                               ] || couponData.scopeProduct?.productName?.en}
                         </p>
                       )}
+                      {couponData?.applyToDelivery && (
+                        <p className="text-xs text-green-600 font-semibold mt-1">
+                          ✨ You also have{' '}
+                          {couponData.deliveryDiscountType === 'amount'
+                            ? formatConvertedPrice(couponData.deliveryDiscount)
+                            : `${couponData.deliveryDiscount}%`}{' '}
+                          off on delivery!
+                        </p>
+                      )}
                     </div>
                   )}
 

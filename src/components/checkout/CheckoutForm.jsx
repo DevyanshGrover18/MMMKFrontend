@@ -21,11 +21,26 @@ import { convertPrice, formatPrice } from '../../utils/currency';
 import { useCurrency } from '../../context/CurrencyContext';
 import { resolveAssetUrl } from '../../utils/assetUrl';
 
-const calculateShippingCharges = (country, weight) => {
-  const countryData = Country.getCountryByCode(country);
-  const rate = countryData?.name
-    ? rateByWeight[Number(weight)]?.[countriesList?.countries[countryData?.name]]
-    : 0;
+const calculateShippingCharges = (countryCode, weight) => {
+  if (!countryCode) return 0;
+  const countryData = Country.getCountryByCode(countryCode);
+  if (!countryData?.name) return 0;
+
+  // Round weight up to nearest 0.5 increment, minimum 0.5
+  const roundedWeight = Math.max(0.5, Math.ceil(Number(weight || 0) * 2) / 2);
+  
+  // Try to find the zone for the country
+  // Use flexible matching for country names (e.g., 'Saudi Arabia' matches 'Saudi')
+  let zone = countriesList?.countries[countryData.name];
+  if (!zone) {
+    const entry = Object.entries(countriesList?.countries || {}).find(([name]) => 
+      countryData.name.toLowerCase().includes(name.toLowerCase()) || 
+      name.toLowerCase().includes(countryData.name.toLowerCase())
+    );
+    if (entry) zone = entry[1];
+  }
+
+  const rate = zone ? rateByWeight[String(roundedWeight)]?.[zone] : 0;
   return parseFloat(rate) || 0;
 };
 
@@ -148,7 +163,6 @@ export default function CheckoutForm({
   const [billingStateList, setBillingStateList] = useState([]);
   const [formData, setFormData] = useState(EMPTY_FORM);
   const [totalProductWeight, setTotalProductWeight] = useState(0);
-  const [shippingCharges, setShippingCharges] = useState(0);
   const [isSameAsShipping, setIsSameAsShipping] = useState(false);
 
   // Track which saved address is selected per section ('new' = manual entry)
@@ -157,18 +171,22 @@ export default function CheckoutForm({
   const formatConvertedPrice = (amount) =>
     formatPrice(convertPrice(amount, currency, rates), currency);
 
+  const calculatedShippingCharges = totalProductWeight
+    ? calculateShippingCharges(formData.shipping_country, totalProductWeight)
+    : 0;
+  const effectiveShippingCharges = shippingChargesProp ?? calculatedShippingCharges;
+
   const derivedSummary = liveSummary || calculateCartSummary({
     items: cartData,
     couponData,
     isCouponApply,
     isBagAdded,
-    shippingCharges,
+    shippingCharges: effectiveShippingCharges,
     appliedCreditAmount,
     currency,
     rates,
   });
 
-  const effectiveShippingCharges = shippingChargesProp ?? shippingCharges;
   const effectiveAppliedCredit =
     appliedCreditAmountProp ?? appliedCreditAmount;
   const items = cartItems || cartData;
@@ -184,7 +202,14 @@ export default function CheckoutForm({
   const applyShippingAddress = (addr) => {
     setSelectedShippingId(addr._id);
     const fields = addressToShippingFields(addr, 'shipping');
-    setFormData((prev) => ({ ...prev, ...fields }));
+    setFormData((prev) => {
+      const next = { ...prev, ...fields };
+      // Calculate shipping for the new country immediately
+      const weight = totalProductWeight;
+      const newRate = calculateShippingCharges(next.shipping_country, weight);
+      onShippingChange?.(newRate);
+      return next;
+    });
     setShippingStateList(State.getStatesOfCountry(addr.country));
   };
 
@@ -197,13 +222,17 @@ export default function CheckoutForm({
 
   const clearShippingAddress = () => {
     setSelectedShippingId('new');
-    setFormData((prev) => ({
-      ...prev,
-      shipping_firstName: '', shipping_lastName: '', shipping_streetAddress: '',
-      shipping_city: '', shipping_state: '', shipping_postalCode: '',
-      shipping_country: '', shipping_company: '', shipping_phoneNumber: '',
-      shipping_landmark: '',
-    }));
+    setFormData((prev) => {
+      const next = {
+        ...prev,
+        shipping_firstName: '', shipping_lastName: '', shipping_streetAddress: '',
+        shipping_city: '', shipping_state: '', shipping_postalCode: '',
+        shipping_country: '', shipping_company: '', shipping_phoneNumber: '',
+        shipping_landmark: '',
+      };
+      onShippingChange?.(0);
+      return next;
+    });
     setShippingStateList([]);
   };
 
@@ -224,7 +253,11 @@ export default function CheckoutForm({
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    if (name === 'shipping_country') setShippingStateList(State.getStatesOfCountry(value));
+    if (name === 'shipping_country') {
+      setShippingStateList(State.getStatesOfCountry(value));
+      const newRate = calculateShippingCharges(value, totalProductWeight);
+      onShippingChange?.(newRate);
+    }
     if (name === 'billing_country') setBillingStateList(State.getStatesOfCountry(value));
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
@@ -270,7 +303,7 @@ export default function CheckoutForm({
         const stripePromise = await loadStripe(publishableKey);
         const data = await createPaymentIntent({
           products: cartData, shippingAddress, billingAddress,
-          shippingCharges, couponCode: isCouponApply ? couponCode : null,
+          shippingCharges: effectiveShippingCharges, couponCode: isCouponApply ? couponCode : null,
           creditsUsed: derivedSummary.creditApplied,
           totalAmount: derivedSummary.total,
           currency,
@@ -295,7 +328,7 @@ export default function CheckoutForm({
       try {
         const res = await createManualOrder({
           products: cartData, shippingAddress, billingAddress,
-          shippingCharges, couponCode: isCouponApply ? couponCode : null,
+          shippingCharges: effectiveShippingCharges, couponCode: isCouponApply ? couponCode : null,
           creditsUsed: derivedSummary.creditApplied,
           totalAmount: derivedSummary.total,
           currency,
@@ -373,15 +406,8 @@ export default function CheckoutForm({
   }, [cartData]);
 
   useEffect(() => {
-    if (totalProductWeight) {
-      const charges = calculateShippingCharges(formData.shipping_country, totalProductWeight);
-      setShippingCharges(charges);
-      onShippingChange?.(charges);
-    } else {
-      setShippingCharges(0);
-      onShippingChange?.(0);
-    }
-  }, [totalProductWeight, formData.shipping_country]);
+    onShippingChange?.(calculatedShippingCharges);
+  }, [calculatedShippingCharges, onShippingChange]);
 
   useEffect(() => {
     setCheckoutSummary(derivedSummary);
@@ -597,11 +623,19 @@ export default function CheckoutForm({
                 <span>-{formatPrice(Number(derivedSummary.creditApplied), currency)}</span>
               </div>
             )}
-            {effectiveShippingCharges > 0 && (
-              <div className="flex items-center justify-between text-black/60">
-                <span>Shipping</span>
-                <span>{formatPrice(derivedSummary.shipping, currency)}</span>
-              </div>
+            {(effectiveShippingCharges > 0 || formData.shipping_country) && (
+              <>
+                <div className="flex items-center justify-between text-black/60">
+                  <span>Shipping</span>
+                  <span>{derivedSummary.shipping > 0 ? formatPrice(derivedSummary.shipping, currency) : 'Free'}</span>
+                </div>
+                {derivedSummary.deliveryCouponDiscount > 0 && (
+                  <div className="flex items-center justify-between text-green-700">
+                    <span className="text-xs italic pl-2">Delivery Discount</span>
+                    <span>-{formatPrice(derivedSummary.deliveryCouponDiscount, currency)}</span>
+                  </div>
+                )}
+              </>
             )}
             {derivedSummary.bagFee > 0 && (
               <div className="flex items-center justify-between text-black/60">

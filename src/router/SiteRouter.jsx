@@ -53,9 +53,9 @@ export default function SiteRouter() {
             <Route
               path="/shopping-cart"
               element={
-                // <UserProtectedRoute>
-                <ShoppingCart />
-                // </UserProtectedRoute>
+                <UserProtectedRoute>
+                  <ShoppingCart />
+                </UserProtectedRoute>
               }
             />
             <Route
