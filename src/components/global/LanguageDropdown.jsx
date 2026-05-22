@@ -7,7 +7,7 @@ const LanguageDropdown = () => {
 
   const changeLanguage = (lng) => {
     document.dir = lng === 'ar' ? 'rtl' : 'ltr';
-    updateTranslationContext({ translateLanguage: lng });
+    updateTranslationContext({ translateLanguage: lng, isManual: true });
   };
 
   return (

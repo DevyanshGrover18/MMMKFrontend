@@ -14,9 +14,13 @@ const OrderFormModal = ({ editData, onCancel, tableQuery }) => {
         return;
       }
 
-      const res = await updateOrder(editData._id, { status: values.status });
+      const res = await updateOrder(editData._id, {
+        status: values.status,
+        deliveryStatus: values.deliveryStatus,
+        paymentStatus: values.paymentStatus,
+      });
       console.log(res);
-      message.success('Order status updated successfully');
+      message.success('Order updated successfully');
       tableQuery.refetch();
       form.resetFields();
       onCancel();
@@ -35,6 +39,8 @@ const OrderFormModal = ({ editData, onCancel, tableQuery }) => {
         amount: editData?.amount,
         paymentType: editData?.mode,
         status: editData?.status,
+        deliveryStatus: editData?.deliveryStatus,
+        paymentStatus: editData?.paymentStatus,
       });
     } else {
       form.resetFields();
@@ -74,6 +80,34 @@ const OrderFormModal = ({ editData, onCancel, tableQuery }) => {
             <Option value="Processing">Processing</Option>
             <Option value="Complete">Complete</Option>
             <Option value="Cancelled">Cancelled</Option>
+          </Select>
+        </Form.Item>
+
+        <Form.Item
+          label="Delivery Status"
+          name="deliveryStatus"
+          rules={[{ required: true, message: 'Please select a delivery status' }]}
+        >
+          <Select>
+            <Option value="Pending">Pending</Option>
+            <Option value="Processing">Processing</Option>
+            <Option value="In Transit">In Transit</Option>
+            <Option value="Out for Delivery">Out for Delivery</Option>
+            <Option value="Delivered">Delivered</Option>
+            <Option value="Failed">Failed</Option>
+            <Option value="Returned">Returned</Option>
+          </Select>
+        </Form.Item>
+
+        <Form.Item
+          label="Payment Status"
+          name="paymentStatus"
+          rules={[{ required: true, message: 'Please select a payment status' }]}
+        >
+          <Select>
+            <Option value="Pending">Pending</Option>
+            <Option value="Paid">Paid</Option>
+            <Option value="Failed">Failed</Option>
           </Select>
         </Form.Item>
 

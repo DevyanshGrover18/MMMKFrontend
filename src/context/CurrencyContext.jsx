@@ -5,10 +5,13 @@ import {
   SUPPORTED_CURRENCIES,
   normalizeCurrency,
 } from '../utils/currency';
+import { detectLocale, LOCALE_PERSISTENCE_KEYS, getLanguageCodeFromName } from '../utils/localeDetection';
+import i18n from '../i18n';
 
 const CurrencyContext = createContext(null);
 
-const STORAGE_KEY = 'selectedCurrency';
+const STORAGE_KEY = LOCALE_PERSISTENCE_KEYS.CURRENCY;
+const OVERRIDE_KEY = LOCALE_PERSISTENCE_KEYS.MANUAL_OVERRIDE;
 const EXCHANGE_RATE_URL = 'https://api.exchangerate-api.com/v4/latest/USD';
 
 const CurrencyProvider = ({ children }) => {
@@ -21,6 +24,34 @@ const CurrencyProvider = ({ children }) => {
 
   useEffect(() => {
     let isMounted = true;
+
+    const initLocale = async () => {
+      try {
+        const isManualOverride = localStorage.getItem(OVERRIDE_KEY) === 'true';
+        const hasDetected = localStorage.getItem('localeAutoDetected') === 'true';
+        const currentSavedCurrency = localStorage.getItem(STORAGE_KEY);
+
+        // If not manually overridden and either not detected yet OR currency is missing/defaulted to USD
+        // Note: We check if it's 'USD' because USD is the default, and we want to try re-detecting
+        // if it hasn't been definitively marked as "auto detected" yet.
+        if (!isManualOverride && (!hasDetected || !currentSavedCurrency || currentSavedCurrency === BASE_CURRENCY)) {
+          const detected = await detectLocale();
+          if (isMounted && detected?.currency) {
+            const normalized = normalizeCurrency(detected.currency);
+            
+            // Only update if it's different from current state
+            if (normalized !== currency) {
+              setCurrencyState(normalized);
+              localStorage.setItem(STORAGE_KEY, normalized);
+            }
+          }
+        }
+      } catch (error) {
+        console.error('Currency auto-detection failed:', error);
+      }
+    };
+
+    initLocale();
 
     const fetchRates = async () => {
       try {
@@ -59,6 +90,7 @@ const CurrencyProvider = ({ children }) => {
 
   const setCurrency = (nextCurrency) => {
     setCurrencyState(normalizeCurrency(nextCurrency));
+    localStorage.setItem(OVERRIDE_KEY, 'true');
   };
 
   return (

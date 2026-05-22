@@ -1,4 +1,4 @@
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import React, { useEffect, useState } from 'react';
 import { createContext, useContext } from 'react';
 import {
@@ -161,6 +161,7 @@ const CartProvider = ({ children }) => {
     enabled: isUserSignedIn(),
     retry: false,
   });
+  const queryClient = useQueryClient();
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -245,6 +246,7 @@ const CartProvider = ({ children }) => {
   const setCartItems = ({ items, updateOnBackend = false, successMessage }) => {
     localStorage.setItem('cartItems', JSON.stringify(items));
     setCart(items);
+    queryClient.setQueryData(['cart'], { data: items });
     if (updateOnBackend && isUserSignedIn()) {
       setCartData({
         items: items.map((item) => ({
@@ -364,6 +366,7 @@ const CartProvider = ({ children }) => {
   const clearCart = ({ updateOnBackend = false } = {}) => {
     const localCart = JSON.parse(localStorage.getItem('cartItems')) || [];
     localStorage.removeItem('cartItems');
+    queryClient.setQueryData(['cart'], { data: [] });
     setCartItems({ items: [] });
     setCouponCode('');
     setCouponData({});
@@ -382,14 +385,19 @@ const CartProvider = ({ children }) => {
     setAppliedCreditAmount(0);
     localStorage.removeItem(APPLIED_CREDIT_KEY);
     setIsBagAdded(false);
+    localStorage.removeItem('isBagAdded');
     if (updateOnBackend && isUserSignedIn()) {
-      for (const item of localCart) {
-        removeCartItems(item.product._id, item.sku, item.quantity).catch(
-          () => {
-            // Ignore backend cleanup failures while clearing the local cart.
-          }
-        );
-      }
+      Promise.allSettled(
+        localCart.map((item) =>
+          removeCartItems(item.product._id, item.sku, item.quantity)
+        )
+      )
+        .catch(() => {
+          // Ignore backend cleanup failures while clearing the local cart.
+        })
+        .finally(() => {
+          queryClient.invalidateQueries({ queryKey: ['cart'] });
+        });
     }
   };
 

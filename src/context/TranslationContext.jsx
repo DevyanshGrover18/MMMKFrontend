@@ -11,6 +11,7 @@ import { useGlobalContext } from './GlobalProvider';
 import { useLocation } from 'react-router-dom';
 import { LANGUAGECODES } from '../utils/staticData';
 import i18n from '../i18n';
+import { detectLocale, getLanguageCodeFromName } from '../utils/localeDetection';
 import translationAR from '../locales/ar/translationAR.json';
 import translationDE from '../locales/de/translationDE.json';
 import translationES from '../locales/es/translationES.json';
@@ -781,6 +782,9 @@ const TranslationProvider = ({ children }) => {
 
       if (newUtils.translateLanguage) {
         localStorage.setItem('translateLanguage', newUtils.translateLanguage);
+        if (newUtils.isManual) {
+          localStorage.setItem('manualLocaleOverride', 'true');
+        }
       }
 
       return updated;
@@ -952,12 +956,37 @@ const TranslationProvider = ({ children }) => {
       }
     };
 
-    const savedLanguage = localStorage.getItem('translateLanguage');
-    if (savedLanguage) {
-      updateUtils({ translateLanguage: savedLanguage });
-    } else {
-      getLanguageFromBrowser();
-    }
+    const initLocale = async () => {
+      try {
+        const savedLanguage = localStorage.getItem('translateLanguage');
+        const isManualOverride = localStorage.getItem('manualLocaleOverride') === 'true';
+        const hasDetected = localStorage.getItem('localeAutoDetected') === 'true';
+
+        if (savedLanguage) {
+          updateUtils({ translateLanguage: savedLanguage });
+        } else if (!isManualOverride && (!hasDetected || !savedLanguage)) {
+          const detected = await detectLocale();
+          if (detected?.language) {
+            const langCode = getLanguageCodeFromName(detected.language);
+            updateUtils({ translateLanguage: langCode });
+            localStorage.setItem('translateLanguage', langCode);
+            localStorage.setItem('localeAutoDetected', 'true');
+          } else {
+            getLanguageFromBrowser();
+            localStorage.setItem('localeAutoDetected', 'true');
+          }
+        } else if (!isManualOverride) {
+          getLanguageFromBrowser();
+        } else {
+          updateUtils({ translateLanguage: 'en' });
+        }
+      } catch (error) {
+        console.error('Translation locale detection failed:', error);
+        getLanguageFromBrowser();
+      }
+    };
+
+    initLocale();
   }, []);
 
   return (
