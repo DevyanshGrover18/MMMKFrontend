@@ -1,4 +1,4 @@
-import Chart from 'react-apexcharts';
+import Chart from './ApexChart';
 import { Empty } from 'antd';
 import { cn } from '../../../utils/cn';
 

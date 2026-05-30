@@ -1,4 +1,4 @@
-import Chart from 'react-apexcharts';
+import Chart from './ApexChart';
 import { cn } from '../../../utils/cn';
 
 export default function PieChart({
@@ -7,7 +7,7 @@ export default function PieChart({
   values,
   labels,
   setConfig,
-  chartColors,
+  chartColors = [],
   title,
   subTitle,
   showAsPercentage = false,

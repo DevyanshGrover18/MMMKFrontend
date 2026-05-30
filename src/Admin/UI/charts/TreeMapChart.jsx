@@ -1,4 +1,4 @@
-import Chart from 'react-apexcharts';
+import Chart from './ApexChart';
 import { cn } from '../../../utils/cn';
 
 export default function TreeMapChart({
@@ -7,7 +7,7 @@ export default function TreeMapChart({
   values,
   title,
   setConfig,
-  chartColors,
+  chartColors = [],
 }) {
   const color = '#111';
 

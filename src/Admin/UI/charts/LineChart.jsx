@@ -1,4 +1,4 @@
-import Chart from 'react-apexcharts';
+import Chart from './ApexChart';
 import { cn } from '../../../utils/cn';
 
 export default function LineChart({
