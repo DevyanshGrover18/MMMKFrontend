@@ -14,7 +14,7 @@ const products = [
     title: 'Maaliyah',
     OriginalPrice: 418,
     OfferedPrice: 379,
-    productId: '6932b828f831c31cc6425581',
+    productId: '6932b828f831c31cc6425581', 
   },
   {
     id: 2,
