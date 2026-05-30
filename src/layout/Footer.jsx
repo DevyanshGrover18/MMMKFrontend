@@ -67,38 +67,51 @@ const Footer = () => {
                   {common.followUsOn}
                 </h3>
                 <div className="flex justify-center gap-6 mb-6 text-4xl cursor-pointer sm:text-5xl">
-                  <span className="w-10 h-10 text-black bg-white rounded-md hover:bg-yellow-300 hover:text-white">
-                    <a href="https://www.instagram.com/mmmk_wode?igsh=MXRvbWZhOGJ6dXVyNA==">
-                      <FaSnapchat className="w-6 h-6 mt-2 ml-2 mr-2" />
-                    </a>
-                  </span>
-                  <span className="w-10 h-10 text-black bg-white rounded-md hover:text-white hover:bg-blue-800">
-                    <a
-                      href="https://www.instagram.com/mmmk_wode?igsh=MXRvbWZhOGJ6dXVyNA=="
-                      target="_blank"
-                      rel="noopener noreferrer"
-                    >
-                      <Instagram className="w-6 h-6 mt-2 ml-2 mr-2" />
-                    </a>
-                  </span>
-                  <span className="w-10 h-10 text-black bg-white rounded-md hover:text-white hover:bg-violet-800">
-                    <a
-                      href="https://www.instagram.com/mmmk_wode?igsh=MXRvbWZhOGJ6dXVyNA=="
-                      target="_blank"
-                      rel="noopener noreferrer"
-                    >
-                      <FaTiktok className="w-6 h-6 mt-2 ml-2 mr-2" />
-                    </a>
-                  </span>
+                  <a
+                    className="w-10 h-10 text-black bg-white rounded-md hover:bg-yellow-300 hover:text-white inline-flex items-center justify-center"
+                    href="https://www.instagram.com/mmmk_wode?igsh=MXRvbWZhOGJ6dXVyNA=="
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    aria-label="Snapchat"
+                  >
+                    <FaSnapchat className="w-6 h-6" />
+                  </a>
+                  <a
+                    className="w-10 h-10 text-black bg-white rounded-md hover:text-white hover:bg-blue-800 inline-flex items-center justify-center"
+                    href="https://www.instagram.com/mmmk_wode?igsh=MXRvbWZhOGJ6dXVyNA=="
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    aria-label="Instagram"
+                  >
+                    <Instagram className="w-6 h-6" />
+                  </a>
+                  <a
+                    className="w-10 h-10 text-black bg-white rounded-md hover:text-white hover:bg-violet-800 inline-flex items-center justify-center"
+                    href="https://www.instagram.com/mmmk_wode?igsh=MXRvbWZhOGJ6dXVyNA=="
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    aria-label="TikTok"
+                  >
+                    <FaTiktok className="w-6 h-6" />
+                  </a>
                 </div>
                 <div className="flex items-center gap-4">
                   <img
                     src="/Wode Logo.png"
+                    alt={common.mmmk}
+                    width="192"
+                    height="192"
+                    loading="lazy"
+                    decoding="async"
                     className="w-32 h-32 mx-auto md:h-48 md:w-48"
                   />
                   <img
                     src="/africanFalcon.jpg"
                     alt={common.productImageAlt}
+                    width="176"
+                    height="176"
+                    loading="lazy"
+                    decoding="async"
                     className="object-contain w-30 rounded-full h-30 md:w-44 md:h-44"
                   />
                 </div>

@@ -60,7 +60,7 @@ export default function RecommendedSection() {
               <div className="absolute z-[1] bottom-0 transition-all duration-500 shadow-2xl w-full max-h-[100px] h-full text-white">
                 <Link
                   to={`/product-details/${product._id}`}
-                  className="absolute z-[-1] left-0 right-0 bottom-0 h-full bg-gradient-to-t from-black/60 to-transparent transition-all duration-500"
+                  className="absolute z-[-1] left-0 right-0 bottom-0 h-full transition-all duration-500"
                 >
                   <span className="block w-full h-full opacity-0 border-4 border-white origin-left group-hover:opacity-100 transition-all duration-500"></span>
                 </Link>

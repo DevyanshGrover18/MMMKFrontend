@@ -9,6 +9,17 @@ import UserAuthProvider from './context/userAuthProvider.jsx';
 
 const queryClient = new QueryClient();
 
+if (typeof window !== 'undefined' && window.trustedTypes) {
+  const existingPolicy = window.trustedTypes.getPolicy?.('mmmk-default');
+  if (!existingPolicy) {
+    window.trustedTypes.createPolicy('mmmk-default', {
+      createHTML: (input) => input,
+      createScript: (input) => input,
+      createScriptURL: (input) => input,
+    });
+  }
+}
+
 createRoot(document.getElementById('root')).render(
   <>
     <Provider store={store}>

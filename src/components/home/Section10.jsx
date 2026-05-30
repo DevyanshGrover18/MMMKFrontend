@@ -18,8 +18,10 @@ export default function Section10() {
       src={videoSrc}
       controls
       muted
+      autoPlay
+      loop
       playsInline
-      preload="metadata"
+      preload="none"
     />
   );
 
@@ -76,10 +78,17 @@ export default function Section10() {
               </div>
             </SwiperSlide>
           ))}
-          <SwiperSlide key={5} className="flex justify-center pb-14">
+          <SwiperSlide key="influencer-image" className="flex justify-center pb-14">
             <div className="relative w-full max-w-xs bg-white border border-black shadow-md md:max-w-sm">
               <div className="relative flex items-center justify-center aspect-video md:aspect-[16/9]">
-                <img src={`/influencerImage1.jpg`} />
+                <img
+                  src={`/influencerImage1.jpg`}
+                  alt={common.whatOurInfluencersSay}
+                  width="1200"
+                  height="675"
+                  loading="lazy"
+                  decoding="async"
+                />
               </div>
             </div>
           </SwiperSlide>

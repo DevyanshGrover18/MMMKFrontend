@@ -14,9 +14,9 @@ const AboutUs = () => {
         <div className="flex h-[20vh] flex-col items-center justify-center text-center text-white md:mb-0 md:mt-16 md:h-[0vh]"></div>
         <div className="flex min-h-[400px] items-center justify-center">
           <div className="w-full max-w-4xl rounded-lg bg-opacity-75 p-6 md:p-16">
-            <h1 className="mb-6 text-center text-5xl font-bold text-white">
+            <h2 className="mb-6 text-center text-5xl font-bold text-white">
               {content.title}
-            </h1>
+            </h2>
 
             {content.intro.map((paragraph, index) => (
               <p
@@ -29,9 +29,9 @@ const AboutUs = () => {
               </p>
             ))}
 
-            <h1 className="mb-6 mt-10 text-center text-5xl font-bold text-white">
+            <h2 className="mb-6 mt-10 text-center text-5xl font-bold text-white">
               {content.identityTitle}
-            </h1>
+            </h2>
             <p className="text-xl leading-relaxed text-white text-justify">
               {content.identityBody}
             </p>
@@ -39,9 +39,9 @@ const AboutUs = () => {
             <p className="mt-10 text-xl italic leading-relaxed text-white text-justify">
               {content.closing}
             </p>
-            <h1 className="mb-6 mt-10 text-center text-5xl font-bold text-white">
+            <h2 className="mb-6 mt-10 text-center text-5xl font-bold text-white">
               {content.journeyTitle}
-            </h1>
+            </h2>
           </div>
         </div>
 

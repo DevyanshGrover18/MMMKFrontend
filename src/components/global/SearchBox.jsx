@@ -75,6 +75,7 @@ export default function SearchBox(props) {
       value={searchValue}
       searchValue={searchValue}
       placeholder={props.placeholder || 'Search...'}
+      aria-label={props['aria-label'] || 'Search products'}
       style={props.style}
       defaultActiveFirstOption={false}
       suffixIcon={<BsSearch className="text-gray-900" size={20} />}

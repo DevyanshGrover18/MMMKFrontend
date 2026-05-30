@@ -27,9 +27,9 @@ const LuxurySection = () => {
         <p className="text-sm font-light tracking-widest sm:text-base sm:mr-7">
           {common.mmmk}
         </p>
-        <h1 className="text-3xl font-medium leading-tight uppercase sm:text-4xl md:text-5xl space-y-8">
+        <h2 className="text-3xl font-medium leading-tight uppercase sm:text-4xl md:text-5xl space-y-8">
           {homepage.section14Heading1}
-        </h1>
+        </h2>
 
         <Button4 isLink to="/product-listings">
           {common.shopNow}

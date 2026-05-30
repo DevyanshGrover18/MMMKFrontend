@@ -17,7 +17,7 @@ const BikiniSection = () => {
           muted
           loop
           playsInline
-          preload="metadata"
+          preload="none"
           src="/Bikni-left-section-(1).mp4"
         ></video>
       </div>
@@ -28,6 +28,10 @@ const BikiniSection = () => {
           src="Wode Logo.png"
           className="w-20 h-20 mb-6 md:w-32 md:h-32"
           alt={common.mmmk}
+          width="128"
+          height="128"
+          loading="lazy"
+          decoding="async"
         />
 
         {/* Hardcoded Bikini Heading */}
@@ -51,7 +55,7 @@ const BikiniSection = () => {
           muted
           loop
           playsInline
-          preload="metadata"
+          preload="none"
           src="/rightside-(1).mp4"
         ></video>
       </div>

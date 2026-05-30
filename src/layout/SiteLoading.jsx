@@ -48,7 +48,14 @@ export default function SiteLoading() {
           ></div>
         ))}
       </div> */}
-      <img style={{ width: '200px' }} src="/Wode Logo.png" alt="Loading..." />
+      <img
+        src="/Wode Logo.png"
+        alt="Loading MMMK Wode"
+        width="200"
+        height="200"
+        decoding="async"
+        style={{ width: '200px' }}
+      />
     </div>
   );
 }

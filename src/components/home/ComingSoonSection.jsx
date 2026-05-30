@@ -13,14 +13,22 @@ const ComingSoonSection = () => {
         <div className="w-full flex-1 overflow-hidden">
           <img
             src="/commingsoon1a.jpg"
-            alt="Left"
+            alt={common.comingSoon}
+            width="1200"
+            height="1200"
+            loading="lazy"
+            decoding="async"
             className="object-cover w-full h-full"
           />
         </div>
         <div className="w-full flex-1 overflow-hidden">
           <img
             src="/commingsoon2a.jpg"
-            alt="Left"
+            alt={common.comingSoon}
+            width="1200"
+            height="1200"
+            loading="lazy"
+            decoding="async"
             className="object-cover w-full h-full"
           />
         </div>
@@ -31,6 +39,10 @@ const ComingSoonSection = () => {
           <img
             src="Wode Logo.png"
             alt={common.mmmk}
+            width="192"
+            height="192"
+            loading="lazy"
+            decoding="async"
             className="object-contain w-full h-full"
           />
         </div>
@@ -59,7 +71,11 @@ const ComingSoonSection = () => {
         <div className="flex justify-center h-full w-full">
           <img
             src="/comingsoon3.jpg"
-            alt="Left"
+            alt={common.comingSoon}
+            width="1200"
+            height="1200"
+            loading="lazy"
+            decoding="async"
             className="object-cover w-full h-full"
           />
         </div>

@@ -31,6 +31,10 @@ const Section3 = () => {
         <img
           src="/section3Product1.jpg"
           alt={homepage.section11Heading1}
+          width="1200"
+          height="1200"
+          loading="lazy"
+          decoding="async"
           className="h-full w-[100%] ms:w-[97%] object-cover"
         />
       </div>

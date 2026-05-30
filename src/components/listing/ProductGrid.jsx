@@ -67,10 +67,12 @@ const ProductGrid = ({ list = [], textColor = 'white' }) => {
           className="relative p-4 text-white border border-white"
         >
           <button
+            type="button"
             title={common.addToWishlist}
             onClick={() => {
               handleAddWishList(product._id);
             }}
+            aria-label={`${common.addToWishlist} ${getProductName(product)}`}
             className="absolute top-2 right-2 z-10"
           >
             <FiHeart
@@ -89,6 +91,8 @@ const ProductGrid = ({ list = [], textColor = 'white' }) => {
                     : ''
                 }
                 alt={getProductName(product)}
+                width="1200"
+                height="1200"
                 className="h-full w-full object-cover object-top"
                 loading="lazy"
                 decoding="async"

@@ -1,8 +1,10 @@
-import { forwardRef } from 'react';
-import { FaChevronLeft, FaChevronRight } from 'react-icons/fa';
+import { forwardRef, memo } from 'react';
 
-const CustomCarousel = forwardRef(
-  ({ items = [], renderItem, onMouseEnter, onMouseLeave }, ref) => {
+const CustomCarousel = memo(
+  forwardRef(function CustomCarousel(
+    { items = [], renderItem, onMouseEnter, onMouseLeave },
+    ref
+  ) {
     return (
       <div
         className="relative max-w-full mt-8 mx-4 select-none"
@@ -16,13 +18,15 @@ const CustomCarousel = forwardRef(
           style={{
             scrollBehavior: 'smooth',
             transition: 'scroll-left 1s ease-in-out',
+            scrollbarWidth: 'none',
+            msOverflowStyle: 'none',
           }}
         >
           {items.map(renderItem)}
         </div>
       </div>
     );
-  }
+  })
 );
 
 export default CustomCarousel;

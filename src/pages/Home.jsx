@@ -1,21 +1,21 @@
 /* eslint-disable no-unused-vars */
 import { lazy, Suspense } from 'react';
-import Section2 from '../components/home/Section2';
-import Section3 from '../components/home/Section3';
-import Section6 from '../components/home/Section6';
-import Section7 from '../components/home/Section7';
-import Section8 from '../components/home/Section8';
-import Section9 from '../components/home/Section9';
-import Enquiry from '../components/home/Enquiry';
-import NewsLetter from '../components/global/NewsLetter';
-import ShopInstant from '../components/home/ShopInstant';
-import Slider from '../components/global/Slider';
-import Section5 from '../components/home/Section5';
-import RecommendedSection from '../components/home/RecommendedSection';
-import BannerSection from '../components/home/BannerSection';
 import BannerVideo from '../components/global/BannerVideo';
 import { CommonButton } from '../components/global/UIButtons';
 import { useTranslationContext } from '../context/TranslationContext';
+import LazySection from '../components/global/LazySection';
+
+const Section2 = lazy(() => import('../components/home/Section2'));
+const Section3 = lazy(() => import('../components/home/Section3'));
+const Section6 = lazy(() => import('../components/home/Section6'));
+const Section7 = lazy(() => import('../components/home/Section7'));
+const Section8 = lazy(() => import('../components/home/Section8'));
+const Enquiry = lazy(() => import('../components/home/Enquiry'));
+const NewsLetter = lazy(() => import('../components/global/NewsLetter'));
+const ShopInstant = lazy(() => import('../components/home/ShopInstant'));
+const Slider = lazy(() => import('../components/global/Slider'));
+const RecommendedSection = lazy(() => import('../components/home/RecommendedSection'));
+const BannerSection = lazy(() => import('../components/home/BannerSection'));
 
 const BikiniSection = lazy(() => import('../components/home/BikiniSection'));
 const Section10 = lazy(() => import('../components/home/Section10'));
@@ -33,49 +33,102 @@ const Home = () => {
 
   return (
     <div className="w-full">
-      <BannerVideo bg="/heroSectionBg1.mp4">
+      <BannerVideo bg="/heroSectionBg1.mp4" poster="/bannerSectionImage.jpg">
         <div className="text-white text-center md:h-[70vh] h-[80vh] flex flex-col items-center justify-center md:mt-16 md:mb-0 -mb-56">
-          <h4 className="my-4 text-[23px] sm:text-7xl md:text-8xl lg:text-7xl sm:my-6 md:my-10 text-orange-200">
-            {common.mmmk}
-          </h4>
-          {/* <h1 className="my-4 text-[23px] sm:text-7xl md:text-8xl lg:text-7xl sm:my-6 md:my-10">
-            {homepage.section1Heading1}
-          </h1> */}
+          <h1 className="my-4 text-[23px] font-semibold sm:text-7xl md:text-8xl lg:text-7xl sm:my-6 md:my-10 text-orange-200">
+            {homepage.section1Heading1 || common.mmmk}
+          </h1>
           <CommonButton variant={1} size="md" isLink to="/product-listings">
             {common.shopNow}
           </CommonButton>
         </div>
       </BannerVideo>
-      <Section8></Section8>
-      <Slider></Slider>
-      <Section2></Section2>
-      <BikiniSection></BikiniSection>
-      <RecommendedSection />
-      {/* <Slider dataSource={slides}></Slider> */}
-      {/* <Section5></Section5> */}
-      <BannerSection></BannerSection>
-      <ShopInstant></ShopInstant>
-      <Section6 />
-      <Suspense fallback={null}>
-        <VideoCard />
-      </Suspense>
+      <LazySection minHeight="420px">
+        <Suspense fallback={<div className="h-[420px]" />}>
+          <Section8 />
+        </Suspense>
+      </LazySection>
+      <LazySection minHeight="520px">
+        <Suspense fallback={<div className="h-[520px]" />}>
+          <Slider />
+        </Suspense>
+      </LazySection>
+      <LazySection minHeight="420px">
+        <Suspense fallback={<div className="h-[420px]" />}>
+          <Section2 />
+        </Suspense>
+      </LazySection>
+      <LazySection minHeight="900px">
+        <Suspense fallback={<div className="h-[900px]" />}>
+          <BikiniSection />
+        </Suspense>
+      </LazySection>
+      <LazySection minHeight="580px">
+        <Suspense fallback={<div className="h-[680px]" />}>
+          <RecommendedSection />
+        </Suspense>
+      </LazySection>
+      <LazySection minHeight="500px">
+        <Suspense fallback={<div className="h-[700px]" />}>
+          <BannerSection />
+        </Suspense>
+      </LazySection>
+      <LazySection minHeight="220px">
+        <Suspense fallback={<div className="h-[220px]" />}>
+          <ShopInstant />
+        </Suspense>
+      </LazySection>
+      <LazySection minHeight="520px">
+        <Suspense fallback={<div className="h-[520px]" />}>
+          <Section6 />
+        </Suspense>
+      </LazySection>
+      <LazySection minHeight="680px">
+        <Suspense fallback={<div className="h-[680px]" />}>
+          <VideoCard />
+        </Suspense>
+      </LazySection>
       {/* <Section9 /> */}
-      <Section3 />
-      <Enquiry />
-      <Suspense fallback={null}>
-        <ComingSoonSection />
-      </Suspense>
-      <Section7 />
-      <Suspense fallback={null}>
-        <LuxurySection />
-      </Suspense>
-      <Suspense fallback={null}>
-        <Section10 />
-      </Suspense>
-      <Suspense fallback={null}>
-        <Section11 />
-      </Suspense>
-      <NewsLetter />
+      <LazySection minHeight="520px">
+        <Suspense fallback={<div className="h-[520px]" />}>
+          <Section3 />
+        </Suspense>
+      </LazySection>
+      <LazySection minHeight="260px">
+        <Suspense fallback={<div className="h-[260px]" />}>
+          <Enquiry />
+        </Suspense>
+      </LazySection>
+      <LazySection minHeight="600px">
+        <Suspense fallback={<div className="h-[600px]" />}>
+          <ComingSoonSection />
+        </Suspense>
+      </LazySection>
+      <LazySection minHeight="700px">
+        <Suspense fallback={<div className="h-[700px]" />}>
+          <Section7 />
+        </Suspense>
+      </LazySection>
+      <LazySection minHeight="100vh">
+        <Suspense fallback={<div className="h-screen" />}>
+          <LuxurySection />
+        </Suspense>
+      </LazySection>
+      <LazySection minHeight="720px">
+        <Suspense fallback={<div className="h-[720px]" />}>
+          <Section10 />
+        </Suspense>
+      </LazySection>
+      <LazySection minHeight="720px">
+        <Suspense fallback={<div className="h-[720px]" />}>
+          <Section11 />
+        </Suspense>
+      </LazySection>
+      <LazySection minHeight="240px">
+        <Suspense fallback={<div className="h-[240px]" />}>
+          <NewsLetter />
+        </Suspense>
+      </LazySection>
     </div>
   );
 };

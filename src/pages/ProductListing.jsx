@@ -238,8 +238,10 @@ const ProductListing = () => {
               {/* Mobile Filter Button */}
               <div className="flex items-end justify-end mr-2 md:hidden">
                 <button
+                  type="button"
                   onClick={toggleFilterSidebar}
                   className="flex items-center justify-center px-3 py-1 space-x-2 text-center text-white bg-transparent text-bold hover:bg-gray-300"
+                  aria-label={common.filters}
                 >
                   <MdOutlineFilterList className="text-xl" />
                   <span>{common.filters}</span>
@@ -285,8 +287,10 @@ const ProductListing = () => {
                 {common.filters}
               </h3>
               <button
+                type="button"
                 onClick={toggleFilterSidebar}
                 className="text-white hover:text-yellow-500"
+                aria-label={common.close}
               >
                 {common.close}
               </button>

@@ -1,7 +1,5 @@
 /* eslint-disable no-unused-vars */
 import { Swiper, SwiperSlide } from 'swiper/react';
-import video from '../../assets/video.mp4';
-
 // Import Swiper styles
 import 'swiper/css';
 import 'swiper/css/pagination';
@@ -22,7 +20,7 @@ export default function Section11() {
       autoPlay
       loop
       playsInline
-      preload="metadata"
+      preload="none"
     />
   );
 
@@ -85,12 +83,3 @@ export default function Section11() {
     </div>
   );
 }
-
-const dataSource = [
-  { id: 1, videoSrc: video },
-  { id: 2, videoSrc: video },
-  { id: 3, videoSrc: video },
-  { id: 4, videoSrc: video },
-  { id: 5, videoSrc: video },
-  { id: 6, videoSrc: video },
-];

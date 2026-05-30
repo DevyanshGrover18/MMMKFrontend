@@ -1,13 +1,44 @@
 /* eslint-disable no-unused-vars */
-import { useState, useRef, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { memo, useCallback, useRef, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { Button3 } from './UIButtons';
-import { FaChevronLeft, FaChevronRight } from 'react-icons/fa';
 import CustomCarousel from './Carousal';
 import { useTranslationContext } from '../../context/TranslationContext';
 import { useGlobalContext } from '../../context/GlobalProvider';
 import { getCategoryLabel } from '../../utils/categoryTranslation';
 import { resolveAssetUrl } from '../../utils/assetUrl';
+
+const CategorySlide = memo(function CategorySlide({ product, translateLanguage }) {
+  return (
+    <div
+      className="relative group flex-shrink-0 w-full sm:w-[300px] md:w-[340px] lg:w-[430px] h-[300px] md:h-[350px] lg:h-[550px] mx-auto"
+    >
+      <div
+        className="w-full h-full overflow-hidden"
+        style={{
+          backgroundImage: `url(${resolveAssetUrl(product.image)})`,
+          // backgroundImage: `url("/section2Left.jpg")`,
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+          backgroundRepeat: 'no-repeat',
+        }}
+      ></div>
+      <div className="absolute z-[1] bottom-0 transition-all duration-500 shadow-2xl w-full max-h-[100px] h-full text-white">
+        <Link
+          to={
+            '/product-listings?categories=' +
+            encodeURIComponent(product.name.en).replace(/%20/g, '+')
+          }
+          className="absolute z-10 left-0 right-0 bottom-0 h-full transition-all duration-500 flex items-center justify-center group-hover:shadow-[inset_0_0_0_4px_white]"
+        >
+          <h3 className="text-lg font-semibold sm:text-xl md:text-2xl text-center w-full [text-shadow:0_2px_12px_rgba(0,0,0,0.75)]">
+            {getCategoryLabel(product, translateLanguage)}
+          </h3>
+        </Link>
+      </div>
+    </div>
+  );
+});
 
 export default function Slider() {
   const {
@@ -16,36 +47,66 @@ export default function Slider() {
   } = useTranslationContext();
   const { categories } = useGlobalContext();
   const carouselRef = useRef(null);
-  const [isHovering, setIsHovering] = useState(false);
+  const isHoveringRef = useRef(false);
+  const maxScrollRef = useRef(0);
 
-  const handlePrevPage = () => {
-    if (carouselRef.current) {
-      carouselRef.current.scrollLeft -= 300;
-    }
-  };
+  const updateScrollBounds = useCallback(() => {
+    const carousel = carouselRef.current;
+    if (!carousel) return;
 
-  const handleNextPage = () => {
-    if (carouselRef.current) {
-      carouselRef.current.scrollLeft += 300;
-    }
-  };
+    maxScrollRef.current = Math.max(0, carousel.scrollWidth - carousel.clientWidth);
+  }, []);
+
+  const handleMouseEnter = useCallback(() => {
+    isHoveringRef.current = true;
+  }, []);
+
+  const handleMouseLeave = useCallback(() => {
+    isHoveringRef.current = false;
+  }, []);
+
+  const renderCategorySlide = useCallback(
+    (product) => (
+      <CategorySlide
+        key={product._id}
+        product={product}
+        translateLanguage={translateLanguage}
+      />
+    ),
+    [translateLanguage]
+  );
 
   useEffect(() => {
     const carousel = carouselRef.current;
-    if (!carousel || isHovering) return;
+    if (!carousel || categories.length === 0) return undefined;
 
-    const scrollInterval = setInterval(() => {
-      if (carousel.scrollWidth > carousel.clientWidth) {
-        if (carousel.scrollLeft < carousel.scrollWidth - carousel.clientWidth) {
-          carousel.scrollLeft += 1;
-        } else {
-          carousel.scrollLeft = 0;
-        }
+    updateScrollBounds();
+
+    let resizeObserver;
+    if ('ResizeObserver' in window) {
+      resizeObserver = new ResizeObserver(updateScrollBounds);
+      resizeObserver.observe(carousel);
+    } else {
+      window.addEventListener('resize', updateScrollBounds);
+    }
+
+    const scrollInterval = window.setInterval(() => {
+      const maxScroll = maxScrollRef.current;
+      if (isHoveringRef.current || maxScroll <= 0) return;
+
+      if (carousel.scrollLeft < maxScroll) {
+        carousel.scrollLeft += 1;
+      } else {
+        carousel.scrollLeft = 0;
       }
     }, 50);
 
-    return () => clearInterval(scrollInterval);
-  }, [categories, isHovering]);
+    return () => {
+      window.clearInterval(scrollInterval);
+      resizeObserver?.disconnect();
+      window.removeEventListener('resize', updateScrollBounds);
+    };
+  }, [categories.length, updateScrollBounds]);
 
   return (
     <section className="w-full py-12">
@@ -64,53 +125,10 @@ export default function Slider() {
           <CustomCarousel
             ref={carouselRef}
             items={categories}
-            onMouseEnter={() => setIsHovering(true)}
-            onMouseLeave={() => setIsHovering(false)}
-            renderItem={(product, i) => (
-              <div
-                key={product._id}
-                className="relative group flex-shrink-0 w-full sm:w-[300px] md:w-[340px] lg:w-[430px] h-[300px] md:h-[350px] lg:h-[550px] mx-auto"
-              >
-                <div
-                  className="w-full h-full overflow-hidden"
-                  style={{
-                    backgroundImage: `url(${resolveAssetUrl(product.image)})`,
-                    // backgroundImage: `url("/section2Left.jpg")`,
-                    backgroundSize: 'cover',
-                    backgroundPosition: 'center',
-                    backgroundRepeat: 'no-repeat',
-                  }}
-                ></div>
-                <div className="absolute z-[1] bottom-0 transition-all duration-500 shadow-2xl w-full max-h-[100px] h-full text-white">
-                  <Link
-                    to={
-                      '/product-listings?categories=' +
-                      encodeURIComponent(product.name.en).replace(/%20/g, '+')
-                    }
-                    className="absolute z-10 left-0 right-0 bottom-0 h-full bg-gradient-to-t from-black/60 to-transparent transition-all duration-500 flex items-center justify-center group-hover:shadow-[inset_0_0_0_4px_white]"
-                  >
-                    <h3 className="text-lg font-semibold sm:text-xl md:text-2xl text-center w-full">
-                      {getCategoryLabel(product, translateLanguage)}
-                    </h3>
-                  </Link>
-                </div>
-              </div>
-            )}
+            onMouseEnter={handleMouseEnter}
+            onMouseLeave={handleMouseLeave}
+            renderItem={renderCategorySlide}
           />
-          {/* <button
-            className="absolute left-[2%] lg:-left-14 top-1/2 -translate-y-1/2 z-20 bg-black bg-opacity-50 text-white p-3 rounded-full hover:bg-opacity-80 pointer-events-auto flex items-center justify-center"
-            onClick={handlePrevPage}
-            aria-label="Scroll Left"
-          >
-            <FaChevronLeft />
-          </button>
-          <button
-            className="absolute right-[2%] lg:-right-14 top-1/2 -translate-y-1/2 z-20 bg-black bg-opacity-50 text-white p-3 rounded-full hover:bg-opacity-80 pointer-events-auto flex items-center justify-center"
-            onClick={handleNextPage}
-            aria-label="Scroll Right"
-          >
-            <FaChevronRight />
-          </button> */}
         </div>
       </div>
     </section>

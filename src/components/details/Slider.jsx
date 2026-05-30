@@ -49,11 +49,15 @@ export default function Slider({ images }) {
       >
         {images?.map((img, index) => (
           <SwiperSlide key={`main-slide-${index}`}>
-            <img
-              src={resolveAssetUrl(img)}
-              alt={`Slide ${index + 1}`}
-              className="object-cover max-h-[400px] w-auto shadow-md mx-auto"
-            />
+          <img
+            src={resolveAssetUrl(img)}
+            alt={`Slide ${index + 1}`}
+            width="1200"
+            height="1200"
+            loading={index === 0 ? 'eager' : 'lazy'}
+            decoding="async"
+            className="object-cover max-h-[400px] w-auto shadow-md mx-auto"
+          />
           </SwiperSlide>
         ))}
       </Swiper>
@@ -84,12 +88,16 @@ export default function Slider({ images }) {
       >
         {images?.map((img, index) => (
           <SwiperSlide key={`thumb-slide-${index}`}>
-            <img
-              src={resolveAssetUrl(img)}
-              alt={`Thumbnail ${index + 1}`}
-              className="object-contain w-full h-[70px] shadow-sm cursor-pointer relative"
-              style={{
-                opacity: activeImage === index ? 1 : 0.8,
+          <img
+            src={resolveAssetUrl(img)}
+            alt={`Thumbnail ${index + 1}`}
+            width="200"
+            height="200"
+            loading="lazy"
+            decoding="async"
+            className="object-contain w-full h-[70px] shadow-sm cursor-pointer relative"
+            style={{
+              opacity: activeImage === index ? 1 : 0.8,
               }}
             />
           </SwiperSlide>

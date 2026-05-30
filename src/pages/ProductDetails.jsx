@@ -297,10 +297,10 @@ const ProductDetails = () => {
             <div className="grid w-full grid-cols-1 lg:grid-cols-12">
               <div className="col-span-1 p-6 border lg:col-span-3 md:p-10">
                 <div className="flex flex-col justify-between">
-                  <h3 className="text-base font-bold md:text-xl">
+                  <h1 className="text-base font-bold md:text-xl">
                     {product?.translated?.productName ||
                       productData?.productName?.en}
-                  </h3>
+                  </h1>
                   {/* <p
                   className="my-4 text-sm md:text-base"
                   dangerouslySetInnerHTML={{
@@ -363,6 +363,7 @@ const ProductDetails = () => {
                         <button
                           className="px-3 text-2nd"
                           type="button"
+                          aria-label={common.decreaseQuantity || 'Decrease quantity'}
                           onClick={() =>
                             setCount((prevData) =>
                               prevData === 1 ? 1 : prevData - 1
@@ -378,6 +379,7 @@ const ProductDetails = () => {
                         <button
                           className="px-3 text-2nd"
                           type="button"
+                          aria-label={common.increaseQuantity || 'Increase quantity'}
                           onClick={() => {
                             if (selectedAvailableQuantity <= 0) {
                               message.warning(common.outOfStock || 'Sold out');
@@ -413,11 +415,12 @@ const ProductDetails = () => {
                         )}
                     </div>
 
-                    <button
-                      name="wishList"
-                      onClick={handleAddToWishList}
-                      className="w-full py-2 mt-3 font-semibold text-black bg-white"
-                      disabled={isOutOfStock}
+                      <button
+                        name="wishList"
+                        type="button"
+                        onClick={handleAddToWishList}
+                        className="w-full py-2 mt-3 font-semibold text-black bg-white"
+                        disabled={isOutOfStock}
                     >
                       {isOutOfStock ? 'Sold Out' : common.addToCart}
                     </button>
@@ -446,9 +449,9 @@ const ProductDetails = () => {
             <div className="w-full mt-6">
               <div className="flex flex-col items-center justify-between w-full gap-4 px-4 py-6 border border-b md:flex-row md:py-8 lg:py-6 md:gap-5 text-2nd sm:px-10 lg:px-20">
                 <div className="text-center md:text-left">
-                  <h3 className="text-lg font-bold md:text-xl">
-                    {productDetails.relatedProducts}
-                  </h3>
+                <h3 className="text-lg font-bold md:text-xl">
+                  {productDetails.relatedProducts}
+                </h3>
                 </div>
                 <CommonButton
                   variant={4}

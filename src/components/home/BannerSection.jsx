@@ -55,6 +55,10 @@ export default function BannerSection() {
             <img
               src="Wode Logo.png"
               alt={common.mmmk}
+              width="192"
+              height="192"
+              loading="lazy"
+              decoding="async"
               className="object-contain w-full h-full"
             />
           </div>
@@ -64,9 +68,9 @@ export default function BannerSection() {
             <h2 className="text-xl font-semibold tracking-wider sm:text-2xl lg:text-3xl">
               {homepage.section6Heading1}
             </h2>
-            <h1 className="text-3xl font-light tracking-widest sm:text-4xl lg:text-xl">
+            <h2 className="text-3xl font-light tracking-widest sm:text-4xl lg:text-xl">
               {homepage.section6Description1}
-            </h1>
+            </h2>
 
             <Button4
               isLink
@@ -86,6 +90,10 @@ export default function BannerSection() {
         <img
           src={leftImg}
           alt={common.productImageAlt}
+          width="1200"
+          height="900"
+          loading="lazy"
+          decoding="async"
           className="object-cover shadow w-full h-full"
         />
       ),
@@ -97,6 +105,10 @@ export default function BannerSection() {
         <img
           src="/bannerSectionImage.jpg"
           alt={common.productImageAlt}
+          width="1200"
+          height="900"
+          loading="lazy"
+          decoding="async"
           className="object-cover shadow w-full h-full"
         />
       ),
@@ -108,6 +120,10 @@ export default function BannerSection() {
         <img
           src={rightImg}
           alt={common.productImageAlt}
+          width="1200"
+          height="900"
+          loading="lazy"
+          decoding="async"
           className="object-cover shadow w-full h-full"
         />
       ),
@@ -123,6 +139,10 @@ export default function BannerSection() {
           <img
             src="/africanFalcon.jpg"
             alt={common.productImageAlt}
+            width="1200"
+            height="1200"
+            loading="lazy"
+            decoding="async"
             className="object-cover w-full h-full rounded-md"
           />
           <p className="absolute bottom-10 left-0 right-0 text-center text-2xl z-10">

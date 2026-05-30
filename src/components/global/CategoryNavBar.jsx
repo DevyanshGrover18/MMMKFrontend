@@ -12,8 +12,7 @@ const CategoryNavBar = ({ setUtils }) => {
 
   const handleSelectCategory = (value) => {
     const newPath = `/product-listings?categories=${getUrl(value)}`;
-    console.log(location.pathname);
-    if (location.pathname !== '/product-listing') {
+    if (location.pathname !== '/product-listings') {
       return navigate(newPath);
     }
     setUtils((prevData) => {
@@ -31,6 +30,7 @@ const CategoryNavBar = ({ setUtils }) => {
         return (
           <button
             key={item._id || index}
+            type="button"
             onClick={() => handleSelectCategory(item.name.en)}
             className="px-6 py-2 text-white transition duration-300 border-2 border-transparent rounded-md hover:border-white hover:bg-white hover:text-black whitespace-nowrap"
           >

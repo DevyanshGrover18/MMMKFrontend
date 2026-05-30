@@ -35,7 +35,7 @@ const section7 = () => {
     '';
 
   return (
-    <div className="relativ py-10 bg-[var(--primary-dark)]">
+    <div className="relative py-10 bg-[var(--primary-dark)]">
       {/* 30% off badge */}
       {/* <div className="absolute top-[45%] left-[46.5%] z-10 hidden md:block ">
           <div className="flex items-center justify-center text-2xl font-bold text-white bg-black rounded-full w-28 h-28">
@@ -106,6 +106,10 @@ const section7 = () => {
                 <img
                   src={resolveAssetUrl(product?.image)}
                   alt={getProductName(product) || common.productImageAlt}
+                  width="1200"
+                  height="1200"
+                  loading={index === 0 ? 'eager' : 'lazy'}
+                  decoding="async"
                   className="h-full min-h-[300px] w-full mb-4 object-cover"
                 />
               </div>
@@ -150,6 +154,7 @@ const section7 = () => {
               <Button4
                 onClick={() => navigate(`/product-details/${product._id}`)}
                 className="!top-0 !py-2 !border"
+                aria-label={`${common.view} ${getProductName(product)}`}
               >
                 {common.view}
               </Button4>

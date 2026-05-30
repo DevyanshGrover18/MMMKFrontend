@@ -15,6 +15,10 @@ const Section6 = () => {
         <img
           src="/section6Product.jpg"
           alt={common.productImageAlt}
+          width="1200"
+          height="1200"
+          loading="lazy"
+          decoding="async"
           className="object-contain shadow w-full h-auto"
         />
       </div>
@@ -39,6 +43,10 @@ const Section6 = () => {
         <img
           src="/melMoneyRight2.jpg"
           alt={common.productImageAlt}
+          width="1200"
+          height="1200"
+          loading="lazy"
+          decoding="async"
           className="object-contain shadow w-full h-auto"
         />
       </div>

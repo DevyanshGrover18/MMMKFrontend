@@ -46,6 +46,10 @@ const Section8 = () => {
           src="Wode Logo.png"
           className="w-20 h-20 mb-6 md:w-32 md:h-32"
           alt={common.mmmk}
+          width="128"
+          height="128"
+          loading="lazy"
+          decoding="async"
         />
         <p className="text-sm md:text-lg lg:text-2xl tracking-[2px] md:tracking-[6px] leading-10 flex flex-col gap-4 mb-8">
           {/* {query.data?.data?.centerTitle[i18n.language] */}

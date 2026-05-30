@@ -74,8 +74,9 @@ const Banner = ({ children, minHight, bg }) => {
 
   return (
     <div
-      className={`w-full min-h-[${minHight}vh] text-white relative md:py-24 py-6`}
+      className="w-full text-white relative md:py-24 py-6"
       style={{
+        minHeight: minHight ? `${minHight}vh` : '100vh',
         backgroundImage: `url(${bg})`,
         backgroundPosition: 'center',
         backgroundRepeat: 'no-repeat',

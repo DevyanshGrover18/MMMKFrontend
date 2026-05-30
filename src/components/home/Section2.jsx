@@ -13,6 +13,10 @@ const Section2 = () => {
         <img
           src="/section2Left.jpg"
           alt={common.productImageAlt}
+          width="1200"
+          height="900"
+          loading="lazy"
+          decoding="async"
           className="object-cover w-full h-full"
         />
         <div className="absolute inset-0 flex items-end justify-center p-4">
@@ -34,7 +38,7 @@ const Section2 = () => {
           autoPlay
           loop
           muted
-          preload="metadata"
+          preload="none"
           // playsInline
           controls
         />
@@ -45,6 +49,10 @@ const Section2 = () => {
         <img
           src="/section2Right.jpg"
           alt={common.productImageAlt}
+          width="1200"
+          height="900"
+          loading="lazy"
+          decoding="async"
           className="object-cover w-full h-full"
         />
         <div className="absolute inset-0 flex items-end justify-center p-4">

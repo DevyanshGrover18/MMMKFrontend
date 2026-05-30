@@ -55,17 +55,23 @@ const BannerSlider = () => {
         <img
           src={data[currentNumber].img}
           alt={data[currentNumber].title}
+          width="400"
+          height="500"
+          loading={currentNumber === 0 ? 'eager' : 'lazy'}
+          decoding="async"
           className="w-[80%] lg:w-[400px] mx-auto"
         />
         <div className="flex justify-center w-full gap-5 py-5 text-center lg:py-10">
           {data.map((_, index) => (
-            <span
+            <button
               key={index}
+              type="button"
               className={`block w-[20px] h-[20px] rounded-full border border-white cursor-pointer ${
                 index === currentNumber ? 'bg-white' : ''
               }`}
               onClick={() => handleChange(index)}
-            ></span>
+              aria-label={`Go to slide ${index + 1}`}
+            />
           ))}
         </div>
       </div>
@@ -78,7 +84,7 @@ const BannerSlider = () => {
         <p className="my-5 text-2nd lg:my-10">
           {data[currentNumber].description}
         </p>
-        <button className="px-10 py-2 font-bold text-black bg-white">
+        <button type="button" className="px-10 py-2 font-bold text-black bg-white">
           {common.buyNow}
         </button>
       </div>
