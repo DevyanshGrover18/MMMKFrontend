@@ -1,8 +1,9 @@
-import { memo, useCallback, useRef } from 'react';
+import { memo, useCallback, useRef, useState, useEffect } from 'react';
 import { useTranslationContext } from '../../context/TranslationContext';
 import { convertPrice, formatPrice } from '../../utils/currency';
 import { useCurrency } from '../../context/CurrencyContext';
 import { useNavigate } from 'react-router-dom';
+import { useInView } from 'framer-motion';
 
 const products = [
   {
@@ -61,6 +62,8 @@ const ProductVideoCard = memo(function ProductVideoCard({
   onOpen,
 }) {
   const videoRef = useRef(null);
+  const containerRef = useRef(null);
+  const isInView = useInView(containerRef, { margin: '200px 0px', once: true });
 
   const handleMouseEnter = useCallback(() => {
     const video = videoRef.current;
@@ -87,8 +90,9 @@ const ProductVideoCard = memo(function ProductVideoCard({
 
   return (
     <button
+      ref={containerRef}
       type="button"
-      className="group cursor-pointer text-left"
+      className="group cursor-pointer text-left w-full"
       onClick={handleClick}
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
@@ -97,17 +101,21 @@ const ProductVideoCard = memo(function ProductVideoCard({
       <div
         className={`relative aspect-square overflow-hidden rounded-lg ${product.backgroundColor} flex items-center justify-center`}
       >
-        <video
-          ref={videoRef}
-          className="h-full w-full object-cover"
-          src={product.video}
-          muted
-          loop
-          playsInline
-          preload="auto"
-        >
-          Your browser does not support the video tag.
-        </video>
+        {isInView ? (
+          <video
+            ref={videoRef}
+            className="h-full w-full object-cover"
+            src={product.video}
+            muted
+            loop
+            playsInline
+            preload="metadata"
+          >
+            Your browser does not support the video tag.
+          </video>
+        ) : (
+          <div className="w-full h-full bg-gray-100 animate-pulse" />
+        )}
       </div>
 
       <div className="mt-3">
