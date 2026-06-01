@@ -8,16 +8,19 @@ import { useGlobalContext } from '../../context/GlobalProvider';
 import { getCategoryLabel } from '../../utils/categoryTranslation';
 import { resolveAssetUrl } from '../../utils/assetUrl';
 
-const CategorySlide = memo(function CategorySlide({ product, translateLanguage }) {
+const CategorySlide = memo(function CategorySlide({
+  product,
+  translateLanguage,
+}) {
   return (
     <div
-      className="relative group flex-shrink-0 w-full sm:w-[300px] md:w-[340px] lg:w-[430px] h-[300px] md:h-[350px] lg:h-[550px] mx-auto"
+      className="group relative mx-auto h-[300px] w-[82vw] flex-shrink-0 sm:w-[300px] md:h-[350px] md:w-[340px] lg:h-[550px] lg:w-[430px]"
+      style={{ scrollSnapAlign: 'start' }}
     >
       <div
         className="w-full h-full overflow-hidden"
         style={{
           backgroundImage: `url(${resolveAssetUrl(product.image)})`,
-          // backgroundImage: `url("/section2Left.jpg")`,
           backgroundSize: 'cover',
           backgroundPosition: 'center',
           backgroundRepeat: 'no-repeat',
@@ -48,21 +51,32 @@ export default function Slider() {
   const { categories } = useGlobalContext();
   const carouselRef = useRef(null);
   const isHoveringRef = useRef(false);
+  const isTouchingRef = useRef(false);
   const maxScrollRef = useRef(0);
 
   const updateScrollBounds = useCallback(() => {
     const carousel = carouselRef.current;
     if (!carousel) return;
-
-    maxScrollRef.current = Math.max(0, carousel.scrollWidth - carousel.clientWidth);
+    maxScrollRef.current = Math.max(
+      0,
+      carousel.scrollWidth - carousel.clientWidth
+    );
   }, []);
 
   const handleMouseEnter = useCallback(() => {
     isHoveringRef.current = true;
   }, []);
-
   const handleMouseLeave = useCallback(() => {
     isHoveringRef.current = false;
+  }, []);
+  const handleTouchStart = useCallback(() => {
+    isTouchingRef.current = true;
+  }, []);
+  const handleTouchEnd = useCallback(() => {
+    // small delay so snap animation finishes before auto-scroll resumes
+    setTimeout(() => {
+      isTouchingRef.current = false;
+    }, 1000);
   }, []);
 
   const renderCategorySlide = useCallback(
@@ -92,13 +106,13 @@ export default function Slider() {
 
     const scrollInterval = window.setInterval(() => {
       const maxScroll = maxScrollRef.current;
-      if (isHoveringRef.current || maxScroll <= 0) return;
+      if (isHoveringRef.current || isTouchingRef.current || maxScroll <= 0)
+        return;
 
       if (carousel.scrollLeft < maxScroll) {
         carousel.scrollLeft += 1;
-      } else {
-        carousel.scrollLeft = 0;
       }
+      // at the end — do nothing, just stop
     }, 50);
 
     return () => {
@@ -111,8 +125,7 @@ export default function Slider() {
   return (
     <section className="w-full py-12">
       <div className="container px-4 mx-auto">
-        {/* Header Section */}
-        <div className="flex flex-col items-center justify-between mb-8 md:flex-row md:ml-12">
+        <div className="mb-8 flex flex-col items-center justify-between gap-4 md:ml-12 md:flex-row">
           <h2 className="text-xl text-[#05682F] font-bold text-center sm:text-3xl md:text-4xl lg:text-5xl">
             {homepage.section2Heading1}
           </h2>
@@ -127,6 +140,8 @@ export default function Slider() {
             items={categories}
             onMouseEnter={handleMouseEnter}
             onMouseLeave={handleMouseLeave}
+            onTouchStart={handleTouchStart}
+            onTouchEnd={handleTouchEnd}
             renderItem={renderCategorySlide}
           />
         </div>

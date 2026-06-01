@@ -134,18 +134,14 @@ const ProductListing = () => {
   }, [categories, translateLanguage, utils.categories, utils.q]);
 
   const handleSelectCategory = (item) => {
-    setUtils((prevData) => {
-      const currentCategories = prevData.categories || [];
-      const nextCategories = currentCategories.includes(item.name.en)
-        ? currentCategories.filter((name) => name !== item.name.en)
-        : [...currentCategories, item.name.en];
+    const categoryName = item?.name?.en;
+    if (!categoryName) return;
 
-      return {
-        ...prevData,
-        categories: nextCategories,
-        currentPage: 1,
-      };
-    });
+    setUtils((prevData) => ({
+      ...prevData,
+      categories: [categoryName],
+      currentPage: 1,
+    }));
   };
 
   const toggleFilterSidebar = () => {
@@ -248,7 +244,7 @@ const ProductListing = () => {
             {/* Right (ProductGrid component) */}
             <div className="w-full md:col-span-9 lg:col-span-10">
               {query.isLoading ? (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4">
+                <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4">
                   {[...Array(8)].map((_, i) => (
                     <SkeletonCard key={`skeleton-${i}`} />
                   ))}

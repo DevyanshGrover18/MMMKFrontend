@@ -11,14 +11,32 @@ import { getStoredUserId } from '../../utils/authStorage';
 import { convertPrice, formatPrice } from '../../utils/currency';
 import { useCurrency } from '../../context/CurrencyContext';
 import { resolveAssetUrl } from '../../utils/assetUrl';
+import { useQueryClient } from '@tanstack/react-query';
+import { getSingleProduct, getProductSkus } from '../../apis/nonAuth/products';
 
 const ProductGrid = ({ list = [], textColor = 'white' }) => {
   const {
     content: { common },
   } = useTranslationContext();
   const { currency, rates } = useCurrency();
+  const queryClient = useQueryClient();
+
+  const prefetchProductDetails = (productId) => {
+    queryClient.prefetchQuery({
+      queryKey: ['product-details', productId],
+      queryFn: () => getSingleProduct(productId),
+      staleTime: 60000,
+    });
+    queryClient.prefetchQuery({
+      queryKey: ['product-skus', productId],
+      queryFn: () => getProductSkus(productId),
+      staleTime: 60000,
+    });
+  };
+
   const formatConvertedPrice = (amount) =>
     formatPrice(convertPrice(amount, currency, rates), currency);
+
 
   const getProductName = (product) =>
     product?.translated?.productName ||
@@ -60,11 +78,12 @@ const ProductGrid = ({ list = [], textColor = 'white' }) => {
 
   const navigate = useNavigate();
   return list?.length > 0 ? (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4">
+    <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4">
       {list.map((product, index) => (
         <div
           key={product._id}
-          className="relative p-4 text-white border border-white"
+          onMouseEnter={() => prefetchProductDetails(product._id)}
+          className="relative border border-white p-2 text-white sm:p-4"
         >
           <button
             type="button"
@@ -75,15 +94,12 @@ const ProductGrid = ({ list = [], textColor = 'white' }) => {
             aria-label={`${common.addToWishlist} ${getProductName(product)}`}
             className="absolute top-2 right-2 z-10"
           >
-            <FiHeart
-              size={24}
-              className="absolute top-2 right-4 text-red-500"
-            />
+            <FiHeart className="absolute right-1 top-1 h-5 w-5 text-red-500 sm:right-4 sm:top-2 sm:h-6 sm:w-6" />
           </button>
 
-          <div className="text-center flex flex-col gap-2">
+          <div className="flex flex-col gap-2 text-center">
             {/* Fixed image container */}
-            <div className="overflow-hidden h-[350px]">
+            <div className="h-[210px] overflow-hidden sm:h-[300px] md:h-[350px]">
               <img
                 src={
                   getProductImage(product)
@@ -103,11 +119,11 @@ const ProductGrid = ({ list = [], textColor = 'white' }) => {
 
             {/* Price */}
             {product.price && product.websitePrice ? (
-              <p className="font-medium text-white flex justify-center items-center gap-2">
-                <span className="line-through text-sm">
+              <p className="flex flex-wrap items-center justify-center gap-1 text-white sm:gap-2 sm:font-medium">
+                <span className="text-xs line-through sm:text-sm">
                   {formatConvertedPrice(product?.price)}
                 </span>
-                <span className="text-lg font-semibold md:text-xl">
+                <span className="text-sm font-semibold sm:text-lg md:text-xl">
                   {formatConvertedPrice(product?.websitePrice)}
                 </span>
               </p>
@@ -116,7 +132,7 @@ const ProductGrid = ({ list = [], textColor = 'white' }) => {
             )}
 
             {/* Product Name */}
-            <h3 className={`text-base md:text-xl font-bold text-${textColor}`}>
+            <h3 className={`text-sm sm:text-base md:text-xl font-bold text-${textColor}`}>
               {getProductName(product)}
             </h3>
 
@@ -130,7 +146,7 @@ const ProductGrid = ({ list = [], textColor = 'white' }) => {
             {/* Buy Now Button */}
             <Button4
               onClick={() => navigate(`/product-details/${product._id}`)}
-              className="!top-0 !py-2 !border"
+              className="!top-0 !border !px-2 !py-1 !text-xs sm:!px-4 sm:!py-2 sm:!text-sm"
             >
               {common.buyNow}
             </Button4>

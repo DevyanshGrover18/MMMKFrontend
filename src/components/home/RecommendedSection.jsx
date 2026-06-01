@@ -2,8 +2,6 @@
 /* eslint-disable react/prop-types */
 import { Link, useNavigate } from 'react-router-dom';
 
-// Import your images and video
-
 import { Button3, Button4 } from '../global/UIButtons';
 import CustomCarousel from '../global/Carousal';
 import { useTranslationContext } from '../../context/TranslationContext';
@@ -29,7 +27,7 @@ export default function RecommendedSection() {
   return (
     <section className="w-full py-12">
       <div className="container px-4 mx-auto">
-        <div className="flex flex-col items-center justify-between mb-8 md:flex-row md:ml-12">
+        <div className="mb-8 flex flex-col items-center justify-between gap-4 md:ml-12 md:flex-row">
           <h2 className="text-xl text-[#FFA500] font-bold text-center sm:text-3xl md:text-4xl lg:text-5xl">
             {homepage.section5Heading1}
           </h2>
@@ -43,64 +41,61 @@ export default function RecommendedSection() {
           renderItem={(product, i) => (
             <div
               key={product._id}
-              className="relative group flex-shrink-0 w-full sm:w-[300px] md:w-[340px] lg:w-[430px] h-[300px] md:h-[350px] lg:h-[400px] mx-auto"
+              className="group relative mx-auto h-[320px] w-[82vw] flex-shrink-0 sm:w-[300px] md:h-[350px] md:w-[340px] lg:h-[400px] lg:w-[430px]"
             >
               <div
                 className="w-full h-full overflow-hidden"
                 style={{
-                  backgroundImage: `url(${
-                    resolveAssetUrl(product.image)
-                  })`,
-                  // backgroundImage: `url("/section2Left.jpg")`,
+                  backgroundImage: `url(${resolveAssetUrl(product.image)})`,
                   backgroundSize: 'cover',
                   backgroundPosition: 'center',
                   backgroundRepeat: 'no-repeat',
                 }}
               ></div>
-              <div className="absolute z-[1] bottom-0 transition-all duration-500 shadow-2xl w-full max-h-[100px] h-full text-white">
-                <Link
-                  to={`/product-details/${product._id}`}
-                  className="absolute z-[-1] left-0 right-0 bottom-0 h-full transition-all duration-500"
-                >
-                  <span className="block w-full h-full opacity-0 border-4 border-white origin-left group-hover:opacity-100 transition-all duration-500"></span>
-                </Link>
-                <div className="absolute bottom-4 px-4">
-                  {product.price && product.websitePrice ? (
-                    <p
-                      className={`font-medium text-white flex justify-center items-center gap-2`}
-                    >
-                      <span className="line-through text-sm">
-                        {formatConvertedPrice(product?.price)}
-                      </span>
-                      <span className="text-lg font-semibold md:text-xl">
-                        {formatConvertedPrice(product?.websitePrice)}
-                      </span>
-                    </p>
-                  ) : (
-                    common.itemUnavailable
-                  )}
 
-                  <p className="text-xl px-4">
-                    {product.nameInLanguage?.[translateLanguage]}
-                  </p>
-                </div>
-              </div>
-              {/* <Button4
-                isLink
+              <Link
                 to={`/product-details/${product._id}`}
-                className="absolute z-[2] top-1/2 left-1/2 -translate-x-1/2 -translate-y-full transition-all duration-500 scale-0 opacity-0 group-hover:opacity-100 group-hover:scale-100"
+                className="absolute inset-0 z-[1]"
               >
-                {common.view}
-              </Button4>
-              <div className="absolute z-[1] bottom-0 transition-all duration-500 shadow-2xl w-full max-h-[100px] group-hover:max-h-[500px] h-full text-white">
-                <div className="absolute z-[-1] left-0 right-0 bottom-0 h-full bg-gradient-to-t from-black/60 to-transparent pointer-events-none" />
-                <div className="absolute bottom-4">
-                  <span className="px-4">$ {product.price}</span>
-                  <p className="text-xl px-4">
-                    {product.nameInLanguage?.[translateLanguage]}
+                <span className="block w-full h-full opacity-0 border-4 border-white transition-all duration-500 group-hover:opacity-100"></span>
+              </Link>
+
+              <div
+                className="absolute z-[2] bottom-0 left-0 right-0 text-white"
+                style={{
+                  background:
+                    'linear-gradient(to top, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.55) 60%, transparent 100%)',
+                  padding: '48px 16px 16px',
+                }}
+              >
+                {product.price && product.websitePrice ? (
+                  <p
+                    className="font-medium text-white flex justify-center items-center gap-2"
+                    style={{ textShadow: '0 1px 3px rgba(0,0,0,0.6)' }}
+                  >
+                    <span className="line-through text-sm opacity-75">
+                      {formatConvertedPrice(product?.price)}
+                    </span>
+                    <span className="text-lg font-semibold md:text-xl">
+                      {formatConvertedPrice(product?.websitePrice)}
+                    </span>
                   </p>
-                </div>
-              </div> */}
+                ) : (
+                  <p
+                    className="text-center text-sm"
+                    style={{ textShadow: '0 1px 3px rgba(0,0,0,0.6)' }}
+                  >
+                    {common.itemUnavailable}
+                  </p>
+                )}
+
+                <p
+                  className="px-2 text-center text-lg leading-snug sm:text-xl"
+                  style={{ textShadow: '0 1px 3px rgba(0,0,0,0.6)' }}
+                >
+                  {product.nameInLanguage?.[translateLanguage]}
+                </p>
+              </div>
             </div>
           )}
         />

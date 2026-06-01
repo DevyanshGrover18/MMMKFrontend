@@ -9,9 +9,9 @@ const Section6 = () => {
   } = useTranslationContext();
   // console.log("Product in Section6:", product);
   return (
-    <div className="w-full grid grid-cols-1 md:grid-cols-3 overflow-hidden bg-[#99ddff]">
+    <div className="grid w-full grid-cols-1 overflow-hidden bg-[#99ddff] md:grid-cols-3">
       {/* Image Section */}
-      <div className="flex items-center justify-center w-full">
+      <div className="flex w-full items-center justify-center">
         <img
           src="/section6Product.jpg"
           alt={common.productImageAlt}
@@ -19,12 +19,12 @@ const Section6 = () => {
           height="1200"
           loading="lazy"
           decoding="async"
-          className="object-contain shadow w-full h-auto"
+          className="h-auto max-h-[420px] w-full object-contain shadow md:max-h-none"
         />
       </div>
       {/* Text Content Section */}
-      <div className="flex flex-col justify-center w-full h-full px-6 py-20 text-white text-center py-12 md:py-16 md:px-10 lg:px-16 xl:px-20">
-        <p className="text-[12px] md:text-[14px] font-bold">
+      <div className="flex h-full w-full flex-col justify-center px-6 py-10 text-center text-white md:px-10 md:py-16 lg:px-16 xl:px-20">
+        <p className="text-sm font-bold leading-relaxed md:text-[14px]">
           {homepage.section8Heading1}
         </p>
 
@@ -39,7 +39,7 @@ const Section6 = () => {
         {/* </Link> */}
       </div>
       {/* Image Section */}
-      <div className="flex items-center justify-center w-full">
+      <div className="flex w-full items-center justify-center">
         <img
           src="/melMoneyRight2.jpg"
           alt={common.productImageAlt}
@@ -47,7 +47,7 @@ const Section6 = () => {
           height="1200"
           loading="lazy"
           decoding="async"
-          className="object-contain shadow w-full h-auto"
+          className="h-auto max-h-[420px] w-full object-contain shadow md:max-h-none"
         />
       </div>
     </div>

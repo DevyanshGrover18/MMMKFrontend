@@ -8,26 +8,26 @@ const LuxurySection = () => {
 
   return (
     <div
-      className="relative flex items-center justify-center h-screen px-4 bg-center bg-cover sm:px-8"
+      className="relative flex min-h-[560px] items-center justify-center bg-cover bg-center px-4 py-24 sm:px-8 md:min-h-screen"
       style={{
         backgroundImage: `url("/luxurySectionImage.jpg")`,
       }}
     >
       {/* Logo Section */}
-      <div className="absolute top-4 left-4 sm:left-8">
+      <div className="absolute left-4 top-4 sm:left-8">
         <img
           src="/Wode Logo.png"
           alt={common.mmmk}
-          className="w-24 h-24 sm:w-32 sm:h-32"
+          className="h-20 w-20 sm:h-28 sm:w-28 md:h-32 md:w-32"
         />
       </div>
 
       {/* Content Section */}
-      <div className="px-4 space-y-4 text-center text-white">
-        <p className="text-sm font-light tracking-widest sm:text-base sm:mr-7">
+      <div className="max-w-4xl px-4 text-center text-white">
+        <p className="text-sm font-light tracking-widest sm:text-base">
           {common.mmmk}
         </p>
-        <h2 className="text-3xl font-medium leading-tight uppercase sm:text-4xl md:text-5xl space-y-8">
+        <h2 className="my-4 text-3xl font-medium leading-tight uppercase sm:text-4xl md:text-5xl">
           {homepage.section14Heading1}
         </h2>
 

@@ -1,4 +1,4 @@
-import { TbGiftCard, TbGiftCardFilled, TbMenu } from 'react-icons/tb';
+import { TbGiftCardFilled, TbMenu } from 'react-icons/tb';
 import Container from './Container';
 import { Link } from 'react-router-dom';
 import { useEffect, useState } from 'react';
@@ -12,7 +12,7 @@ import { useTranslationContext } from '../../context/TranslationContext';
 import LanguageDropdown from './LanguageDropdown';
 import CurrencyDropdown from './CurrencyDropdown';
 
-export default function Navbar({}) {
+export default function Navbar() {
   const {
     translateLanguage,
     content: { common },
@@ -22,7 +22,6 @@ export default function Navbar({}) {
   const [utils, setUtils] = useState({
     isMenuOpen: false,
     isSearchOpen: false,
-    isListOpen: false,
   });
 
   const updateUtils = (newUtils) =>
@@ -37,6 +36,8 @@ export default function Navbar({}) {
     }
   }, [translateLanguage]);
 
+  const cartCount = data?.length ?? 0;
+
   return (
     <>
       <MenuDrawer
@@ -47,84 +48,169 @@ export default function Navbar({}) {
         isOpen={utils.isSearchOpen}
         onClose={() => updateUtils({ isSearchOpen: false })}
       />
-      <Container>
-        <div className="w-full flex justify-between items-center py-4 relative bottom-10 z-8">
-          {/* left - Menu */}
-          <button
-            type="button"
-            className="flex items-center gap-4 text-md sm:mx-4 md:mx-8 lg:mx-14"
-            onClick={() => updateUtils({ isMenuOpen: true })}
-            aria-label={common.menu}
-          >
-            <TbMenu className="w-6 h-8" />
-            <span className="hidden sm:block">{common.menu}</span>
-          </button>
 
-          {/* center - Logo */}
-          <div className="absolute mt-56 transform -translate-x-1/2 md:mt-0 left-1/2 sm:mt-10">
-            <Link to={'/'} aria-label={common.mmmk}>
-              <img
-                src="/Wode Logo.png"
-                alt={common.mmmk}
-                width="192"
-                height="192"
-                decoding="async"
-                className="w-32 h-32 md:-mb-20 sm:w-48 sm:h-48"
-              />
-            </Link>
-          </div>
+      <nav className="w-full z-50">
+        <Container>
 
-          {/* right - Icons */}
-          <div className="flex items-center gap-6 text-3rd">
-            <div className="flex items-center gap-4">
+          {/* ── Mobile (< md) ── */}
+          <div className="flex flex-col md:hidden">
+
+            {/* Row 1: menu — logo — icons */}
+            <div className="flex items-center justify-between px-3 py-2">
+
+              {/* Left: menu */}
+              <button
+                type="button"
+                className="flex items-center gap-2 text-white shrink-0"
+                onClick={() => updateUtils({ isMenuOpen: true })}
+                aria-label={common.menu}
+                style={{ textShadow: '0 1px 4px rgba(0,0,0,0.8)' }}
+              >
+                <TbMenu size={22} style={{ filter: 'drop-shadow(0 1px 3px rgba(0,0,0,0.9))' }} />
+                <span className="text-xs font-medium">{common.menu}</span>
+              </button>
+
+              {/* Center: logo in normal flow */}
+              <Link to="/" aria-label={common.mmmk} className="mx-4">
+                <img
+                  src="/Wode Logo.png"
+                  alt={common.mmmk}
+                  width="52"
+                  height="52"
+                  decoding="async"
+                  className="w-13 h-13 object-contain"
+                  style={{ filter: 'drop-shadow(0 2px 6px rgba(0,0,0,0.6))' }}
+                />
+              </Link>
+
+              {/* Right: icons */}
+              <div className="flex items-center gap-3 shrink-0">
+                {[
+                  {
+                    onClick: () => updateUtils({ isSearchOpen: true }),
+                    label: common.search || 'Search',
+                    icon: <IoSearchSharp size={16} />,
+                    isButton: true,
+                  },
+                ].map((item) => (
+                  <button
+                    key={item.label}
+                    onClick={item.onClick}
+                    type="button"
+                    className="p-1 text-white bg-transparent outline-none"
+                    aria-label={item.label}
+                    style={{ filter: 'drop-shadow(0 1px 3px rgba(0,0,0,0.9))' }}
+                  >
+                    {item.icon}
+                  </button>
+                ))}
+
+                {[
+                  { to: '/gift-cards', label: common.giftCards || 'Gift cards', icon: <TbGiftCardFilled size={17} /> },
+                  { to: '/profile/saved-items', label: common.savedItems || 'Saved items', icon: <FaHeart size={15} /> },
+                  { to: '/profile/my-account', label: common.myAccount || 'My account', icon: <FaUser size={15} /> },
+                ].map((item) => (
+                  <Link
+                    key={item.to}
+                    to={item.to}
+                    aria-label={item.label}
+                    className="p-1 text-white"
+                    style={{ filter: 'drop-shadow(0 1px 3px rgba(0,0,0,0.9))' }}
+                  >
+                    {item.icon}
+                  </Link>
+                ))}
+
+                <Link
+                  to="/shopping-cart"
+                  aria-label={common.shoppingCart || 'Shopping cart'}
+                  className="relative p-1 text-white"
+                  style={{ filter: 'drop-shadow(0 1px 3px rgba(0,0,0,0.9))' }}
+                >
+                  {cartCount > 0 && (
+                    <span className="absolute -top-1 -right-1 text-[10px] bg-red-500 text-white rounded-full w-4 h-4 flex items-center justify-center leading-none">
+                      {cartCount}
+                    </span>
+                  )}
+                  <BsMinecartLoaded size={15} />
+                </Link>
+              </div>
+            </div>
+
+            {/* Row 2: language + currency */}
+            <div className="flex items-center justify-center gap-4 py-1.5">
               <LanguageDropdown />
               <CurrencyDropdown />
             </div>
+          </div>
 
+          {/* ── Desktop (>= md) ── */}
+          <div className="hidden md:flex items-center justify-between py-3 relative">
+
+            {/* Left: menu */}
             <button
-              onClick={() => updateUtils({ isSearchOpen: true })}
               type="button"
-              className="flex items-center text-sm text-white bg-transparent outline-none mb-2"
-              aria-label={common.search || 'Search'}
+              className="flex items-center gap-2 text-white z-10 shrink-0 ml-6 lg:ml-12"
+              onClick={() => updateUtils({ isMenuOpen: true })}
+              aria-label={common.menu}
+              style={{ textShadow: '0 1px 4px rgba(0,0,0,0.8)', filter: 'drop-shadow(0 1px 3px rgba(0,0,0,0.9))' }}
             >
-              <IoSearchSharp size={17} className="text-white" />
+              <TbMenu size={22} />
+              <span className="text-sm">{common.menu}</span>
             </button>
-            <Link
-              to={'/gift-cards'}
-              className="flex items-center text-sm text-white bg-transparent outline-none"
-              aria-label={common.giftCards || 'Gift cards'}
+
+            {/* Center: logo absolute */}
+            <div className="absolute left-1/2 -translate-x-1/2 z-0">
+              <Link to="/" aria-label={common.mmmk}>
+                <img
+                  src="/Wode Logo.png"
+                  alt={common.mmmk}
+                  width="200"
+                  height="200"
+                  decoding="async"
+                  className="w-36 h-36 lg:w-48 lg:h-48 object-contain -mb-10 lg:-mb-14"
+                  style={{ filter: 'drop-shadow(0 2px 8px rgba(0,0,0,0.6))' }}
+                />
+              </Link>
+            </div>
+
+            {/* Right: dropdowns + icons */}
+            <div
+              className="flex items-center gap-4 z-10 shrink-0 mr-6 lg:mr-12 text-white"
+              style={{ filter: 'drop-shadow(0 1px 3px rgba(0,0,0,0.9))' }}
             >
-              <TbGiftCardFilled size={24} className="text-white" />
-            </Link>
-            <Link
-              to={'/profile/saved-items'}
-              aria-label={common.savedItems || 'Saved items'}
-            >
-              <FaHeart />
-            </Link>
-            <Link
-              to={'/profile/my-account'}
-              aria-label={common.myAccount || 'My account'}
-            >
-              <FaUser size={17} className="text-white" />
-            </Link>
-            <span className="relative">
-              <Link
-                to={'/shopping-cart'}
-                aria-label={common.shoppingCart || 'Shopping cart'}
+              <LanguageDropdown />
+              <CurrencyDropdown />
+              <button
+                onClick={() => updateUtils({ isSearchOpen: true })}
+                type="button"
+                className="bg-transparent outline-none p-1"
+                aria-label={common.search || 'Search'}
               >
-                {data?.length === 0 ? null : (
-                  <span className="absolute right-[-20px] text-sm bg-red-500 rounded-full w-8 h-18 flex items-center justify-center">
-                    {data?.length}
+                <IoSearchSharp size={17} className="text-white" />
+              </button>
+              <Link to="/gift-cards" aria-label={common.giftCards || 'Gift cards'} className="p-1 text-white">
+                <TbGiftCardFilled size={20} />
+              </Link>
+              <Link to="/profile/saved-items" aria-label={common.savedItems || 'Saved items'} className="p-1 text-white">
+                <FaHeart size={17} />
+              </Link>
+              <Link to="/profile/my-account" aria-label={common.myAccount || 'My account'} className="p-1 text-white">
+                <FaUser size={17} />
+              </Link>
+              <Link to="/shopping-cart" aria-label={common.shoppingCart || 'Shopping cart'} className="relative p-1 text-white">
+                {cartCount > 0 && (
+                  <span className="absolute -top-1 -right-1 text-[10px] bg-red-500 text-white rounded-full w-4 h-4 flex items-center justify-center leading-none">
+                    {cartCount}
                   </span>
                 )}
-
-                <BsMinecartLoaded size={17} className="text-white" />
+                <BsMinecartLoaded size={17} />
               </Link>
-            </span>
+            </div>
           </div>
-        </div>
-      </Container>
+
+        </Container>
+      </nav>
     </>
   );
 }

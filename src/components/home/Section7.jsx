@@ -35,7 +35,7 @@ const section7 = () => {
     '';
 
   return (
-    <div className="relative py-10 bg-[var(--primary-dark)]">
+    <div className="relative bg-[var(--primary-dark)] px-4 py-10 md:px-0">
       {/* 30% off badge */}
       {/* <div className="absolute top-[45%] left-[46.5%] z-10 hidden md:block ">
           <div className="flex items-center justify-center text-2xl font-bold text-white bg-black rounded-full w-28 h-28">
@@ -85,7 +85,7 @@ const section7 = () => {
           </div>
         );
       })} */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-0">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4 lg:gap-0">
         {productsQuery?.data?.map((product, index) => (
           <div
             key={index}
@@ -101,8 +101,8 @@ const section7 = () => {
               </div>
             )} */}
 
-            <div className="text-center min-h-[350px] flex flex-col">
-              <div className="flex-1">
+            <div className="flex min-h-[350px] flex-col text-center">
+              <div className="aspect-square w-full overflow-hidden sm:aspect-[4/5]">
                 <img
                   src={resolveAssetUrl(product?.image)}
                   alt={getProductName(product) || common.productImageAlt}
@@ -110,7 +110,7 @@ const section7 = () => {
                   height="1200"
                   loading={index === 0 ? 'eager' : 'lazy'}
                   decoding="async"
-                  className="h-full min-h-[300px] w-full mb-4 object-cover"
+                  className="h-full w-full object-cover"
                 />
               </div>
               {/* <p
@@ -127,7 +127,7 @@ const section7 = () => {
               </p> */}
               {product.price && product.websitePrice ? (
                 <p
-                  className={`font-medium text-white flex justify-center items-center gap-2`}
+                  className="mt-4 flex flex-wrap items-center justify-center gap-2 font-medium text-white"
                 >
                   <span className="line-through text-sm">
                     {formatConvertedPrice(product?.price)}

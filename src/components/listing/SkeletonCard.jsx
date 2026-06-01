@@ -1,7 +1,7 @@
 const SkeletonCard = () => {
   return (
-    <div className="relative p-4 text-white border border-white">
-      <div className="w-full md:h-[350px] h-[450px] flex flex-col">
+    <div className="relative border border-white p-2 text-white sm:p-4">
+      <div className="flex h-[290px] w-full flex-col sm:h-[390px] md:h-[350px]">
         <div className="flex-1 bg-gray-700 animate-pulse"></div>
         <div className="mt-4">
           <div className="h-4 bg-gray-700 rounded w-3/4 mx-auto animate-pulse"></div>

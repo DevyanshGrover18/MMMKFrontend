@@ -7,10 +7,10 @@ const ComingSoonSection = () => {
     content: { common, homepage },
   } = useTranslationContext();
   return (
-    <div className="flex flex-col w-full sm:h-screen sm:overflow-hidden lg:py-10 md:flex-row">
+    <div className="flex w-full flex-col overflow-hidden md:min-h-screen md:flex-row lg:py-10">
       {/* Left Image */}
-      <div className="flex flex-col flex-1">
-        <div className="w-full flex-1 overflow-hidden">
+      <div className="flex flex-1 flex-col">
+        <div className="h-[260px] w-full flex-1 overflow-hidden sm:h-[340px] md:h-auto">
           <img
             src="/commingsoon1a.jpg"
             alt={common.comingSoon}
@@ -21,7 +21,7 @@ const ComingSoonSection = () => {
             className="object-cover w-full h-full"
           />
         </div>
-        <div className="w-full flex-1 overflow-hidden">
+        <div className="h-[260px] w-full flex-1 overflow-hidden sm:h-[340px] md:h-auto">
           <img
             src="/commingsoon2a.jpg"
             alt={common.comingSoon}
@@ -34,7 +34,7 @@ const ComingSoonSection = () => {
         </div>
       </div>
 
-      <div className="flex-1 flex flex-col items-center justify-center gap-10 min-h-[200px] sm:min-h-[500px] h-full bg-[rgb(83,49,37)] text-[rgb(248,238,188)]">
+      <div className="flex min-h-[300px] flex-1 flex-col items-center justify-center gap-8 bg-[rgb(83,49,37)] px-4 py-10 text-[rgb(248,238,188)] sm:min-h-[420px] md:h-full md:gap-10">
         <div className="w-32 h-32 md:w-40 md:h-40 lg:w-48 lg:h-48">
           <img
             src="Wode Logo.png"
@@ -61,7 +61,7 @@ const ComingSoonSection = () => {
 
       {/* Center Section */}
       <div
-        className="flex flex-col items-center relative justify-between w-full text-white md:w-1/3 h-[200px] sm:h-1/3 md:h-full"
+        className="relative flex h-[260px] w-full flex-col items-center justify-between text-white sm:h-[340px] md:h-full md:w-1/3"
         // style={{
         //   background:
         //     "linear-gradient(to bottom left, #154689 50%, #0e6952 99%)",

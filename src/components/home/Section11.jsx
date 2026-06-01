@@ -25,8 +25,8 @@ export default function Section11() {
   );
 
   return (
-    <div className="py-[50px] videoSwiper">
-      <div className="flex justify-between w-full py-12">
+    <div className="videoSwiper py-10 md:py-[50px]">
+      <div className="flex w-full justify-between py-8 md:py-12">
         {/* Header */}
         <div className="px-4 text-black md:px-20">
           <h2 className="text-2xl font-semibold md:text-4xl lg:text-5xl">
@@ -36,7 +36,7 @@ export default function Section11() {
       </div>
 
       {/* Swiper Container */}
-      <div className="px-6 md:px-12 lg:px-16">
+      <div className="px-4 sm:px-6 md:px-12 lg:px-16">
         <Swiper
           slidesPerView={1} // Default to 1 for mobile
           spaceBetween={20}

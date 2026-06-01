@@ -49,9 +49,9 @@ export default function BannerSection() {
       id: 'logo',
       type: 'logo',
       content: (
-        <div className="flex flex-col items-center gap-2 text-center md:text-left w-full">
+        <div className="flex w-full flex-col items-center gap-2 px-4 text-center md:px-0 md:text-left">
           {/* Logo */}
-          <div className="w-32 h-32 md:w-40 md:h-40 lg:w-48 lg:h-48">
+          <div className="h-24 w-24 sm:h-32 sm:w-32 md:h-40 md:w-40 lg:h-48 lg:w-48">
             <img
               src="Wode Logo.png"
               alt={common.mmmk}
@@ -64,18 +64,18 @@ export default function BannerSection() {
           </div>
 
           {/* Text and Button */}
-          <div className="space-y-4 text-white text-center">
-            <h2 className="text-xl font-semibold tracking-wider sm:text-2xl lg:text-3xl">
+          <div className="text-center text-white">
+            <h2 className="text-lg font-semibold tracking-wide sm:text-2xl lg:text-3xl">
               {homepage.section6Heading1}
             </h2>
-            <h2 className="text-3xl font-light tracking-widest sm:text-4xl lg:text-xl">
+            <h2 className="mt-3 text-2xl font-light tracking-wide sm:text-4xl lg:text-xl">
               {homepage.section6Description1}
             </h2>
 
             <Button4
               isLink
               to={getModuleUrl('category', 'Jewelry & Accessories')}
-              className="relative top-10"
+              className="mt-6"
             >
               {common.shopNow}
             </Button4>
@@ -132,8 +132,8 @@ export default function BannerSection() {
       id: 'falcon',
       type: 'falcon',
       content: (
-        <div className="relative text-[rgb(248,238,188)] w-full h-full flex items-center justify-center">
-          <p className="absolute top-10 left-0 right-0 text-center text-2xl z-10">
+        <div className="relative flex h-full w-full items-center justify-center text-[rgb(248,238,188)]">
+          <p className="absolute left-0 right-0 top-8 z-10 px-4 text-center text-xl sm:text-2xl">
             {common.comingSoon}
           </p>
           <img
@@ -145,7 +145,7 @@ export default function BannerSection() {
             decoding="async"
             className="object-cover w-full h-full rounded-md"
           />
-          <p className="absolute bottom-10 left-0 right-0 text-center text-2xl z-10">
+          <p className="absolute bottom-8 left-0 right-0 z-10 px-4 text-center text-xl sm:text-2xl">
             {homepage.section6Heading2}
           </p>
         </div>
@@ -192,7 +192,7 @@ export default function BannerSection() {
   };
 
   return (
-    <div className="w-full flex overflow-hidden bg-[rgb(83,49,37)] h-[500px] relative">
+    <div className="relative flex h-[560px] w-full overflow-hidden bg-[rgb(83,49,37)] sm:h-[620px] md:h-[500px]">
       {/* Mobile slider indicators */}
       {isMobile && (
         <div className="absolute bottom-4 left-0 right-0 flex justify-center space-x-2 z-10">

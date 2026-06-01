@@ -34,8 +34,8 @@ const Home = () => {
   return (
     <div className="w-full">
       <BannerVideo bg="/heroSectionBg1.mp4" poster="/bannerSectionImage.jpg">
-        <div className="text-white text-center md:h-[70vh] h-[80vh] flex flex-col items-center justify-center md:mt-16 md:mb-0 -mb-56">
-          <h1 className="my-4 text-[23px] font-semibold sm:text-7xl md:text-8xl lg:text-7xl sm:my-6 md:my-10 text-orange-200">
+        <div className="flex min-h-[520px] flex-col items-center justify-center px-4 py-24 text-center text-white sm:min-h-[620px] md:min-h-[70vh] md:mt-16">
+          <h1 className="my-4 max-w-full text-4xl font-semibold leading-tight text-orange-200 sm:text-6xl md:text-8xl lg:text-7xl sm:my-6 md:my-10">
             {homepage.section1Heading1 || common.mmmk}
           </h1>
           <CommonButton variant={1} size="md" isLink to="/product-listings">
@@ -110,7 +110,7 @@ const Home = () => {
         </Suspense>
       </LazySection>
       <LazySection minHeight="100vh">
-        <Suspense fallback={<div className="h-screen" />}>
+        <Suspense fallback={<div className="min-h-[560px] md:min-h-screen" />}>
           <LuxurySection />
         </Suspense>
       </LazySection>

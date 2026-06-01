@@ -1,14 +1,15 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 
 import Banner from '../components/global/Banner';
 import ProductGrid from '../components/listing/ProductGrid';
 import NewsLetter from '../components/global/NewsLetter';
 import Accordion from '../components/details/Accordion';
 import Slider from '../components/details/Slider';
+import ProductDetailsSkeleton from '../components/details/ProductDetailsSkeleton';
 import bg from '../assets/bg.png';
 import { useQuery } from '@tanstack/react-query';
 import Section10 from '../components/home/Section10';
-import { Link, useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import { message, notification } from 'antd';
 import {
   getProductSkus,
@@ -17,18 +18,13 @@ import {
 } from '../apis/nonAuth/products';
 import { useCart } from '../context/CartProvider';
 import CategoryNavBar from '../components/global/CategoryNavBar';
-import { IoCartOutline } from 'react-icons/io5';
 import {
   isUserSignedIn,
-  percentageValue,
-  getPercentageOf,
 } from '../utils/globalMethods';
 import ProductReview from '../components/details/ProductReview';
 import {
-  translate,
   translateText,
   useTranslationContext,
-  getTranslateProducts,
 } from '../context/TranslationContext';
 import { CommonButton } from '../components/global/UIButtons';
 import { convertPrice, formatPrice } from '../utils/currency';
@@ -53,24 +49,34 @@ const ProductDetails = () => {
     queryKey: ['product-details', params.id],
     queryFn: () => getSingleProduct(params.id),
     enabled: Boolean(params.id),
+    staleTime: 60000, // Cache for 1 minute
   });
+  
+  const productData = useMemo(() => query.data?.data || {}, [query.data]);
+
   const SkuQuery = useQuery({
     queryKey: ['product-skus', params.id],
     queryFn: () => getProductSkus(params.id),
     enabled: Boolean(params.id),
+    staleTime: 60000,
   });
 
   // fetching paginated products
   const list = useQuery({
     queryKey: ['getRelatedProducts', params.id, translateLanguage],
     queryFn: () => getRelatedProducts(params.id, translateLanguage),
+    enabled: Boolean(params.id) && Boolean(productData?.category),
+    staleTime: 300000, // Related products change less frequently, cache for 5 min
   });
-  const productData = query.data?.data || {};
-  const skuList = SkuQuery.data?.length
-    ? SkuQuery.data
-    : Array.isArray(productData?.skus)
-      ? productData.skus
-      : [];
+
+  const skuList = useMemo(() => {
+    return SkuQuery.data?.length
+      ? SkuQuery.data
+      : Array.isArray(productData?.skus)
+        ? productData.skus
+        : [];
+  }, [SkuQuery.data, productData.skus]);
+
   const selectedSkuDetails = skuList.find((sku) => sku.sku === selectedSku);
   const totalAvailableStock = skuList.reduce(
     (sum, sku) => sum + Number(sku?.quantity || 0),
@@ -102,12 +108,14 @@ const ProductDetails = () => {
     skuList.length > 0 && !usesProductLevelStock
       ? totalAvailableStock <= 0 || remainingSelectableQuantity <= 0
       : remainingSelectableQuantity <= 0;
-  const productImages = [
-    ...(productData?.image ? [productData.image] : []),
-    ...(Array.isArray(productData?.images)
-      ? productData.images.filter((img) => img !== productData.image)
-      : []),
-  ].filter(Boolean);
+  const productImages = useMemo(() => {
+    return [
+      ...(productData?.image ? [productData.image] : []),
+      ...(Array.isArray(productData?.images)
+        ? productData.images.filter((img) => img !== productData.image)
+        : []),
+    ].filter(Boolean);
+  }, [productData.image, productData.images]);
 
   const handleTranslateProductData = async (data, language) => {
     const allFieldsToTranslate = {
@@ -150,7 +158,7 @@ const ProductDetails = () => {
       const raw = sessionStorage.getItem('recentlyViewed');
       oldList = raw ? JSON.parse(raw) : [];
       if (!Array.isArray(oldList)) oldList = [];
-    } catch (e) {
+    } catch (error) {
       oldList = [];
     }
 
@@ -191,6 +199,10 @@ const ProductDetails = () => {
       setCount(1);
     }
   }, [remainingSelectableQuantity, count]);
+
+  if (query.isLoading) {
+    return <ProductDetailsSkeleton />;
+  }
 
   const handleAddToWishList = async (e) => {
     try {

@@ -7,9 +7,9 @@ const Section2 = () => {
   } = useTranslationContext();
 
   return (
-    <div className="grid w-full h-auto grid-cols-1 mb-12 md:grid-cols-3">
+    <div className="mb-8 grid w-full grid-cols-1 overflow-hidden md:mb-12 md:min-h-[520px] md:grid-cols-3 lg:min-h-[640px]">
       {/* Image Box 1 */}
-      <div className="relative w-full h-[200px] sm:h-[300px] md:h-auto lg:h-auto">
+      <div className="relative h-[240px] w-full sm:h-[320px] md:h-auto">
         <img
           src="/section2Left.jpg"
           alt={common.productImageAlt}
@@ -31,7 +31,7 @@ const Section2 = () => {
           </CommonButton>
         </div>
       </div>
-      <div className="w-full h-[200px] sm:h-[300px] md:h-auto lg:h-auto">
+      <div className="h-[240px] w-full sm:h-[320px] md:h-auto">
         <video
           src="/section2Video.mp4"
           className="object-cover w-full h-full"
@@ -39,13 +39,13 @@ const Section2 = () => {
           loop
           muted
           preload="none"
-          // playsInline
+          playsInline
           controls
         />
       </div>
 
       {/* Image Box 2 */}
-      <div className="relative w-full h-[200px] sm:h-[300px] md:h-auto lg:h-auto">
+      <div className="relative h-[240px] w-full sm:h-[320px] md:h-auto">
         <img
           src="/section2Right.jpg"
           alt={common.productImageAlt}

@@ -8,9 +8,9 @@ const BikiniSection = () => {
   } = useTranslationContext();
 
   return (
-    <div className="grid w-full h-auto min-h-screen grid-cols-1 overflow-hidden md:grid-cols-12">
+    <div className="grid w-full grid-cols-1 overflow-hidden md:min-h-screen md:grid-cols-12">
       {/* Box 1 */}
-      <div className="col-span-12 md:col-span-5 h-[400px] md:h-full">
+      <div className="col-span-12 h-[320px] sm:h-[400px] md:col-span-5 md:h-full">
         <video
           className="w-full h-full object-cover"
           autoPlay
@@ -23,7 +23,7 @@ const BikiniSection = () => {
       </div>
 
       {/* Box 2 - Updated with Hardcoded Bikini Heading */}
-      <div className="col-span-12 md:col-span-2 h-full text-white flex flex-col justify-center items-center text-center p-4 md:p-6 py-10 md:py-[150px] bg-yellow-900">
+      <div className="col-span-12 flex min-h-[320px] flex-col items-center justify-center bg-yellow-900 p-4 py-10 text-center text-white md:col-span-2 md:min-h-0 md:p-6 md:py-[150px]">
         <img
           src="Wode Logo.png"
           className="w-20 h-20 mb-6 md:w-32 md:h-32"
@@ -35,7 +35,7 @@ const BikiniSection = () => {
         />
 
         {/* Hardcoded Bikini Heading */}
-        <p className="text-sm md:text-lg lg:text-2xl tracking-[2px] md:tracking-[6px] leading-10 flex flex-col gap-4 mb-8">
+        <p className="mb-8 flex flex-col gap-3 text-sm leading-8 tracking-[2px] md:gap-4 md:text-lg md:leading-10 md:tracking-[5px] lg:text-2xl">
           <span>{common.explore}</span>
           <span>{common.premium}</span>
           <span>{common.bikini}</span>
@@ -48,7 +48,7 @@ const BikiniSection = () => {
       </div>
 
       {/* Box 3 */}
-      <div className="col-span-12 md:col-span-5 h-[400px] md:h-full">
+      <div className="col-span-12 h-[320px] sm:h-[400px] md:col-span-5 md:h-full">
         <video
           className="w-full h-full object-cover"
           autoPlay

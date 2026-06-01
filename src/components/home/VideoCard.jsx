@@ -144,15 +144,15 @@ export default function VideoCard() {
   return (
     <div className="bg-white py-8 px-4 md:px-8 md:py-12">
       <div className="mx-auto max-w-full">
-        <div className="mb-8 flex items-center justify-between">
+        <div className="mb-8 flex flex-col items-start justify-between gap-3 sm:flex-row sm:items-center">
           <div>
-            <h2 className="mb-2 text-3xl font-bold text-black md:text-4xl">
+            <h2 className="mb-2 text-2xl font-bold leading-tight text-black sm:text-3xl md:text-4xl">
               {homepage.section17Heading1}
             </h2>
           </div>
         </div>
 
-        <div className="grid grid-cols-1 gap-6 md:grid-cols-3 lg:grid-cols-4">
+        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
           {products.map((product) => (
             <ProductVideoCard
               key={product.id}
