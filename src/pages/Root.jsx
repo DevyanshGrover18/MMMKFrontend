@@ -3,6 +3,7 @@ import { Outlet, useLocation } from 'react-router-dom';
 import Header from '../layout/Header';
 import Footer from '../layout/Footer';
 import ScrollToTop from '../hook/ScrollTop';
+import Navbar from '../components/global/Navbar';
 
 const Root = () => {
   const location = useLocation();
@@ -16,7 +17,8 @@ const Root = () => {
   // }
 
   return (
-    <div className="w-full">
+    <div className="w-full relative">
+      {!isAdminRoute && <Navbar />}
       <Header />
       <ScrollToTop>
         <Outlet />

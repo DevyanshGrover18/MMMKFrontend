@@ -4,7 +4,6 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { FaVolumeUp, FaVolumeMute } from 'react-icons/fa';
-import Navbar from './Navbar';
 
 const BannerVideo = ({ children, minHight, bg, poster }) => {
   const { i18n } = useTranslation();
@@ -109,7 +108,6 @@ const BannerVideo = ({ children, minHight, bg, poster }) => {
           )}
         </button>
 
-        <Navbar />
         <div className="w-full relative z-[2]">{children}</div>
       </div>
     </>

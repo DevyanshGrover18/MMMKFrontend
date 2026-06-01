@@ -13,7 +13,6 @@ import { RiArrowDropDownLine } from 'react-icons/ri';
 import BannerSlider from './BannerSlider';
 import { NavLink, useLocation, useNavigate } from 'react-router-dom';
 import { useCart } from '../../context/CartProvider';
-import Navbar from './Navbar';
 
 const Banner = ({ children, minHight, bg, blurOverlay = true }) => {
   const navigate = useNavigate();
@@ -90,7 +89,6 @@ const Banner = ({ children, minHight, bg, blurOverlay = true }) => {
         }`}
       ></div>
       {/* Black overlay */}
-      <Navbar />
       <div className="w-full relative z-[2]">{children}</div>
     </div>
   );

@@ -158,7 +158,7 @@ const ProductDetails = () => {
       const raw = sessionStorage.getItem('recentlyViewed');
       oldList = raw ? JSON.parse(raw) : [];
       if (!Array.isArray(oldList)) oldList = [];
-    } catch (error) {
+    } catch {
       oldList = [];
     }
 

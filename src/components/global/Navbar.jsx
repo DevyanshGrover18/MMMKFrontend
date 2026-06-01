@@ -49,7 +49,7 @@ export default function Navbar() {
         onClose={() => updateUtils({ isSearchOpen: false })}
       />
 
-      <nav className="w-full z-50">
+      <nav className="absolute top-0 left-0 w-full z-50">
         <Container>
 
           {/* ── Mobile (< md) ── */}

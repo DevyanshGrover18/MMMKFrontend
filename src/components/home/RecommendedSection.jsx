@@ -9,18 +9,27 @@ import { useGlobalContext } from '../../context/GlobalProvider';
 import { convertPrice, formatPrice } from '../../utils/currency';
 import { useCurrency } from '../../context/CurrencyContext';
 import { resolveAssetUrl } from '../../utils/assetUrl';
+import RecommendedSkeleton from './RecommendedSkeleton';
 
 export default function RecommendedSection() {
   const {
     translateLanguage,
     content: { common, homepage },
   } = useTranslationContext();
-  const { recommendedProducts } = useGlobalContext();
+  const { recommendedProducts, isRecommendedLoading } = useGlobalContext();
   const { currency, rates } = useCurrency();
   const formatConvertedPrice = (amount) =>
     formatPrice(convertPrice(amount, currency, rates), currency);
   const navigate = useNavigate();
   const isArabic = translateLanguage === 'ar';
+
+  if (isRecommendedLoading && recommendedProducts.length === 0) {
+    return <RecommendedSkeleton />;
+  }
+
+  if (recommendedProducts.length === 0) {
+    return null;
+  }
 
   const totalSlides = recommendedProducts.length;
 
@@ -41,17 +50,22 @@ export default function RecommendedSection() {
           renderItem={(product, i) => (
             <div
               key={product._id}
-              className="group relative mx-auto h-[320px] w-[82vw] flex-shrink-0 sm:w-[300px] md:h-[350px] md:w-[340px] lg:h-[400px] lg:w-[430px]"
+              className="group relative mx-auto h-[320px] w-[82vw] flex-shrink-0 sm:w-[300px] md:h-[350px] md:w-[340px] lg:h-[400px] lg:w-[430px] bg-gray-800"
             >
-              <div
-                className="w-full h-full overflow-hidden"
-                style={{
-                  backgroundImage: `url(${resolveAssetUrl(product.image)})`,
-                  backgroundSize: 'cover',
-                  backgroundPosition: 'center',
-                  backgroundRepeat: 'no-repeat',
+              <img
+                src={resolveAssetUrl(product.image)}
+                alt={product.nameInLanguage?.[translateLanguage] || 'Product'}
+                width="450"
+                height="450"
+                className="w-full h-full object-cover transition-opacity duration-300"
+                loading={i < 3 ? 'eager' : 'lazy'}
+                fetchPriority={i < 3 ? 'high' : 'auto'}
+                decoding="async"
+                onLoad={(e) => {
+                  e.target.style.opacity = 1;
                 }}
-              ></div>
+                style={{ opacity: 0 }}
+              />
 
               <Link
                 to={`/product-details/${product._id}`}

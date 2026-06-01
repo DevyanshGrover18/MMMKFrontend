@@ -1,9 +1,7 @@
 /* eslint-disable react-hooks/rules-of-hooks */
 
-import { Button3, Button4 } from '../global/UIButtons';
+import { Button4 } from '../global/UIButtons';
 import { useTranslationContext } from '../../context/TranslationContext';
-import { FiHeart } from 'react-icons/fi';
-import { getPercentageOf } from '../../utils/globalMethods';
 import { getHomePageBottomSection } from '../../apis/nonAuth/products';
 import { useQuery } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
@@ -102,15 +100,20 @@ const section7 = () => {
             )} */}
 
             <div className="flex min-h-[350px] flex-col text-center">
-              <div className="aspect-square w-full overflow-hidden sm:aspect-[4/5]">
+              <div className="aspect-square w-full overflow-hidden sm:aspect-[4/5] bg-gray-800">
                 <img
                   src={resolveAssetUrl(product?.image)}
                   alt={getProductName(product) || common.productImageAlt}
-                  width="1200"
-                  height="1200"
-                  loading={index === 0 ? 'eager' : 'lazy'}
+                  width="400"
+                  height="500"
+                  loading={index < 4 ? 'eager' : 'lazy'}
+                  fetchPriority={index < 4 ? 'high' : 'auto'}
                   decoding="async"
-                  className="h-full w-full object-cover"
+                  className="h-full w-full object-cover transition-opacity duration-300"
+                  onLoad={(e) => {
+                    e.target.style.opacity = 1;
+                  }}
+                  style={{ opacity: 0 }}
                 />
               </div>
               {/* <p
@@ -167,30 +170,3 @@ const section7 = () => {
 };
 
 export default section7;
-
-const products = [
-  {
-    _id: '6851357a366f5ccebb1b630c',
-    // name: "M Queen",
-    image: '/staticProduct3.jpg',
-    price: 97,
-  },
-  {
-    _id: '685142ee366f5ccebb1b6525',
-    // name: "MMM Gift Box Set",
-    image: '/staticProduct4.jpg',
-    price: 225,
-  },
-  {
-    _id: '6852b786321062a20722d664',
-    // name: "MO5",
-    image: '/staticProduct1.jpg',
-    price: 70,
-  },
-  {
-    _id: '6853f3ece5f7d8af316612ed',
-    // name: "MO8",
-    image: '/staticProduct2.jpg',
-    price: 69,
-  },
-];

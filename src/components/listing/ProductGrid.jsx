@@ -1,10 +1,8 @@
 /* eslint-disable react/prop-types */
 import { useNavigate } from 'react-router-dom';
-import { getPercentageOf } from '../../utils/globalMethods';
 import { Button4 } from '../global/UIButtons';
 import { useTranslationContext } from '../../context/TranslationContext';
 import { FiHeart } from 'react-icons/fi';
-import toast from 'react-hot-toast';
 import { notification } from 'antd';
 import { addItemToWishList } from '../../apis/user/wishList';
 import { getStoredUserId } from '../../utils/authStorage';
@@ -99,7 +97,7 @@ const ProductGrid = ({ list = [], textColor = 'white' }) => {
 
           <div className="flex flex-col gap-2 text-center">
             {/* Fixed image container */}
-            <div className="h-[210px] overflow-hidden sm:h-[300px] md:h-[350px]">
+            <div className="h-[210px] overflow-hidden sm:h-[300px] md:h-[350px] bg-gray-800">
               <img
                 src={
                   getProductImage(product)
@@ -107,13 +105,17 @@ const ProductGrid = ({ list = [], textColor = 'white' }) => {
                     : ''
                 }
                 alt={getProductName(product)}
-                width="1200"
-                height="1200"
-                className="h-full w-full object-cover object-top"
-                loading={index === 0 ? 'eager' : 'lazy'}
-                fetchPriority={index === 0 ? 'high' : 'auto'}
+                width="400"
+                height="500"
+                className="h-full w-full object-cover object-top transition-opacity duration-300"
+                loading={index < 4 ? 'eager' : 'lazy'}
+                fetchPriority={index < 4 ? 'high' : 'auto'}
                 decoding="async"
                 sizes="(min-width: 1024px) 25vw, (min-width: 768px) 50vw, 100vw"
+                onLoad={(e) => {
+                  e.target.style.opacity = 1;
+                }}
+                style={{ opacity: 0 }}
               />
             </div>
 

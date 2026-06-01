@@ -50,9 +50,11 @@ const GlobalProvider = ({ children }) => {
   });
 
   const recommendedProducts = useQuery({
-    queryKey: ['products'],
+    queryKey: ['recommended-products'],
     queryFn: () => getAllProductsWithFilters({ showOnHomepage: true }),
     enabled: pathname === '/',
+    staleTime: 600000, // 10 minutes
+    cacheTime: 900000, // 15 minutes
   });
 
   // When server data arrives, initialise order (only if not already set by user drag)
@@ -121,6 +123,7 @@ const GlobalProvider = ({ children }) => {
         updateGlobalContext: updateUtils,
         reorderCategories,
         categoryOrder,
+        isRecommendedLoading: recommendedProducts.isLoading,
       }}
     >
       {children}
