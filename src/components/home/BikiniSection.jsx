@@ -40,7 +40,7 @@ const BikiniSection = () => {
             muted
             loop
             playsInline
-            preload="auto"
+            preload="none"
             src="/Bikni-left-section-(1).mp4"
             poster="/comingsoon3.jpg"
           ></video>
@@ -81,7 +81,7 @@ const BikiniSection = () => {
             muted
             loop
             playsInline
-            preload="auto"
+            preload="none"
             src="/rightside-(1).mp4"
             poster="/comingsoon3.jpg"
           ></video>

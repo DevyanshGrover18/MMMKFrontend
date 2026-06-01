@@ -1,5 +1,6 @@
-/* eslint-disable no-unused-vars */
 import { Swiper, SwiperSlide } from 'swiper/react';
+import { useRef, useState, useEffect } from 'react';
+import { useInView } from 'framer-motion';
 
 // Import Swiper styles
 import 'swiper/css';
@@ -7,23 +8,52 @@ import 'swiper/css/pagination';
 import { Pagination } from 'swiper/modules';
 import { useTranslationContext } from '../../context/TranslationContext';
 
+const VideoPlayer = ({ videoSrc }) => {
+  const ref = useRef(null);
+  const videoRef = useRef(null);
+  const isInView = useInView(ref, { margin: '200px 0px' });
+  const [hasBeenViewed, setHasBeenViewed] = useState(false);
+
+  useEffect(() => {
+    if (isInView) {
+      setHasBeenViewed(true);
+    }
+  }, [isInView]);
+
+  useEffect(() => {
+    if (videoRef.current) {
+      if (isInView) {
+        videoRef.current.play().catch(() => {});
+      } else {
+        videoRef.current.pause();
+      }
+    }
+  }, [isInView]);
+
+  return (
+    <div ref={ref} className="w-full">
+      {hasBeenViewed ? (
+        <video
+          ref={videoRef}
+          className="w-full h-auto object-contain"
+          src={videoSrc}
+          controls
+          muted
+          loop
+          playsInline
+          preload="metadata"
+        />
+      ) : (
+        <div className="w-full aspect-[9/16] bg-gray-200 animate-pulse" />
+      )}
+    </div>
+  );
+};
+
 export default function Section10() {
   const {
     content: { common },
   } = useTranslationContext();
-
-  const VideoPlayer = ({ videoSrc }) => (
-    <video
-      className="object-cover w-full"
-      src={videoSrc}
-      controls
-      muted
-      autoPlay
-      loop
-      playsInline
-      preload="none"
-    />
-  );
 
   return (
     <div className="videoSwiper py-10 md:py-[50px]">
@@ -66,7 +96,7 @@ export default function Section10() {
           {Array.from({ length: 18 }, (_, i) => (
             <SwiperSlide key={i} className="flex justify-center pb-14">
               <div className="relative w-full max-w-xs bg-white border border-black shadow-md md:max-w-sm">
-                <div className="relative flex items-center justify-center aspect-video md:aspect-[16/9]">
+                <div className="relative flex items-center justify-center">
                   <VideoPlayer videoSrc={`/influencerVideo${i + 1}.mp4`} />
                 </div>
 
@@ -80,7 +110,7 @@ export default function Section10() {
           ))}
           <SwiperSlide key="influencer-image" className="flex justify-center pb-14">
             <div className="relative w-full max-w-xs bg-white border border-black shadow-md md:max-w-sm">
-              <div className="relative flex items-center justify-center aspect-video md:aspect-[16/9]">
+              <div className="relative flex items-center justify-center">
                 <img
                   src={`/influencerImage1.jpg`}
                   alt={common.whatOurInfluencersSay}
@@ -88,6 +118,7 @@ export default function Section10() {
                   height="675"
                   loading="lazy"
                   decoding="async"
+                  className="w-full h-auto object-contain"
                 />
               </div>
             </div>

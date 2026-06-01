@@ -7,10 +7,10 @@ const ComingSoonSection = () => {
     content: { common, homepage },
   } = useTranslationContext();
   return (
-    <div className="flex w-full flex-col overflow-hidden md:min-h-screen md:flex-row lg:py-10">
+    <div className="flex w-full flex-col overflow-hidden sm:h-screen sm:flex-row lg:py-10">
       {/* Left Image */}
       <div className="flex flex-1 flex-col">
-        <div className="h-[260px] w-full flex-1 overflow-hidden sm:h-[340px] md:h-auto">
+        <div className="h-[260px] w-full flex-1 overflow-hidden sm:h-auto">
           <img
             src="/commingsoon1a.jpg"
             alt={common.comingSoon}
@@ -21,7 +21,7 @@ const ComingSoonSection = () => {
             className="object-cover w-full h-full"
           />
         </div>
-        <div className="h-[260px] w-full flex-1 overflow-hidden sm:h-[340px] md:h-auto">
+        <div className="h-[260px] w-full flex-1 overflow-hidden sm:h-auto">
           <img
             src="/commingsoon2a.jpg"
             alt={common.comingSoon}
@@ -34,7 +34,7 @@ const ComingSoonSection = () => {
         </div>
       </div>
 
-      <div className="flex min-h-[300px] flex-1 flex-col items-center justify-center gap-8 bg-[rgb(83,49,37)] px-4 py-10 text-[rgb(248,238,188)] sm:min-h-[420px] md:h-full md:gap-10">
+      <div className="flex min-h-[300px] flex-1 flex-col items-center justify-center gap-8 bg-[rgb(83,49,37)] px-4 py-10 text-[rgb(248,238,188)] sm:min-h-0 sm:h-full md:gap-10">
         <div className="w-32 h-32 md:w-40 md:h-40 lg:w-48 lg:h-48">
           <img
             src="Wode Logo.png"
@@ -60,13 +60,7 @@ const ComingSoonSection = () => {
       </div>
 
       {/* Center Section */}
-      <div
-        className="relative flex h-[260px] w-full flex-col items-center justify-between text-white sm:h-[340px] md:h-full md:w-1/3"
-        // style={{
-        //   background:
-        //     "linear-gradient(to bottom left, #154689 50%, #0e6952 99%)",
-        // }}
-      >
+      <div className="relative flex h-[260px] w-full flex-col items-center justify-between text-white sm:h-full sm:w-1/3">
         {/* Top: Logo */}
         <div className="flex justify-center h-full w-full">
           <img
