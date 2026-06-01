@@ -15,7 +15,7 @@ import { NavLink, useLocation, useNavigate } from 'react-router-dom';
 import { useCart } from '../../context/CartProvider';
 import Navbar from './Navbar';
 
-const Banner = ({ children, minHight, bg }) => {
+const Banner = ({ children, minHight, bg, blurOverlay = true }) => {
   const navigate = useNavigate();
   const { pathname } = useLocation();
   const { t, i18n } = useTranslation();
@@ -84,7 +84,11 @@ const Banner = ({ children, minHight, bg }) => {
       }}
     >
       {/* Black overlay */}
-      <div className="absolute inset-0 bg-black opacity-50 z-5 backdrop-filter backdrop-blur-xl"></div>
+      <div
+        className={`absolute inset-0 bg-black opacity-50 z-5 ${
+          blurOverlay ? 'backdrop-filter backdrop-blur-xl' : ''
+        }`}
+      ></div>
       {/* Black overlay */}
       <Navbar />
       <div className="w-full relative z-[2]">{children}</div>

@@ -1,14 +1,12 @@
-import { useEffect, useState } from 'react';
+import { lazy, Suspense, useEffect, useRef, useState } from 'react';
 import { MdOutlineFilterList } from 'react-icons/md';
 
 import Banner from '../components/global/Banner';
 import ProductGrid from '../components/listing/ProductGrid';
-import NewsLetter from '../components/global/NewsLetter';
 import bg from '../assets/bg.png';
 import Pagination from '../components/global/Pagination';
 import { useQuery } from '@tanstack/react-query';
 import { getAllProducts } from '../apis/nonAuth/products';
-import SidebarFilter from '../components/listing/SidebarFilter';
 import { useSearchParams } from 'react-router-dom';
 import { useGlobalContext } from '../context/GlobalProvider';
 import {
@@ -19,6 +17,43 @@ import {
 import SkeletonCard from '../components/listing/SkeletonCard';
 import { getCategoryLabel } from '../utils/categoryTranslation';
 
+const SidebarFilter = lazy(() => import('../components/listing/SidebarFilter'));
+const NewsLetter = lazy(() => import('../components/global/NewsLetter'));
+
+const knownFilterParams = [
+  'categories',
+  'gender',
+  'brand',
+  'price',
+  'discount',
+  'category',
+  'sort',
+  'q',
+];
+
+const getListingUtilsFromSearchParams = (searchParams) => {
+  const customFilters = {};
+  for (const [key, value] of searchParams.entries()) {
+    if (!knownFilterParams.includes(key)) {
+      customFilters[key] = value ? value.split(',') : [];
+    }
+  }
+
+  const searchedCategories = searchParams.get('categories');
+
+  return {
+    currentPage: 1,
+    categories: searchedCategories?.split(',').map((item) => item.trim()) || [],
+    gender: searchParams.get('gender')?.split(',') || [],
+    price: searchParams.get('price')?.split(',') || [],
+    discount: searchParams.get('discount')?.split(',') || [],
+    category: searchParams.get('category')?.split(',') || [],
+    brand: searchParams.get('brand')?.split(',') || [],
+    sort: searchParams.get('sort') || '',
+    q: searchParams.get('q') || null,
+    ...customFilters,
+  };
+};
 
 const ProductListing = () => {
   const { categories } = useGlobalContext();
@@ -28,67 +63,14 @@ const ProductListing = () => {
   } = useTranslationContext();
 
   const [isFilterSidebarOpen, setIsFilterSidebarOpen] = useState(false);
-
-  const [utils, setUtils] = useState({
-    currentPage: 1,
-    categories: [],
-    gender: [],
-    price: [],
-    discount: [],
-    category: [],
-    brand: [],
-    sort: '',
-    q: null,
-  });
-
-  const updateUtils = (newData) =>
-    setUtils((prevData) => ({ ...prevData, ...newData }));
-
   const [searchParams] = useSearchParams();
+  const [utils, setUtils] = useState(() =>
+    getListingUtilsFromSearchParams(searchParams)
+  );
+  const didLoadProductsRef = useRef(false);
 
   useEffect(() => {
-    const searchedCategories = searchParams.get('categories');
-    const gender = searchParams.get('gender');
-    const brand = searchParams.get('brand');
-    const price = searchParams.get('price');
-    const discount = searchParams.get('discount');
-    const category = searchParams.get('category');
-    const q = searchParams.get('q');
-    const sort = searchParams.get('sort');
-
-    // Extract all other params as potential custom filters
-    const knownParams = [
-      'categories',
-      'gender',
-      'brand',
-      'price',
-      'discount',
-      'category',
-      'sort',
-      'q',
-    ];
-    const customFilters = {};
-    for (const [key, value] of searchParams.entries()) {
-      if (!knownParams.includes(key)) {
-        customFilters[key] = value ? value.split(',') : [];
-      }
-    }
-
-    const searchedCats =
-      searchedCategories?.split(',').map((item) => item.trim()) || [];
-
-    updateUtils({
-      categories: searchedCats,
-      gender: gender ? gender.split(',') : [],
-      price: price ? price.split(',') : [],
-      discount: discount ? discount.split(',') : [],
-      category: category ? category.split(',') : [],
-      brand: brand ? brand.split(',') : [],
-      sort: sort || '',
-      q: q || null,
-      ...customFilters,
-      currentPage: 1,
-    });
+    setUtils(getListingUtilsFromSearchParams(searchParams));
   }, [searchParams]);
 
   const [selectedCategory, setSelectedCategory] = useState(null);
@@ -108,6 +90,12 @@ const ProductListing = () => {
   });
 
   useEffect(() => {
+    if (!query.data) return;
+    if (!didLoadProductsRef.current) {
+      didLoadProductsRef.current = true;
+      return;
+    }
+
     const element = document.getElementById('categories-navbar');
     element?.scrollIntoView({ top: 0, behavior: 'smooth' });
   }, [query.data]);
@@ -177,7 +165,7 @@ const ProductListing = () => {
           }
         `}
       </style>
-      <Banner bg={bg}>
+      <Banner bg={bg} blurOverlay={false}>
         <div className="w-full md:mt-32 mt-36">
           {/* Navbar */}
           <div
@@ -228,11 +216,19 @@ const ProductListing = () => {
             <div className="w-full md:col-span-3 lg:col-span-2 md:border-b-0">
               {/* Desktop Filter */}
               <div className="hidden md:block">
-                <SidebarFilter
-                  categories={selectedCategoryIds}
-                  utils={utils}
-                  setUtils={setUtils}
-                />
+                <Suspense
+                  fallback={
+                    <div className="h-[80vh] w-full bg-black p-4 text-white">
+                      {common.loading}
+                    </div>
+                  }
+                >
+                  <SidebarFilter
+                    categories={selectedCategoryIds}
+                    utils={utils}
+                    setUtils={setUtils}
+                  />
+                </Suspense>
               </div>
 
               {/* Mobile Filter Button */}
@@ -277,32 +273,32 @@ const ProductListing = () => {
           </main>
 
           {/* Sidebar Filter (Mobile Only) */}
-          <div
-            className={`fixed inset-y-0 right-0 z-[30] w-[80%] max-w-sm bg-black border-l border-white p-5 transform transition-transform duration-300 ${
-              isFilterSidebarOpen ? 'translate-x-0' : 'translate-x-full'
-            } md:hidden`}
-          >
-            <div className="flex items-center justify-between pb-4 border-b border-gray-600">
-              <h3 className="text-xl font-bold text-white">
-                {common.filters}
-              </h3>
-              <button
-                type="button"
-                onClick={toggleFilterSidebar}
-                className="text-white hover:text-yellow-500"
-                aria-label={common.close}
-              >
-                {common.close}
-              </button>
+          {isFilterSidebarOpen && (
+            <div className="fixed inset-y-0 right-0 z-[30] w-[80%] max-w-sm bg-black border-l border-white p-5 transform transition-transform duration-300 md:hidden">
+              <div className="flex items-center justify-between pb-4 border-b border-gray-600">
+                <h3 className="text-xl font-bold text-white">
+                  {common.filters}
+                </h3>
+                <button
+                  type="button"
+                  onClick={toggleFilterSidebar}
+                  className="text-white hover:text-yellow-500"
+                  aria-label={common.close}
+                >
+                  {common.close}
+                </button>
+              </div>
+              <div className="mt-5">
+                <Suspense fallback={<div className="text-white">{common.loading}</div>}>
+                  <SidebarFilter
+                    categories={selectedCategoryIds}
+                    utils={utils}
+                    setUtils={setUtils}
+                  />
+                </Suspense>
+              </div>
             </div>
-            <div className="mt-5">
-              <SidebarFilter
-                categories={selectedCategoryIds}
-                utils={utils}
-                setUtils={setUtils}
-              />
-            </div>
-          </div>
+          )}
 
           {/* Overlay for Sidebar (Mobile Only) */}
           {isFilterSidebarOpen && (
@@ -313,7 +309,9 @@ const ProductListing = () => {
           )}
 
           <div className="py-10">
-            <NewsLetter />
+            <Suspense fallback={null}>
+              <NewsLetter />
+            </Suspense>
           </div>
         </div>
       </Banner>

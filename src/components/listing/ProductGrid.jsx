@@ -94,8 +94,10 @@ const ProductGrid = ({ list = [], textColor = 'white' }) => {
                 width="1200"
                 height="1200"
                 className="h-full w-full object-cover object-top"
-                loading="lazy"
+                loading={index === 0 ? 'eager' : 'lazy'}
+                fetchPriority={index === 0 ? 'high' : 'auto'}
                 decoding="async"
+                sizes="(min-width: 1024px) 25vw, (min-width: 768px) 50vw, 100vw"
               />
             </div>
 
