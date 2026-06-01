@@ -1,3 +1,4 @@
+import { useEffect, useRef, useState } from 'react';
 import { Button4 } from '../global/UIButtons';
 import { useTranslationContext } from '../../context/TranslationContext';
 import { getModuleUrl } from '../../utils/globalMethods';
@@ -7,19 +8,43 @@ const BikiniSection = () => {
     content: { common, homepage },
   } = useTranslationContext();
 
+  const [inView, setInView] = useState(false);
+  const sectionRef = useRef(null);
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setInView(true);
+          observer.disconnect();
+        }
+      },
+      { threshold: 0.1 }
+    );
+
+    if (sectionRef.current) {
+      observer.observe(sectionRef.current);
+    }
+
+    return () => observer.disconnect();
+  }, []);
+
   return (
-    <div className="grid w-full grid-cols-1 overflow-hidden md:min-h-screen md:grid-cols-12">
+    <div ref={sectionRef} className="grid w-full grid-cols-1 overflow-hidden md:min-h-screen md:grid-cols-12">
       {/* Box 1 */}
-      <div className="col-span-12 h-[320px] sm:h-[400px] md:col-span-5 md:h-full">
-        <video
-          className="w-full h-full object-cover"
-          autoPlay
-          muted
-          loop
-          playsInline
-          preload="none"
-          src="/Bikni-left-section-(1).mp4"
-        ></video>
+      <div className="col-span-12 h-[320px] sm:h-[400px] md:col-span-5 md:h-full bg-gray-800">
+        {inView && (
+          <video
+            className="w-full h-full object-cover"
+            autoPlay
+            muted
+            loop
+            playsInline
+            preload="auto"
+            src="/Bikni-left-section-(1).mp4"
+            poster="/comingsoon3.jpg"
+          ></video>
+        )}
       </div>
 
       {/* Box 2 - Updated with Hardcoded Bikini Heading */}
@@ -48,16 +73,19 @@ const BikiniSection = () => {
       </div>
 
       {/* Box 3 */}
-      <div className="col-span-12 h-[320px] sm:h-[400px] md:col-span-5 md:h-full">
-        <video
-          className="w-full h-full object-cover"
-          autoPlay
-          muted
-          loop
-          playsInline
-          preload="none"
-          src="/rightside-(1).mp4"
-        ></video>
+      <div className="col-span-12 h-[320px] sm:h-[400px] md:col-span-5 md:h-full bg-gray-800">
+        {inView && (
+          <video
+            className="w-full h-full object-cover"
+            autoPlay
+            muted
+            loop
+            playsInline
+            preload="auto"
+            src="/rightside-(1).mp4"
+            poster="/comingsoon3.jpg"
+          ></video>
+        )}
       </div>
     </div>
   );
