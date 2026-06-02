@@ -297,34 +297,20 @@ const ShoppingCart = () => {
   }, [data]);
 
   const handleProceedToCheckout = async () => {
-    const handleProceedToCheckout = () => {
-      const handleProceedToCheckout = async () => {
-        if (isProceedingToCheckout) return;
-        setIsProceedingToCheckout(true);
-        try {
-          const summary = calculateCartSummary({
-            items: data,
-            couponData,
-            isCouponApply,
-            appliedCreditAmount,
-            isBagAdded,
-            currency,
-            rates,
-          });
-          setCheckoutSummary(summary);
-          navigate('/checkout', { state: { cartSummary: summary } });
-        } catch (err) {
-          console.error(err);
-        } finally {
-          setIsProceedingToCheckout(false);
-        }
-      };
-      } catch (err) {
-        console.error(err);
-      } finally {
-        setIsProceedingToCheckout(false);
-      }
-    };
+    if (isProceedingToCheckout) return;
+    setIsProceedingToCheckout(true);
+    try {
+      const summary = calculateCartSummary({
+        items: data,
+        couponData,
+        isCouponApply,
+        appliedCreditAmount,
+        isBagAdded,
+        currency,
+        rates,
+      });
+      setCheckoutSummary(summary);
+      navigate('/checkout', { state: { cartSummary: summary } });
     } catch (err) {
       console.error(err);
     } finally {
