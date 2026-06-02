@@ -10,7 +10,7 @@ import { LuSearch } from 'react-icons/lu';
 import Loading from '../../Admin/UI/Loading';
 import { useTranslationContext } from '../../context/TranslationContext';
 import { useCurrency } from '../../context/CurrencyContext';
-import { convertStoredPrice, formatPrice } from '../../utils/currency';
+import { formatPrice } from '../../utils/currency';
 
 const RETURNABLE_STATUSES = ['delivered', 'completed'];
 
@@ -18,7 +18,7 @@ const MyOrders = () => {
   const {
     content: { profile, common },
   } = useTranslationContext();
-  const { currency, rates } = useCurrency();
+  const { currency } = useCurrency();
   const [activeOrder, setActiveOrder] = useState(null);
   const [searchOrder, setSearchOrder] = useState(null);
 
@@ -62,10 +62,7 @@ const MyOrders = () => {
       align: 'center',
       width: 120,
       render: (amount, record) =>
-        formatPrice(
-          convertStoredPrice(amount, record?.currency, currency, rates),
-          currency
-        ),
+        formatPrice(Number(amount || 0), record?.currency || currency),
     },
     {
       title: profile.quantity,

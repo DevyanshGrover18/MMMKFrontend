@@ -230,11 +230,6 @@ const OrderPage = () => {
         width: 150,
         render: (_, record) => (
           <div className="flex items-center gap-2 justify-center">
-            <ViewButton
-              onClick={() =>
-                alert('View details of ' + (record?.userId?.firstName || ''))
-              }
-            />
             <EditButton onClick={() => handleEdit(record)} />
             <DeleteButton
               onClick={() =>

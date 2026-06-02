@@ -11,7 +11,11 @@ import { refreshPaymentStatus } from '../apis/user/payment';
 import { useCart } from '../context/CartProvider';
 import { useTranslationContext } from '../context/TranslationContext';
 import { CommonButton } from '../components/global/UIButtons';
-import { convertStoredPrice, formatPrice } from '../utils/currency';
+import {
+  BASE_CURRENCY,
+  convertStoredPrice,
+  formatPrice,
+} from '../utils/currency';
 import { useCurrency } from '../context/CurrencyContext';
 
 const OrderSuccess = () => {
@@ -34,9 +38,22 @@ const OrderSuccess = () => {
   const juraSyncStatus = order?.juraSyncStatus || order?.depoterSyncStatus || 'Pending';
   const juraOrderId = order?.jura_order_id || order?.depoter_order_id || null;
   const juraSyncError = order?.juraSyncError || order?.depoterSyncError || null;
-  const orderTotal = convertStoredPrice(
-    order?.amount || order?.price?.total || 0,
-    order?.currency,
+  const orderTotal = Number(order?.price?.total || order?.amount || 0);
+  const orderCurrency = order?.currency || currency;
+  const storedShipping = Number(order?.price?.shippingCharges || 0);
+  const hasLegacyUnconvertedShipping =
+    orderCurrency !== BASE_CURRENCY &&
+    storedShipping > 0 &&
+    storedShipping < 1000 &&
+    Number(order?.price?.subtotal || 0) > 1000;
+  const normalizedOrderTotal = hasLegacyUnconvertedShipping
+    ? orderTotal -
+      storedShipping +
+      convertStoredPrice(storedShipping, BASE_CURRENCY, orderCurrency, rates)
+    : orderTotal;
+  const displayTotal = convertStoredPrice(
+    normalizedOrderTotal,
+    orderCurrency,
     currency,
     rates
   );
@@ -187,16 +204,10 @@ const OrderSuccess = () => {
                         Total
                       </p>
                       <p className="mt-1 text-lg font-semibold text-gray-900">
-                        {formatPrice(orderTotal, currency)}
+                        {formatPrice(displayTotal, currency)}
                       </p>
                     </div>
                   </div>
-
-                  {juraSyncError && (
-                    <div className="mt-4 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
-                      {juraSyncError}
-                    </div>
-                  )}
                 </div>
               )}
 

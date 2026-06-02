@@ -7,7 +7,7 @@ import {
   useTranslationContext,
 } from '../../context/TranslationContext';
 import { useEffect } from 'react';
-import { convertPrice, convertStoredPrice, formatPrice } from '../../utils/currency';
+import { formatPrice } from '../../utils/currency';
 import { useCurrency } from '../../context/CurrencyContext';
 import { resolveAssetUrl } from '../../utils/assetUrl';
 
@@ -16,14 +16,10 @@ const ParticularOrder = ({ activeOrder, setActiveOrder }) => {
     content: { profile, common },
     translateLanguage,
   } = useTranslationContext();
-  const { currency, rates } = useCurrency();
-  const formatConvertedPrice = (amount) =>
-    formatPrice(convertPrice(amount, currency, rates), currency);
+  const { currency } = useCurrency();
+  const orderCurrency = activeOrder?.currency || currency;
   const formatOrderPrice = (amount) =>
-    formatPrice(
-      convertStoredPrice(amount, activeOrder?.currency, currency, rates),
-      currency
-    );
+    formatPrice(Number(amount || 0), orderCurrency);
   const paymentSummary = {
     subtotal:
       Number(activeOrder?.price?.subtotal) ||
@@ -212,7 +208,7 @@ const ParticularOrder = ({ activeOrder, setActiveOrder }) => {
                       <p className="text-gray-500 text-sm">
                         <span className="line-through">
                           {' '}
-                          {formatConvertedPrice(
+                          {formatOrderPrice(
                             Number(product?.id?.price || 0) *
                               Number(product?.quantity || 0)
                           )}
@@ -226,7 +222,7 @@ const ParticularOrder = ({ activeOrder, setActiveOrder }) => {
 
                     {/* Discounted Price (10% off) */}
                     <h3 className="text-lg font-semibold text-red-600">
-                      {formatConvertedPrice(
+                      {formatOrderPrice(
                         Number(
                           getPercentageOf(
                             product?.id?.price,

@@ -59,6 +59,8 @@ const ShoppingCart = () => {
   const [loadings, setLoadings] = useState([]);
   const [isCouponModalOpen, setIsCouponModalOpen] = useState(false);
   const [availableStockByItem, setAvailableStockByItem] = useState({});
+  const [isApplyingCoupon, setIsApplyingCoupon] = useState(false);
+  const [isProceedingToCheckout, setIsProceedingToCheckout] = useState(false);
 
   const addLoading = (index) => {
     setLoadings((prev) => [...prev, index]);
@@ -101,6 +103,7 @@ const ShoppingCart = () => {
 
   const handleApplyCoupon = async (coupon) => {
     if (!coupon) return;
+    setIsApplyingCoupon(true);
 
     try {
       const res = await applyCoupon(coupon);
@@ -125,6 +128,7 @@ const ShoppingCart = () => {
           language: translateLanguage,
           type: 'error',
         });
+        setIsApplyingCoupon(false);
         return;
       }
 
@@ -140,6 +144,8 @@ const ShoppingCart = () => {
         type: 'error',
       });
       // message.error(err.response?.data?.message || "Failed to apply coupon");
+    } finally {
+      setIsApplyingCoupon(false);
     }
   };
 
@@ -290,18 +296,40 @@ const ShoppingCart = () => {
     };
   }, [data]);
 
-  const handleProceedToCheckout = () => {
-    const summary = calculateCartSummary({
-      items: data,
-      couponData,
-      isCouponApply,
-      appliedCreditAmount,
-      isBagAdded,
-      currency,
-      rates,
-    });
-    setCheckoutSummary(summary);
-    navigate('/checkout', { state: { cartSummary: summary } });
+  const handleProceedToCheckout = async () => {
+    const handleProceedToCheckout = () => {
+      const handleProceedToCheckout = async () => {
+        if (isProceedingToCheckout) return;
+        setIsProceedingToCheckout(true);
+        try {
+          const summary = calculateCartSummary({
+            items: data,
+            couponData,
+            isCouponApply,
+            appliedCreditAmount,
+            isBagAdded,
+            currency,
+            rates,
+          });
+          setCheckoutSummary(summary);
+          navigate('/checkout', { state: { cartSummary: summary } });
+        } catch (err) {
+          console.error(err);
+        } finally {
+          setIsProceedingToCheckout(false);
+        }
+      };
+      } catch (err) {
+        console.error(err);
+      } finally {
+        setIsProceedingToCheckout(false);
+      }
+    };
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setIsProceedingToCheckout(false);
+    }
   };
 
   const handleApplyCredits = () => {
@@ -371,7 +399,7 @@ const ShoppingCart = () => {
                         type="button"
                         onClick={() => handleApplyCoupon(coupon.couponCode)}
                         className="w-full rounded-xl border border-gray-200 p-4 text-left transition hover:border-black disabled:cursor-not-allowed disabled:opacity-60"
-                        disabled={isActiveCoupon}
+                        disabled={isActiveCoupon || isApplyingCoupon}
                       >
                         <div className="flex items-center justify-between gap-3">
                           <div>
@@ -693,9 +721,9 @@ const ShoppingCart = () => {
                       <button
                         onClick={() => handleApplyCoupon(couponInput)}
                         className="px-6 py-3 font-semibold text-white bg-black rounded-lg hover:bg-gray-800 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
-                        disabled={!couponInput}
+                        disabled={!couponInput || isApplyingCoupon}
                       >
-                        {common.apply}
+                        {isApplyingCoupon ? 'Applying...' : common.apply}
                       </button>
                     </div>
                     <CommonButton
@@ -704,6 +732,7 @@ const ShoppingCart = () => {
                       size="md"
                       type="button"
                       onClick={() => setIsCouponModalOpen(true)}
+                      disabled={isApplyingCoupon}
                     >
                       View Available Coupons
                     </CommonButton>
@@ -713,8 +742,9 @@ const ShoppingCart = () => {
                       size="md"
                       type="button"
                       onClick={handleProceedToCheckout}
+                      disabled={isProceedingToCheckout}
                     >
-                      {common.checkout}
+                      {isProceedingToCheckout ? 'Processing...' : common.checkout}
                     </CommonButton>
                     {/* <NavLink to="/checkout">
                       <button className="w-full px-3 py-1 font-bold text-white bg-black border-2 md:px-5 md:py-2 brown-border hover:bg-white hover:text-black ">

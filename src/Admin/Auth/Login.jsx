@@ -14,8 +14,9 @@ const Login = () => {
   const [loading, setLoading] = useState(false);
   const { setData } = useAdminAuthContext();
   const navigate = useNavigate();
-
+const onFinish = async (values) => {
   const onFinish = async (values) => {
+    setLoading(true);
     try {
       const res = await adminLogin(values);
       console.log(res);
@@ -27,6 +28,15 @@ const Login = () => {
       message.error(
         err?.response?.data?.message || 'Failed to login please try again'
       );
+    } finally {
+      setLoading(false);
+    }
+  };
+    setLoading(false);
+  }
+};
+    } finally {
+      setLoading(false);
     }
   };
 

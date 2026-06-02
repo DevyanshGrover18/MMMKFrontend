@@ -22,6 +22,7 @@ const CouponForm = ({ isModalVisible, handleCancel, tableQuery, currentEditCoupo
   const [categories, setCategories] = useState([]);
   const [products, setProducts] = useState([]);
   const [scope, setScope] = useState('All');
+  const [loading, setLoading] = useState(false);
 
   const [applyToProducts, setApplyToProducts] = useState(true);
   const [applyToDelivery, setApplyToDelivery] = useState(false);
@@ -61,6 +62,7 @@ const CouponForm = ({ isModalVisible, handleCancel, tableQuery, currentEditCoupo
   }, [isModalVisible, currentEditCoupon, form]);
 
   const handleFinish = async (value) => {
+    setLoading(true);
     try {
       if (currentEditCoupon?._id) {
         await updateCoupon(currentEditCoupon._id, value);
@@ -78,6 +80,8 @@ const CouponForm = ({ isModalVisible, handleCancel, tableQuery, currentEditCoupo
     } catch (err) {
       console.log(err);
       message.error(err?.response?.data?.message || 'Failed to save coupon');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -99,6 +103,7 @@ const CouponForm = ({ isModalVisible, handleCancel, tableQuery, currentEditCoupo
           applyToProducts: true,
           applyToDelivery: false,
           deliveryDiscountType: 'percentage',
+          perUserLimit: 1,
         }}
       >
         <Form.Item
@@ -117,13 +122,25 @@ const CouponForm = ({ isModalVisible, handleCancel, tableQuery, currentEditCoupo
           <Input placeholder="Enter coupon code" />
         </Form.Item>
 
-        <Form.Item
-          label="Expiry Date"
-          name="expiryDate"
-          rules={[{ required: true, message: 'Please select the expiry date' }]}
-        >
-          <DatePicker style={{ width: '100%' }} />
-        </Form.Item>
+        <div style={{ display: 'flex', gap: '16px' }}>
+          <Form.Item
+            label="Expiry Date"
+            name="expiryDate"
+            rules={[{ required: true, message: 'Please select the expiry date' }]}
+            style={{ flex: 1 }}
+          >
+            <DatePicker style={{ width: '100%' }} />
+          </Form.Item>
+
+          <Form.Item
+            label="Per User Limit"
+            name="perUserLimit"
+            rules={[{ required: true, message: 'Please enter usage limit per user' }]}
+            style={{ flex: 1 }}
+          >
+            <Input type="number" min={1} placeholder="Limit per user" />
+          </Form.Item>
+        </div>
 
         <div style={{ marginBottom: 16 }}>
           <Form.Item name="applyToProducts" valuePropName="checked" noStyle>
@@ -267,10 +284,10 @@ const CouponForm = ({ isModalVisible, handleCancel, tableQuery, currentEditCoupo
         )}
 
         <Form.Item>
-          <Button type="primary" htmlType="submit" style={{ marginRight: 8 }}>
+          <Button type="primary" htmlType="submit" style={{ marginRight: 8 }} loading={loading} disabled={loading}>
             Submit
           </Button>
-          <Button onClick={handleCancel}>Cancel</Button>
+          <Button onClick={handleCancel} disabled={loading}>Cancel</Button>
         </Form.Item>
       </Form>
     </Modal>

@@ -1,4 +1,4 @@
-import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useQuery } from '@tanstack/react-query';
 import { useEffect, useState } from 'react';
 import {
   getAddressBook,
@@ -16,7 +16,7 @@ import rateByWeight from '../../rateByWeight.json';
 import { useTranslationContext } from '../../context/TranslationContext';
 import { CommonButton } from '../global/UIButtons';
 import { loadStripe } from '@stripe/stripe-js';
-import { isUserSignedIn, getPercentageOf } from '../../utils/globalMethods';
+import { getPercentageOf } from '../../utils/globalMethods';
 import { convertPrice, formatPrice } from '../../utils/currency';
 import { useCurrency } from '../../context/CurrencyContext';
 import { resolveAssetUrl } from '../../utils/assetUrl';
@@ -140,13 +140,10 @@ export default function CheckoutForm({
   const common = commonProp || commonCtx;
 
   const navigate = useNavigate();
-  const queryClient = useQueryClient();
   const {
     data: cartData,
     couponCode,
     isCouponApply,
-    setIsCouponApply,
-    setCouponCode,
     couponData,
     calculateCartSummary,
     setCheckoutSummary,
@@ -156,6 +153,7 @@ export default function CheckoutForm({
     clearCart,
   } = useCart();
   const { currency, rates } = useCurrency();
+  const currencyRate = Number(rates?.[currency] || 1);
 
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -174,7 +172,10 @@ export default function CheckoutForm({
   const calculatedShippingCharges = totalProductWeight
     ? calculateShippingCharges(formData.shipping_country, totalProductWeight)
     : 0;
-  const effectiveShippingCharges = shippingChargesProp ?? calculatedShippingCharges;
+  const effectiveShippingCharges =
+    Number(shippingChargesProp || 0) > 0
+      ? Number(shippingChargesProp)
+      : calculatedShippingCharges;
 
   const derivedSummary = liveSummary || calculateCartSummary({
     items: cartData,
@@ -305,12 +306,15 @@ export default function CheckoutForm({
           products: cartData, shippingAddress, billingAddress,
           shippingCharges: effectiveShippingCharges, couponCode: isCouponApply ? couponCode : null,
           creditsUsed: derivedSummary.creditApplied,
+          creditsUsedBase: appliedCreditAmount,
           totalAmount: derivedSummary.total,
+          isBagAdded,
           currency,
+          currencyRate,
         });
 
         if (data?.paidWithCredits && data?.orderId) {
-          setCouponCode(null); setIsCouponApply(false); setAppliedCreditAmount(0);
+          clearCart({ updateOnBackend: true });
           navigate(`/order-success/${data.orderId}`);
           return;
         }
@@ -330,11 +334,14 @@ export default function CheckoutForm({
           products: cartData, shippingAddress, billingAddress,
           shippingCharges: effectiveShippingCharges, couponCode: isCouponApply ? couponCode : null,
           creditsUsed: derivedSummary.creditApplied,
+          creditsUsedBase: appliedCreditAmount,
           totalAmount: derivedSummary.total,
+          isBagAdded,
           currency,
+          currencyRate,
         });
         message.success(res?.message || checkout.orderPlacedSuccessfully);
-        setCouponCode(null); setIsCouponApply(false); setAppliedCreditAmount(0);
+        clearCart({ updateOnBackend: true });
         navigate(`/order-success/${res?.data}`);
       } catch (err) {
         message.error(err?.response?.data?.message);

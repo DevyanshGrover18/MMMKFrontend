@@ -208,11 +208,6 @@ export default function OrdersTable({ data, tableQuery, setIsEditData }) {
           />
           <Button
             type="link"
-            onClick={() => onView(record)}
-            icon={<FaEye className="text-blue-500" />}
-          />
-          <Button
-            type="link"
             onClick={() => {
               setIsEditData(record);
             }}

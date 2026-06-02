@@ -390,7 +390,7 @@ const ProductModalForm = ({
 
       Object.keys(product).forEach((key) => {
         if (['images', 'image'].includes(key)) return;
-        if (product[key])
+        if (product[key] !== undefined && product[key] !== null)
           formData.append(
             key,
             [
