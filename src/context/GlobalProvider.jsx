@@ -132,7 +132,12 @@ const GlobalProvider = ({ children }) => {
 };
 
 const useGlobalContext = () => {
-  return useContext(GlobalContext);
+  const context = useContext(GlobalContext);
+  if (!context) {
+    console.warn('useGlobalContext must be used within a GlobalProvider');
+    return { screenSizeFactor: 3, categories: [], recommendedProducts: [], randomProducts: [] }; // Safe default
+  }
+  return context;
 };
 
 export { useGlobalContext, GlobalProvider };

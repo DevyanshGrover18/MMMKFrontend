@@ -49,12 +49,12 @@ const menuItems = (profile) => [
     key: 'my-credit',
     to: '/profile/my-credit',
   },
-  {
-    icon: <BsCashCoin />,
-    label: profile.paymentMethods,
-    key: 'payment-method',
-    to: '/profile/payment-methods',
-  },
+  // {
+  //   icon: <BsCashCoin />,
+  //   label: profile.paymentMethods,
+  //   key: 'payment-method',
+  //   to: '/profile/payment-methods',
+  // },
   {
     icon: <IoIosLogOut />,
     label: profile.signOut,

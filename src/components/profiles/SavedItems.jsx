@@ -2,9 +2,9 @@
 import { useEffect, useState } from 'react';
 import productImg from '../../assets/product4-trans.jpeg';
 import { useCart } from '../../context/CartProvider';
-import { getCartItems } from '../../apis/user/cart';
+import { getCartItems, addCartItem } from '../../apis/user/cart';
 import { useQuery } from '@tanstack/react-query';
-import { getRandomProducts } from '../../apis/nonAuth/products';
+import { getRandomProducts, getProductSkus } from '../../apis/nonAuth/products';
 import { useNavigate } from 'react-router-dom';
 import {
   translate,
@@ -27,7 +27,7 @@ const SavedItems = () => {
   const { currency, rates } = useCurrency();
   const formatConvertedPrice = (amount) =>
     formatPrice(convertPrice(amount, currency, rates), currency);
-  const { data, refetch } = useCart();
+  const { data, refetch: refetchCart } = useCart();
   const [cartList, setCartList] = useState([]);
   const [wishlistItems, setWishlistItems] = useState([]);
   const [productList, setProductList] = useState([]);
@@ -48,6 +48,43 @@ const SavedItems = () => {
     enabled: Boolean(userId?.id),
     retry: false,
   });
+
+  const handleMoveToCart = async (item) => {
+    try {
+      // 1. Fetch SKUs
+      const skusResponse = await getProductSkus(item.productId);
+      
+      const skuToUse = Array.isArray(skusResponse) && skusResponse.length > 0 
+        ? skusResponse[0].sku 
+        : (skusResponse?.data?.length > 0 ? skusResponse.data[0].sku : '');
+
+      if (!skuToUse) {
+        throw new Error("No SKU found for this product.");
+      }
+
+      // 2. Add to cart
+      const payload = {
+        product: item.productId,
+        quantity: 1,
+        sku: skuToUse 
+      };
+      
+      await addCartItem(payload);
+
+      // 3. Remove from wishlist
+      await removeItemFromWishList({
+        userId: userId.id,
+        productId: item.productId,
+      });
+
+      notification.success({ message: 'Moved to cart successfully' });
+      refetchWishList();
+      refetchCart();
+    } catch (err) {
+      notification.error({ message: err.message || 'Failed to move to cart' });
+    }
+  };
+
   // Update wishlist items
   const updateWishlistItems = async (data, language) => {
     if (!data || !Array.isArray(data)) return;
@@ -217,7 +254,7 @@ const SavedItems = () => {
   }, [products?.data, translateLanguage]);
 
   useEffect(() => {
-    refetch();
+    refetchCart();
   }, []);
 
   return (
@@ -230,13 +267,6 @@ const SavedItems = () => {
               {profile.wishlist}
             </h2>
             <hr className="w-16 mb-3 mx-auto sm:mx-0 border-black" />
-          </div>
-          <div className="flex items-center w-full sm:w-auto justify-center sm:justify-end">
-            <a href="/checkout" className="w-full sm:w-auto">
-              <button className="w-full sm:w-auto px-4 py-2 text-sm md:px-6 md:py-2 transition duration-200 border border-black hover:bg-black hover:text-white">
-                {common.checkout}
-              </button>
-            </a>
           </div>
         </div>
 
@@ -280,9 +310,7 @@ const SavedItems = () => {
                   <h3 className="text-lg font-bold mb-2">
                     {common.price}: {formatConvertedPrice(item.price)}
                   </h3>
-                  <p className="text-sm text-gray-500 mb-3">
-                    {profile.quantity}: {item.quantity}
-                  </p>
+                  
 
                   <div className="flex flex-col  gap-2 justify-center sm:justify-end">
                     <CommonButton
@@ -305,14 +333,12 @@ const SavedItems = () => {
                     </CommonButton>
                     {item.quantity > 0 && (
                       <CommonButton
-                        onClick={() =>
-                          navigate(`/product-details/${item.productId}`)
-                        }
-                        variant={1}
+                        onClick={() => handleMoveToCart(item)}
+                        variant={5}
                         size="sm"
                         className="text-xs sm:text-sm"
                       >
-                        {common.buyNow}
+                        {common.moveToCart || 'Move to Cart'}
                       </CommonButton>
                     )}
                   </div>
@@ -325,8 +351,8 @@ const SavedItems = () => {
                 {profile.emptyWishlist || 'Your wishlist is empty'}
               </p>
               <CommonButton
-                onClick={() => navigate('/products')}
-                variant={1}
+                onClick={() => navigate('/product-listings')}
+                variant={5}
                 size="md"
               >
                 {common.startShopping || 'Start Shopping'}

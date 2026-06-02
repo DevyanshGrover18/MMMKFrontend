@@ -145,8 +145,13 @@ const ProductGrid = ({ list = [], textColor = 'white' }) => {
             <Button4
               onClick={() => navigate(`/product-details/${product._id}`)}
               className="!top-0 !border !px-2 !py-1 !text-xs sm:!px-4 sm:!py-2 sm:!text-sm"
+              disabled={
+                product.quantity <= 0 || product.status === 'Out of stock'
+              }
             >
-              {common.buyNow}
+              {product.quantity <= 0 || product.status === 'Out of stock'
+                ? common.soldOut
+                : common.buyNow}
             </Button4>
           </div>
         </div>

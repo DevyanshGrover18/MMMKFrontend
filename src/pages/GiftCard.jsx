@@ -68,9 +68,28 @@ export const GiftCard = () => {
     },
   });
 
-  const copyToClipboard = (text) => {
-    navigator.clipboard.writeText(text);
-    message.success('Gift card code copied to clipboard!');
+  const copyToClipboard = (text, messageText = 'Copied to clipboard!') => {
+    const textArea = document.createElement("textarea");
+    textArea.value = text;
+    textArea.style.position = "fixed";
+    textArea.style.left = "-9999px";
+    document.body.appendChild(textArea);
+    textArea.focus();
+    textArea.select();
+    
+    try {
+      const successful = document.execCommand('copy');
+      if (successful) {
+        message.success(messageText);
+      } else {
+        message.error('Unable to copy');
+      }
+    } catch (err) {
+      console.error('Fallback copy failed:', err);
+      message.error('Failed to copy to clipboard');
+    }
+    
+    document.body.removeChild(textArea);
   };
 
   const getStatusColor = (status) => {
@@ -143,7 +162,9 @@ export const GiftCard = () => {
             {record.status === 'Active' && (
               <Tooltip title={giftCard.copyCode} className="mb-2">
                 <button
-                  onClick={() => copyToClipboard(code)}
+                  onClick={() =>
+                    copyToClipboard(code, 'Gift card code copied to clipboard!')
+                  }
                   className="text-gray-400 hover:text-gray-600"
                 >
                   <FiCopy size={14} />
@@ -163,7 +184,12 @@ export const GiftCard = () => {
               </span>
               <Tooltip title={giftCard.copyPassword} className="mb-3">
                 <button
-                  onClick={() => copyToClipboard(record.password)}
+                  onClick={() =>
+                    copyToClipboard(
+                      record.password,
+                      'Gift card password copied to clipboard!'
+                    )
+                  }
                   className="text-gray-400 hover:text-gray-600"
                 >
                   <FiCopy size={14} />

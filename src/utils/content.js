@@ -96,6 +96,7 @@ export const TEXT = {
     selectedOptionNotFound: 'Selected option not found',
     addToCartFailed: 'Failed to add item to cart',
     fragrance: 'Fragrance',
+    soldOut: 'Sold Out',
   },
   homepage: {
     section1Heading1: 'INTRODUCING THE ALL NEW MMMK WODE',
@@ -335,6 +336,7 @@ export const TEXT = {
     anyProduct: 'Can be used to purchase any product',
     instantRedemption: 'Instant Redemption',
     purchaseGiftCard: 'Purchase Gift Card',
+    processing: 'Processing',
     pleaseEnterGiftCardName: 'Please enter gift card name',
     atLeast2Char: 'Name must be at least 2 characters',
     atMost50Char: 'Name cannot exceed 50 characters',
