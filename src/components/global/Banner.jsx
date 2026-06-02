@@ -14,7 +14,13 @@ import BannerSlider from './BannerSlider';
 import { NavLink, useLocation, useNavigate } from 'react-router-dom';
 import { useCart } from '../../context/CartProvider';
 
-const Banner = ({ children, minHight, bg, blurOverlay = true }) => {
+const Banner = ({
+  children,
+  minHeight,
+  desktopMinHeight,
+  bg,
+  blurOverlay = true,
+}) => {
   const navigate = useNavigate();
   const { pathname } = useLocation();
   const { t, i18n } = useTranslation();
@@ -71,24 +77,38 @@ const Banner = ({ children, minHight, bg, blurOverlay = true }) => {
     onClose();
   };
 
+  const mobileHeight = minHeight || 100;
+  const desktopHeight = desktopMinHeight || mobileHeight;
+
   return (
     <div
-      className="w-full text-white relative md:py-24 py-6"
+      className={`w-full text-white relative banner-container ${minHeight ? 'md:py-10 py-4' : 'md:py-24 py-6'}`}
       style={{
-        minHeight: minHight ? `${minHight}vh` : '100vh',
+        '--mobile-min-height': `${mobileHeight}vh`,
+        '--desktop-min-height': `${desktopHeight}vh`,
+        minHeight: 'var(--mobile-min-height)',
         backgroundImage: `url(${bg})`,
         backgroundPosition: 'center',
         backgroundRepeat: 'no-repeat',
         backgroundSize: 'cover',
       }}
     >
+      <style>
+        {`
+          @media (min-width: 768px) {
+            .banner-container {
+              min-height: var(--desktop-min-height) !important;
+            }
+          }
+        `}
+      </style>
       {/* Black overlay */}
       <div
-        className={`absolute inset-0 bg-black opacity-50 z-5 ${
+        className={`absolute inset-0 bg-black opacity-50 z-[1] ${
           blurOverlay ? 'backdrop-filter backdrop-blur-xl' : ''
         }`}
       ></div>
-      {/* Black overlay */}
+      {/* Content container */}
       <div className="w-full relative z-[2]">{children}</div>
     </div>
   );

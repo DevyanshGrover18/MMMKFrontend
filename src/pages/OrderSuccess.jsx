@@ -11,7 +11,7 @@ import { refreshPaymentStatus } from '../apis/user/payment';
 import { useCart } from '../context/CartProvider';
 import { useTranslationContext } from '../context/TranslationContext';
 import { CommonButton } from '../components/global/UIButtons';
-import { convertPrice, formatPrice } from '../utils/currency';
+import { convertStoredPrice, formatPrice } from '../utils/currency';
 import { useCurrency } from '../context/CurrencyContext';
 
 const OrderSuccess = () => {
@@ -34,6 +34,12 @@ const OrderSuccess = () => {
   const juraSyncStatus = order?.juraSyncStatus || order?.depoterSyncStatus || 'Pending';
   const juraOrderId = order?.jura_order_id || order?.depoter_order_id || null;
   const juraSyncError = order?.juraSyncError || order?.depoterSyncError || null;
+  const orderTotal = convertStoredPrice(
+    order?.amount || order?.price?.total || 0,
+    order?.currency,
+    currency,
+    rates
+  );
 
   useEffect(() => {
     if (!order) return;
@@ -106,7 +112,7 @@ const OrderSuccess = () => {
 
   return (
     <div className="w-full">
-      <Banner minHight={20} bg={bg}>
+      <Banner minHeight={20} bg={bg}>
         <div className="w-full">
           <CategoryNavBar />
 
@@ -181,10 +187,7 @@ const OrderSuccess = () => {
                         Total
                       </p>
                       <p className="mt-1 text-lg font-semibold text-gray-900">
-                        {formatPrice(
-                          convertPrice(order.amount || order.price?.total || 0, currency, rates),
-                          currency
-                        )}
+                        {formatPrice(orderTotal, currency)}
                       </p>
                     </div>
                   </div>

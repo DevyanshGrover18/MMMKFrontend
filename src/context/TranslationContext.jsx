@@ -69,7 +69,7 @@ const STATIC_PAGE_TRANSLATIONS = {
       footerDescription:
         'Descubre MMMK WODE: donde el lujo se une con la versatilidad. Desde perfumes exquisitos y joyería fina hasta bikinis elegantes, ropa deportiva, sandalias artesanales y vestidos de seda sofisticados, disfruta de un mundo de estilo refinado.',
       mmmkOfficialWebsite: 'SITIO OFICIAL DE MMMK WODE',
-      copyright: 'Copyright © 2024 MMMK WODE. Todos los derechos reservados',
+      copyright: 'Copyright © 2026 MMMK WODE. Todos los derechos reservados',
       productImageAlt: 'Imagen del producto',
       collections: 'Colecciones',
       collection: 'Colección',
@@ -128,7 +128,7 @@ const STATIC_PAGE_TRANSLATIONS = {
       footerDescription:
         'Descubra a MMMK WODE: onde o luxo encontra a versatilidade. De perfumes sofisticados e joias finas a biquínis elegantes, moda fitness, sandálias artesanais e vestidos de seda refinados, mergulhe em um mundo de estilo elegante.',
       mmmkOfficialWebsite: 'SITE OFICIAL MMMK WODE',
-      copyright: 'Copyright © 2024 MMMK WODE. Todos os direitos reservados',
+      copyright: 'Copyright © 2026 MMMK WODE. Todos os direitos reservados',
       productImageAlt: 'Imagem do produto',
       collections: 'Coleções',
       collection: 'Coleção',
@@ -187,7 +187,7 @@ const STATIC_PAGE_TRANSLATIONS = {
       footerDescription:
         'Scopri MMMK WODE: dove il lusso incontra la versatilità. Dai profumi raffinati e i gioielli preziosi ai bikini chic, all’abbigliamento fitness, ai sandali artigianali e agli eleganti abiti in seta, immergiti in un mondo di stile ricercato.',
       mmmkOfficialWebsite: 'SITO UFFICIALE MMMK WODE',
-      copyright: 'Copyright © 2024 MMMK WODE. Tutti i diritti riservati',
+      copyright: 'Copyright © 2026 MMMK WODE. Tutti i diritti riservati',
       productImageAlt: 'Immagine del prodotto',
       collections: 'Collezioni',
       collection: 'Collezione',
@@ -246,7 +246,7 @@ const STATIC_PAGE_TRANSLATIONS = {
       footerDescription:
         'Entdecken Sie MMMK WODE: wo Luxus auf Vielseitigkeit trifft. Von erlesenen Parfums und feinem Schmuck bis hin zu schicken Bikinis, Fitnesskleidung, handgefertigten Sandalen und eleganten Seidenkleidern können Sie in eine Welt raffinierten Stils eintauchen.',
       mmmkOfficialWebsite: 'OFFIZIELLE WEBSITE VON MMMK WODE',
-      copyright: 'Urheberrecht © 2024 MMMK WODE. Alle Rechte vorbehalten',
+      copyright: 'Urheberrecht © 2026 MMMK WODE. Alle Rechte vorbehalten',
       productImageAlt: 'Produktbild',
       collections: 'Kollektionen',
       collection: 'Kollektion',

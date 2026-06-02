@@ -25,7 +25,7 @@ export const TEXT = {
     footerDescription:
       'Discover MMMK WODE: where luxury meets versatility. From exquisite perfumes and fine jewelry to chic bikinis, fitness wear, handcrafted sandals, and elegant silk dresses, indulge in a world of refined style.',
     mmmkOfficialWebsite: 'MMMK WODE OFFICIAL WEBSITE',
-    copyright: 'Copyright © 2024 MMMK WODE All Rights Reserved',
+    copyright: 'Copyright © 2026 MMMK WODE All Rights Reserved',
     productImageAlt: 'Product Image',
     collections: 'Collections',
     collection: 'Collection',

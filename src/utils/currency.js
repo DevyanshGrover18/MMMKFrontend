@@ -53,6 +53,25 @@ export const convertPrice = (
   return Number((numericAmount * rate).toFixed(2));
 };
 
+export const convertStoredPrice = (
+  amount,
+  sourceCurrency = BASE_CURRENCY,
+  selectedCurrency = BASE_CURRENCY,
+  rates = DEFAULT_RATES
+) => {
+  const numericAmount = Number(amount || 0);
+  const source = normalizeCurrency(sourceCurrency);
+  const target = normalizeCurrency(selectedCurrency);
+
+  if (source === target) return Number(numericAmount.toFixed(2));
+
+  const sourceRate = Number(rates?.[source] || DEFAULT_RATES[source] || 1);
+  const targetRate = Number(rates?.[target] || DEFAULT_RATES[target] || 1);
+  const baseAmount = sourceRate ? numericAmount / sourceRate : numericAmount;
+
+  return Number((baseAmount * targetRate).toFixed(2));
+};
+
 export const formatPrice = (amount, selectedCurrency = BASE_CURRENCY) => {
   const currency = normalizeCurrency(selectedCurrency);
 

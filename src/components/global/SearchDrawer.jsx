@@ -23,7 +23,7 @@ export default function SearchDrawer({ isOpen, onClose }) {
       style={{ padding: 0 }}
     >
       {/* Search Bar */}
-      <SearchBox />
+      <SearchBox onResultClick={onClose} />
       {/* BannerSlider */}
       <div className="flex flex-col justify-between w-full gap-5 mt-10 lg:flex-row">
         <div className="w-full lg:w-[60%] mt-6">
@@ -40,6 +40,7 @@ export default function SearchDrawer({ isOpen, onClose }) {
                 <Link
                   key={item._id}
                   to={`/product-listings?categories=${getUrl(item.name.en)}`}
+                  onClick={onClose}
                   className="flex items-center justify-between pb-2 border-b border-gray-300"
                 >
                   <span className="text-base text-2nd">

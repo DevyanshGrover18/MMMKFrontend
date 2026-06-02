@@ -17,7 +17,7 @@ const ThankYou = () => {
 
   return (
     <div className="w-full">
-      <Banner minHight={20} bg={bg}>
+      <Banner minHeight={20} bg={bg}>
         <div className="w-full">
           {/* navbar */}
           <CategoryNavBar />

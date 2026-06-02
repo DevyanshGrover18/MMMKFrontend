@@ -56,17 +56,22 @@ const CouponTable = ({ data, tableQuery }) => {
       ),
     },
     {
-      title: 'Expiry Date',
-      dataIndex: 'expiryDate',
-      key: 'expiryDate',
-      render: (text) => (
-        <span className="text-gray-500">{new Date(text).toDateString()}</span>
-      ),
-    },
-    {
       title: 'Discount (%)',
       dataIndex: 'discount',
       key: 'discount',
+    },
+    {
+      title: 'Status',
+      dataIndex: 'expiryDate',
+      key: 'status',
+      render: (text) => {
+        const isExpired = new Date(text) < new Date();
+        return (
+          <Tag color={isExpired ? 'red' : 'green'} className="px-3 text-sm">
+            {isExpired ? 'Expired' : 'Active'}
+          </Tag>
+        );
+      },
     },
     {
       title: 'Scope',
@@ -95,16 +100,6 @@ const CouponTable = ({ data, tableQuery }) => {
       dataIndex: 'currentUsage',
       key: 'currentUsage',
       render: (value) => Number(value || 0),
-    },
-    {
-      title: 'Visible in Cart',
-      dataIndex: 'showToUsers',
-      key: 'showToUsers',
-      render: (value) => (
-        <Tag color={value === false ? 'red' : 'green'}>
-          {value === false ? 'Hidden' : 'Visible'}
-        </Tag>
-      ),
     },
     {
       title: 'Action',

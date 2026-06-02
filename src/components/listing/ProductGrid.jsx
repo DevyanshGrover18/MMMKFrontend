@@ -97,26 +97,22 @@ const ProductGrid = ({ list = [], textColor = 'white' }) => {
 
           <div className="flex flex-col gap-2 text-center">
             {/* Fixed image container */}
-            <div className="h-[210px] overflow-hidden sm:h-[300px] md:h-[350px] bg-gray-800">
-              <img
-                src={
-                  getProductImage(product)
-                    ? resolveAssetUrl(getProductImage(product))
-                    : ''
-                }
-                alt={getProductName(product)}
-                width="400"
-                height="500"
-                className="h-full w-full object-cover object-top transition-opacity duration-300"
-                loading={index < 4 ? 'eager' : 'lazy'}
-                fetchPriority={index < 4 ? 'high' : 'auto'}
-                decoding="async"
-                sizes="(min-width: 1024px) 25vw, (min-width: 768px) 50vw, 100vw"
-                onLoad={(e) => {
-                  e.target.style.opacity = 1;
-                }}
-                style={{ opacity: 0 }}
-              />
+            <div className="h-[210px] overflow-hidden sm:h-[300px] md:h-[350px] bg-gray-800 flex items-center justify-center">
+              {getProductImage(product) ? (
+                <img
+                  src={resolveAssetUrl(getProductImage(product))}
+                  alt={getProductName(product)}
+                  width="400"
+                  height="500"
+                  className="h-full w-full object-cover object-top transition-opacity duration-300"
+                  loading={index < 4 ? 'eager' : 'lazy'}
+                  fetchPriority={index < 4 ? 'high' : 'auto'}
+                  decoding="async"
+                  sizes="(min-width: 1024px) 25vw, (min-width: 768px) 50vw, 100vw"
+                />
+              ) : (
+                <div className="text-gray-500 text-xs italic">{common.itemUnavailable}</div>
+              )}
             </div>
 
             {/* Price */}

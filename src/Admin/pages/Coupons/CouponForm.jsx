@@ -94,7 +94,6 @@ const CouponForm = ({ isModalVisible, handleCancel, tableQuery, currentEditCoupo
         layout="vertical"
         onFinish={handleFinish}
         initialValues={{
-          showToUsers: true,
           scope: 'All',
           discountType: 'percentage',
           applyToProducts: true,
@@ -266,10 +265,6 @@ const CouponForm = ({ isModalVisible, handleCancel, tableQuery, currentEditCoupo
             </div>
           </div>
         )}
-
-        <Form.Item name="showToUsers" valuePropName="checked">
-          <Checkbox>Show to users in cart</Checkbox>
-        </Form.Item>
 
         <Form.Item>
           <Button type="primary" htmlType="submit" style={{ marginRight: 8 }}>

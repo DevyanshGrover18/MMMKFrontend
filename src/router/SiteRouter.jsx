@@ -20,6 +20,7 @@ const ShoppingCart = lazy(() => import('../pages/ShoppingCart'));
 const Checkout = lazy(() => import('../pages/Checkout'));
 const ThankYou = lazy(() => import('../pages/ThankYou'));
 const OrderSuccess = lazy(() => import('../pages/OrderSuccess'));
+const PaymentCancel = lazy(() => import('../pages/PaymentCancel'));
 const BuyGiftCard = lazy(() => import('../pages/BuyGiftCard'));
 const GiftCard = lazy(() => import('../pages/GiftCard'));
 const ContactUs = lazy(() => import('../pages/ContactUs'));
@@ -105,6 +106,16 @@ export default function SiteRouter() {
               <UserProtectedRoute>
                 <Suspense fallback={<SiteLoading />}>
                   <OrderSuccess />
+                </Suspense>
+              </UserProtectedRoute>
+            }
+          />
+          <Route
+            path="/cancel"
+            element={
+              <UserProtectedRoute>
+                <Suspense fallback={<SiteLoading />}>
+                  <PaymentCancel />
                 </Suspense>
               </UserProtectedRoute>
             }

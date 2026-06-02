@@ -91,10 +91,10 @@ const Profile = ({ children }) => {
 
   return (
     <div className="w-full">
-      {/* Banner - hidden on mobile, visible on md+ */}
-      <div className="hidden md:block">
-        <Banner bg={bgImage}>
-          <div className="text-white text-center md:h-[0vh] h-[20vh] flex flex-col items-center justify-center md:mt-16 md:mb-0 "></div>
+      {/* Banner - visible on all screens, responsive height */}
+      <div className="block">
+        <Banner bg={bgImage} minHeight={20} desktopMinHeight={35}>
+          <div className="text-white text-center h-[10vh] md:h-[15vh] flex flex-col items-center justify-center md:mt-16 md:mb-0 "></div>
         </Banner>
       </div>
 

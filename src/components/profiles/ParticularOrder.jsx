@@ -7,7 +7,7 @@ import {
   useTranslationContext,
 } from '../../context/TranslationContext';
 import { useEffect } from 'react';
-import { convertPrice, formatPrice } from '../../utils/currency';
+import { convertPrice, convertStoredPrice, formatPrice } from '../../utils/currency';
 import { useCurrency } from '../../context/CurrencyContext';
 import { resolveAssetUrl } from '../../utils/assetUrl';
 
@@ -19,6 +19,11 @@ const ParticularOrder = ({ activeOrder, setActiveOrder }) => {
   const { currency, rates } = useCurrency();
   const formatConvertedPrice = (amount) =>
     formatPrice(convertPrice(amount, currency, rates), currency);
+  const formatOrderPrice = (amount) =>
+    formatPrice(
+      convertStoredPrice(amount, activeOrder?.currency, currency, rates),
+      currency
+    );
   const paymentSummary = {
     subtotal:
       Number(activeOrder?.price?.subtotal) ||
@@ -355,7 +360,7 @@ const ParticularOrder = ({ activeOrder, setActiveOrder }) => {
             </h4>
             <div className="flex justify-between mb-2 text-gray-600">
               <p>{profile.subTotal}</p>
-              <p>{formatConvertedPrice(paymentSummary.subtotal)}</p>
+              <p>{formatOrderPrice(paymentSummary.subtotal)}</p>
             </div>
             {activeOrder?.couponCode && (
               <div className="flex justify-between mb-2 text-gray-600">
@@ -366,13 +371,13 @@ const ParticularOrder = ({ activeOrder, setActiveOrder }) => {
             {paymentSummary.couponDiscount > 0 && (
               <div className="flex justify-between mb-2 text-green-700">
                 <p>{common.coupon}</p>
-                <p>-{formatConvertedPrice(paymentSummary.couponDiscount)}</p>
+                <p>-{formatOrderPrice(paymentSummary.couponDiscount)}</p>
               </div>
             )}
             {paymentSummary.shippingCharges > 0 && (
               <div className="flex justify-between mb-2 text-gray-600">
                 <p>Shipping</p>
-                <p>{formatConvertedPrice(paymentSummary.shippingCharges)}</p>
+                <p>{formatOrderPrice(paymentSummary.shippingCharges)}</p>
               </div>
             )}
 
@@ -386,7 +391,7 @@ const ParticularOrder = ({ activeOrder, setActiveOrder }) => {
             </div> */}
             <div className="flex justify-between pt-2 mt-4 font-semibold text-black border-t">
               <p>{profile.totalPaidByCustomer}</p>
-              <p>{formatConvertedPrice(paymentSummary.total)}</p>
+              <p>{formatOrderPrice(paymentSummary.total)}</p>
             </div>
           </div>
 

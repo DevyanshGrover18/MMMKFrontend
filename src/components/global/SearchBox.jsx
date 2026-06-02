@@ -50,6 +50,7 @@ export default function SearchBox(props) {
     navigate(`/product-listings?q=${encodeURIComponent(trimmedValue)}`);
     setSearchValue('');
     setData([]);
+    if (props.onResultClick) props.onResultClick();
   };
 
   const handleSearch = (newValue) => {
@@ -68,6 +69,7 @@ export default function SearchBox(props) {
     }
     setSearchValue('');
     setData([]);
+    if (props.onResultClick) props.onResultClick();
   };
   return (
     <Select

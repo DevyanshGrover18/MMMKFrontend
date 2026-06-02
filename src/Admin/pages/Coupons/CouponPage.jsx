@@ -91,15 +91,18 @@ const CouponPage = () => {
         ),
       },
       {
-        title: 'Expiry Date',
+        title: 'Status',
         dataIndex: 'expiryDate',
-        key: 'expiryDate',
+        key: 'status',
         align: 'center',
-        render: (text) => (
-          <span className="text-gray-500">
-            {text ? new Date(text).toDateString() : ''}
-          </span>
-        ),
+        render: (text) => {
+          const isExpired = text ? new Date(text) < new Date() : false;
+          return (
+            <Tag color={isExpired ? 'red' : 'green'} className="px-3 text-sm">
+              {isExpired ? 'Expired' : 'Active'}
+            </Tag>
+          );
+        },
       },
       {
         title: 'Product Discount',
@@ -159,17 +162,6 @@ const CouponPage = () => {
         key: 'currentUsage',
         align: 'center',
         render: (value) => Number(value || 0),
-      },
-      {
-        title: 'Visible in Cart',
-        dataIndex: 'showToUsers',
-        key: 'showToUsers',
-        align: 'center',
-        render: (value) => (
-          <Tag color={value === false ? 'red' : 'green'}>
-            {value === false ? 'Hidden' : 'Visible'}
-          </Tag>
-        ),
       },
       {
         title: 'Actions',
