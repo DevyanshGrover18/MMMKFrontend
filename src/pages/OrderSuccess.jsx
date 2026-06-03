@@ -40,6 +40,9 @@ const OrderSuccess = () => {
   const juraOrderId = order?.jura_order_id || order?.depoter_order_id || null;
   const juraSyncError = order?.juraSyncError || order?.depoterSyncError || null;
   const orderTotal = Number(order?.price?.total || order?.amount || 0);
+  const creditApplied = Number(order?.price?.creditApplied || 0);
+  const actualOrderTotal = orderTotal + creditApplied;
+  
   const orderCurrency = order?.currency || currency;
   const storedShipping = Number(order?.price?.shippingCharges || 0);
   const hasLegacyUnconvertedShipping =
@@ -47,12 +50,14 @@ const OrderSuccess = () => {
     storedShipping > 0 &&
     storedShipping < 1000 &&
     Number(order?.price?.subtotal || 0) > 1000;
+
   const normalizedOrderTotal =
-    orderTotal > 0 && hasLegacyUnconvertedShipping
-      ? orderTotal -
+    actualOrderTotal > 0 && hasLegacyUnconvertedShipping
+      ? actualOrderTotal -
         storedShipping +
         convertStoredPrice(storedShipping, BASE_CURRENCY, orderCurrency, rates)
-      : orderTotal;
+      : actualOrderTotal;
+
   const displayTotal = Math.max(
     0,
     convertStoredPrice(normalizedOrderTotal, orderCurrency, currency, rates)
@@ -177,7 +182,20 @@ const OrderSuccess = () => {
                     Mode
                   </p>
                   <p className="mt-1 text-lg font-semibold capitalize text-gray-900">
-                    {order.mode || 'N/A'}
+                    {(() => {
+                      const mode = order.mode;
+                      const creditApplied = order?.price?.creditApplied || 0;
+                      const amount = order?.amount || 0;
+                      const modeLabel =
+                        mode === 'cod' ? 'COD' : mode === 'card' ? 'Card' : mode;
+                      if (creditApplied > 0) {
+                        if (amount > 0) {
+                          return `Credits + ${modeLabel}`;
+                        }
+                        return 'Credits';
+                      }
+                      return modeLabel || 'N/A';
+                    })()}
                   </p>
                 </div>
                 <div>

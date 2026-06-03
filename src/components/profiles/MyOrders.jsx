@@ -54,6 +54,18 @@ const MyOrders = () => {
       dataIndex: 'mode',
       key: 'mode',
       align: 'center',
+      render: (mode, record) => {
+        const creditApplied = record?.price?.creditApplied || 0;
+        const amount = record?.amount || 0;
+        const modeLabel = mode === 'cod' ? 'COD' : mode === 'card' ? 'Card' : mode;
+        if (creditApplied > 0) {
+          if (amount > 0) {
+            return `Credits + ${modeLabel}`;
+          }
+          return 'Credits';
+        }
+        return modeLabel;
+      },
     },
     {
       title: common.price,
@@ -61,8 +73,11 @@ const MyOrders = () => {
       key: 'amount',
       align: 'center',
       width: 120,
-      render: (amount, record) =>
-        formatPrice(Number(amount || 0), record?.currency || currency),
+      render: (amount, record) => {
+        const creditApplied = record?.price?.creditApplied || 0;
+        const actualPrice = (amount || 0) + creditApplied;
+        return formatPrice(Number(actualPrice), record?.currency || currency);
+      },
     },
     {
       title: profile.quantity,

@@ -28,6 +28,7 @@ const ParticularOrder = ({ activeOrder, setActiveOrder }) => {
       }, 0),
     shippingCharges: Number(activeOrder?.price?.shippingCharges || 0),
     couponDiscount: Number(activeOrder?.price?.couponDiscount || 0),
+    creditApplied: Number(activeOrder?.price?.creditApplied || 0),
     total: Number(activeOrder?.price?.total || activeOrder?.amount || 0),
   };
 
@@ -374,6 +375,12 @@ const ParticularOrder = ({ activeOrder, setActiveOrder }) => {
               <div className="flex justify-between mb-2 text-gray-600">
                 <p>Shipping</p>
                 <p>{formatOrderPrice(paymentSummary.shippingCharges)}</p>
+              </div>
+            )}
+            {paymentSummary.creditApplied > 0 && (
+              <div className="flex justify-between mb-2 text-green-700">
+                <p>My Credit</p>
+                <p>-{formatOrderPrice(paymentSummary.creditApplied)}</p>
               </div>
             )}
 

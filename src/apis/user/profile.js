@@ -15,6 +15,10 @@ export const getUserCredits = async () => {
   const response = await profile.get('/my-credits/get');
   return response.data?.data;
 };
+export const getUserCreditTransactions = async (days = 'all') => {
+  const response = await profile.get(`/my-credits/transactions?days=${days}`);
+  return response.data?.data;
+};
 
 // Address book
 export const getAddressBook = async () => {

@@ -18,7 +18,12 @@ import { useTranslationContext } from '../../context/TranslationContext';
 import { CommonButton } from '../global/UIButtons';
 import { loadStripe } from '@stripe/stripe-js';
 import { getPercentageOf, isUserSignedIn } from '../../utils/globalMethods';
-import { convertPrice, formatPrice } from '../../utils/currency';
+import {
+  BASE_CURRENCY,
+  convertPrice,
+  convertStoredPrice,
+  formatPrice,
+} from '../../utils/currency';
 import { useCurrency } from '../../context/CurrencyContext';
 import { resolveAssetUrl } from '../../utils/assetUrl';
 
@@ -252,19 +257,26 @@ export default function CheckoutForm({
       currency,
       rates,
     });
-    const eligibleAmount = Math.min(
-      availableCredits,
-      baseSummary.total + baseSummary.creditApplied
-    );
+    
+    // Convert order total to base currency for accurate comparison
+    const neededAmountInCurrency = baseSummary.total + (baseSummary.creditApplied || 0);
+    const neededAmountBase = convertStoredPrice(neededAmountInCurrency, currency, BASE_CURRENCY, rates);
+    
+    const eligibleAmountBase = Math.min(availableCredits, neededAmountBase);
 
-    if (eligibleAmount <= 0) {
+    if (eligibleAmountBase <= 0) {
       message.warning('No wallet credit available to apply');
       return;
     }
 
-    setAppliedCreditAmount(Number(eligibleAmount.toFixed(2)));
+    // If we can cover the whole thing, use the exact neededAmountBase to ensure total becomes 0
+    const finalAmountBaseToSet = Math.abs(eligibleAmountBase - neededAmountBase) < 0.01 
+      ? neededAmountBase 
+      : eligibleAmountBase;
+
+    setAppliedCreditAmount(Number(finalAmountBaseToSet.toFixed(2)));
     message.success(
-      `Applied ${formatConvertedPrice(eligibleAmount)} from My Credit`
+      `Applied ${formatConvertedPrice(finalAmountBaseToSet)} from My Credit`
     );
   };
 
@@ -391,10 +403,6 @@ export default function CheckoutForm({
     if (mode === 'card') {
       try {
         setLoading(true);
-        const publishableKey = getStripePublishableKey();
-        if (!publishableKey)
-          throw new Error('Stripe publishable key is not configured');
-        const stripePromise = await loadStripe(publishableKey);
         const data = await createPaymentIntent({
           products: cartData,
           shippingAddress,
@@ -412,8 +420,14 @@ export default function CheckoutForm({
         if (data?.paidWithCredits && data?.orderId) {
           clearCart({ updateOnBackend: true });
           navigate(`/order-success/${data.orderId}`);
+          setAppliedCreditAmount(0);
           return;
         }
+
+        const publishableKey = getStripePublishableKey();
+        if (!publishableKey)
+          throw new Error('Stripe publishable key is not configured');
+        const stripePromise = await loadStripe(publishableKey);
 
         const result = await stripePromise.redirectToCheckout({
           sessionId: data.id,
@@ -460,7 +474,11 @@ export default function CheckoutForm({
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    setIsModalVisible(true);
+    if (derivedSummary.total === 0) {
+      handlePaymentChoice('card');
+    } else {
+      setIsModalVisible(true);
+    }
   };
 
   // ── Effects ──────────────────────────────────────────────────────────────────

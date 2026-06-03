@@ -538,10 +538,10 @@ const PrimaryDetails = ({
   isUploadingImages,
   updateUtils,
 }) => {
-  const skus = Form.useWatch('skus', form);
-  const filters = Form.useWatch('filters', form);
-  const images = Form.useWatch('images', form);
-  const image = Form.useWatch('image', form);
+  const skus = Form.useWatch('skus', form) || [];
+  const filters = Form.useWatch('filters', form) || [];
+  const images = Form.useWatch('images', form) || [];
+  const image = Form.useWatch('image', form) || [];
 
   const price = Form.useWatch('price', form);
   const websitePrice = Form.useWatch('websitePrice', form);

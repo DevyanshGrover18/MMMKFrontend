@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
-import { getUserCredits } from '../../apis/user/profile';
-import { Input, message, Modal } from 'antd';
+import { getUserCredits, getUserCreditTransactions } from '../../apis/user/profile';
+import { Input, message, Modal, Select, Table } from 'antd';
 import { useState } from 'react';
 import { applyGiftCard } from '../../apis/user/giftCard';
 import { useTranslationContext } from '../../context/TranslationContext';
@@ -12,9 +12,17 @@ export default function MyCredit() {
     content: { profile, common },
   } = useTranslationContext();
   const { currency, rates } = useCurrency();
+  const [days, setDays] = useState('all');
+
   const Credit = useQuery({
     queryKey: ['credit'],
     queryFn: getUserCredits,
+    retry: false,
+  });
+
+  const Transactions = useQuery({
+    queryKey: ['credit-transactions', days],
+    queryFn: () => getUserCreditTransactions(days),
     retry: false,
   });
 
@@ -46,12 +54,61 @@ export default function MyCredit() {
       });
       updateUtils({ isLoading: false });
       Credit.refetch();
+      Transactions.refetch();
     } catch (err) {
       updateUtils({ isLoading: false });
       console.error(err);
       message.error(err.response.data.message || 'Failed to add gift card');
     }
   };
+
+  const columns = [
+    {
+      title: 'Serial No.',
+      dataIndex: 'index',
+      key: 'index',
+      render: (text, record, index) => index + 1,
+    },
+    {
+      title: 'Amount',
+      dataIndex: 'amount',
+      key: 'amount',
+      render: (amount, record) => {
+        const isDeduction = record.type === 'Deduction';
+        
+        // Use stored amount/currency if available for 100% accuracy
+        const displayAmount = record.amountInCurrency !== undefined && record.currency
+          ? record.amountInCurrency
+          : convertPrice(amount, currency, rates);
+        
+        const displayCurrency = record.currency || currency;
+
+        return (
+          <span className={isDeduction ? 'text-red-600 font-medium' : 'text-green-600 font-medium'}>
+            {isDeduction ? '-' : '+'}
+            {formatPrice(displayAmount, displayCurrency)}
+          </span>
+        );
+      },
+    },
+    {
+      title: 'Order',
+      dataIndex: 'order',
+      key: 'order',
+      render: (order) => order?.orderId || 'N/A',
+    },
+    {
+      title: 'Type',
+      dataIndex: 'type',
+      key: 'type',
+    },
+    {
+      title: 'Date',
+      dataIndex: 'createdAt',
+      key: 'createdAt',
+      render: (date) => new Date(date).toLocaleDateString(),
+    },
+  ];
 
   return (
     <>
@@ -111,7 +168,7 @@ export default function MyCredit() {
             {profile.addGiftCard}
           </button>
         </div>
-        <div className="bg-white p-6 rounded-lg shadow-md">
+        <div className="bg-white p-6 rounded-lg shadow-md mb-8">
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-xl font-semibold">{profile.creditBalance}</h3>
             <span className="text-lg font-bold text-green-600">
@@ -119,6 +176,30 @@ export default function MyCredit() {
             </span>
           </div>
           <p className="text-gray-600">{profile.creditBalanceDescription}</p>
+        </div>
+
+        <div className="bg-white p-6 rounded-lg shadow-md">
+          <div className="flex items-center justify-between mb-6">
+            <h3 className="text-xl font-semibold">Transaction History</h3>
+            <Select
+              defaultValue="all"
+              style={{ width: 150 }}
+              onChange={(value) => setDays(value)}
+              options={[
+                { value: '30', label: 'Last 30 days' },
+                { value: '90', label: 'Last 90 days' },
+                { value: 'all', label: 'All' },
+              ]}
+            />
+          </div>
+          <Table
+            columns={columns}
+            dataSource={Transactions.data || []}
+            loading={Transactions.isLoading}
+            rowKey="_id"
+            pagination={{ pageSize: 5 }}
+            scroll={{ x: true }}
+          />
         </div>
       </div>
     </>
