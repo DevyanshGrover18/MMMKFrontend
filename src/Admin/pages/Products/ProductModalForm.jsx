@@ -1,7 +1,13 @@
 /* eslint-disable no-unused-vars */
 /* eslint-disable react/prop-types */
 import { useEffect, useMemo, useState } from 'react';
-import { DndContext, closestCenter } from '@dnd-kit/core';
+import {
+  DndContext,
+  closestCenter,
+  useSensor,
+  useSensors,
+  PointerSensor,
+} from '@dnd-kit/core';
 import {
   arrayMove,
   SortableContext,
@@ -22,6 +28,7 @@ import {
   InputNumber,
   Switch,
   Spin,
+  Popconfirm,
 } from 'antd';
 import { CKEditor } from '@ckeditor/ckeditor5-react';
 import ClassicEditor from '@ckeditor/ckeditor5-build-classic';
@@ -36,22 +43,32 @@ import { resolveAssetUrl } from '../../../utils/assetUrl';
 import { uploadSingleAdminFile } from '../../../apis/admin/upload';
 
 
+const DragHandle = ({ id }) => {
+  const { attributes, listeners } = useSortable({ id });
+  return (
+    <MenuOutlined
+      {...attributes}
+      {...listeners}
+      style={{ cursor: 'grab' }}
+    />
+  );
+};
+
 const SortableRow = ({ children, ...props }) => {
-  const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
-    useSortable({
-      id: props['data-row-key'],
-    });
+  const { setNodeRef, transform, transition, isDragging } = useSortable({
+    id: props['data-row-key'],
+  });
 
   const style = {
     ...props.style,
     transform: CSS.Transform.toString(transform),
     transition,
-    cursor: 'move',
     zIndex: isDragging ? 999 : 'auto',
+    opacity: isDragging ? 0.5 : 1,
   };
 
   return (
-    <tr {...props} ref={setNodeRef} style={style} {...attributes} {...listeners}>
+    <tr {...props} ref={setNodeRef} style={style}>
       {children}
     </tr>
   );
@@ -145,7 +162,7 @@ const ProductModalForm = ({
           homePageBottomSection: selected?.homePageBottomSection || false,
           status: selected?.status,
           showOnHomepage: selected?.showOnHomepage || false,
-          skus: selected?.skus || [],
+          skus: (selected?.skus || []).map(sku => ({ ...sku, tempId: Math.random().toString(36).substr(2, 9) })),
           filters: selected?.filters || [],
           images,
           image,
@@ -153,7 +170,7 @@ const ProductModalForm = ({
       } else {
         form.resetFields();
         form.setFieldsValue({
-          skus: [{ sku: null, quantity: null, price: null }],
+          skus: [{ sku: null, quantity: null, price: null, tempId: Math.random().toString(36).substr(2, 9) }],
           images: [],
           image: [],
         });
@@ -430,7 +447,11 @@ const ProductModalForm = ({
               'uses',
               'benefits',
             ].includes(key)
-              ? JSON.stringify(product[key])
+              ? JSON.stringify(
+                  key === 'skus'
+                    ? product[key].map(({ tempId, ...rest }) => rest)
+                    : product[key]
+                )
               : product[key]
           );
       });
@@ -525,6 +546,10 @@ const PrimaryDetails = ({
   const price = Form.useWatch('price', form);
   const websitePrice = Form.useWatch('websitePrice', form);
 
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 5 } })
+  );
+
   const [dynamicData, setDynamicData] = useState({
     subCategoryOptions: [],
     filterOptions: [],
@@ -589,10 +614,10 @@ const PrimaryDetails = ({
     });
   };
 
-  const handleDeleteSKU = (index) => {
+  const handleDeleteSKU = (tempId) => {
     const skus = form.getFieldValue('skus') || [];
-    skus.splice(index, 1);
-    form.setFieldsValue({ skus });
+    const newSkus = skus.filter((s) => s.tempId !== tempId);
+    form.setFieldsValue({ skus: newSkus });
   };
 
   const beforeUpload = (file) => {
@@ -879,8 +904,17 @@ const PrimaryDetails = ({
           title={filters?.length ? 'Add SKU' : 'Select filters to add SKU'}
           onClick={() => {
             const skus = form.getFieldValue('skus') || [];
-            skus.push({ sku: null, quantity: null, price: null });
-            form.setFieldsValue({ skus });
+            form.setFieldsValue({
+              skus: [
+                ...skus,
+                {
+                  sku: null,
+                  quantity: null,
+                  price: null,
+                  tempId: Math.random().toString(36).substr(2, 9),
+                },
+              ],
+            });
           }}
           disabled={!filters?.length}
         >
@@ -890,19 +924,20 @@ const PrimaryDetails = ({
 
       <Form.Item name="skus">
         <DndContext
+          sensors={sensors}
           collisionDetection={closestCenter}
           onDragEnd={(event) => {
             const { active, over } = event;
-            if (active.id !== over.id) {
-              const oldIndex = skus.findIndex((_, i) => i === active.id);
-              const newIndex = skus.findIndex((_, i) => i === over.id);
+            if (over && active.id !== over.id) {
+              const oldIndex = skus.findIndex((s) => s.tempId === active.id);
+              const newIndex = skus.findIndex((s) => s.tempId === over.id);
               const newSkus = arrayMove(skus, oldIndex, newIndex);
               form.setFieldsValue({ skus: newSkus });
             }
           }}
         >
           <SortableContext
-            items={skus?.map((_, i) => i) || []}
+            items={skus?.map((s) => s.tempId) || []}
             strategy={verticalListSortingStrategy}
           >
             <Table
@@ -911,14 +946,14 @@ const PrimaryDetails = ({
                 body: { row: SortableRow },
               }}
               dataSource={skus || []}
-              rowKey={(record, index) => index}
+              rowKey={(record) => record.tempId}
               pagination={false}
               columns={[
                 {
                   title: '',
                   key: 'drag',
                   width: 50,
-                  render: () => <MenuOutlined />,
+                  render: (_, record) => <DragHandle id={record.tempId} />,
                 },
                 {
                   title: 'SKU',
@@ -999,10 +1034,14 @@ const PrimaryDetails = ({
                   align: 'center',
                   width: 80,
                   render: (_, record, index) => (
-                    <DeleteButton
-                      disabled={skus.length === 1}
-                      onClick={() => handleDeleteSKU(index)}
-                    />
+                    <Popconfirm
+                      title="Are you sure you want to delete this SKU?"
+                      onConfirm={() => handleDeleteSKU(record.tempId)}
+                      okText="Yes"
+                      cancelText="No"
+                    >
+                      <DeleteButton disabled={skus.length === 1} />
+                    </Popconfirm>
                   ),
                 },
               ]}
