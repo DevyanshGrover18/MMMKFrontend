@@ -170,7 +170,7 @@ const ContactUs = () => {
                     <p className="text-xs uppercase tracking-[0.3em] text-white/50">
                       {contact.phoneNumber}
                     </p>
-                    <p className="mt-2 text-lg">+971 00 000 0000</p>
+                    <p className="mt-2 text-lg">+971 582908669</p>
                   </div>
                 </div>
               </aside>
