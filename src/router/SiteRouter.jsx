@@ -9,7 +9,7 @@ import Root from '../pages/Root';
 import ComingSoon from '../layout/ComingSoon';
 // Lazy imports for all site pages
 const Home = lazy(() => import('../pages/Home'));
-const PrivacyPolicy = lazy(() => import('../pages/PrivacyPolicy'));
+const PrivacyPolicy = lazy(() => import('../pages/PrivacyPolicy.jsx'));
 const ReturnPolicy = lazy(() => import('../pages/ReturnPolicy'));
 const AuthPage = lazy(() => import('../pages/AuthPage'));
 const ForgetPassword = lazy(() => import('../pages/ForgetPassword'));

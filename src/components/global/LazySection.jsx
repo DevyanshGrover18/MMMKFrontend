@@ -14,7 +14,7 @@ const LazySection = ({ children, className = '', minHeight = 'auto' }) => {
       const { top, bottom } = el.getBoundingClientRect();
       const viewportHeight =
         window.innerHeight || document.documentElement.clientHeight;
-      const preloadThreshold = 400;
+      const preloadThreshold = 800;
 
       if (bottom >= -preloadThreshold && top <= viewportHeight + preloadThreshold) {
         setIsVisible(true);
@@ -35,7 +35,7 @@ const LazySection = ({ children, className = '', minHeight = 'auto' }) => {
         },
         {
           root: null,
-          rootMargin: '400px 0px',
+          rootMargin: '800px 0px',
           threshold: 0,
         }
       );

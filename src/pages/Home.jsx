@@ -5,15 +5,16 @@ import { CommonButton } from '../components/global/UIButtons';
 import { useTranslationContext } from '../context/TranslationContext';
 import LazySection from '../components/global/LazySection';
 
+import Section8 from '../components/home/Section8';
+import Slider from '../components/global/Slider';
+
 const Section2 = lazy(() => import('../components/home/Section2'));
 const Section3 = lazy(() => import('../components/home/Section3'));
 const Section6 = lazy(() => import('../components/home/Section6'));
 const Section7 = lazy(() => import('../components/home/Section7'));
-const Section8 = lazy(() => import('../components/home/Section8'));
 const Enquiry = lazy(() => import('../components/home/Enquiry'));
 const NewsLetter = lazy(() => import('../components/global/NewsLetter'));
 const ShopInstant = lazy(() => import('../components/home/ShopInstant'));
-const Slider = lazy(() => import('../components/global/Slider'));
 const RecommendedSection = lazy(() => import('../components/home/RecommendedSection'));
 const BannerSection = lazy(() => import('../components/home/BannerSection'));
 
@@ -43,16 +44,12 @@ const Home = () => {
           </CommonButton>
         </div>
       </BannerVideo>
-      <LazySection minHeight="420px">
-        <Suspense fallback={<div className="h-[420px]" />}>
-          <Section8 />
-        </Suspense>
-      </LazySection>
-      <LazySection minHeight="520px">
-        <Suspense fallback={<div className="h-[520px]" />}>
-          <Slider />
-        </Suspense>
-      </LazySection>
+      <div style={{ minHeight: '420px' }}>
+        <Section8 />
+      </div>
+      <div style={{ minHeight: '520px' }}>
+        <Slider />
+      </div>
       <LazySection minHeight="420px">
         <Suspense fallback={<div className="h-[420px]" />}>
           <Section2 />
