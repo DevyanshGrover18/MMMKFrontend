@@ -1,7 +1,15 @@
 /* eslint-disable no-unused-vars */
 /* eslint-disable react/prop-types */
 import { useEffect, useMemo, useState } from 'react';
-import { PlusOutlined } from '@ant-design/icons';
+import { DndContext, closestCenter } from '@dnd-kit/core';
+import {
+  arrayMove,
+  SortableContext,
+  useSortable,
+  verticalListSortingStrategy,
+} from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
+import { MenuOutlined, PlusOutlined } from '@ant-design/icons';
 import {
   Modal,
   Form,
@@ -27,7 +35,28 @@ import { getTranslatedFields } from '../../../utils/getTranslatedFields';
 import { resolveAssetUrl } from '../../../utils/assetUrl';
 import { uploadSingleAdminFile } from '../../../apis/admin/upload';
 
-const { Option } = Select;
+
+const SortableRow = ({ children, ...props }) => {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
+    useSortable({
+      id: props['data-row-key'],
+    });
+
+  const style = {
+    ...props.style,
+    transform: CSS.Transform.toString(transform),
+    transition,
+    cursor: 'move',
+    zIndex: isDragging ? 999 : 'auto',
+  };
+
+  return (
+    <tr {...props} ref={setNodeRef} style={style} {...attributes} {...listeners}>
+      {children}
+    </tr>
+  );
+};
+
 
 const getUniqueImageNames = (images = []) => [...new Set(images.filter(Boolean))];
 
@@ -859,99 +888,128 @@ const PrimaryDetails = ({
         </AddButton>
       </div>
 
-      <Form.Item name="skus" valuePropName="dataSource">
-        <Table
-          columns={[
-            {
-              title: 'SKU',
-              dataIndex: 'sku',
-              key: 'sku',
-              render: (text, record, index) => (
-                <Form.Item
-                  name={['skus', index, 'sku']}
-                  rules={[{ required: true, message: 'SKU is required' }]}
-                  className="mb-0"
-                >
-                  <Input placeholder="Enter SKU" />
-                </Form.Item>
-              ),
-            },
-            ...(filters?.map((filter) => {
-              const filterData = filtersQuery.data?.data?.find(
-                (f) => f.filterName === filter
-              );
-              const isPrice = filter === 'Price';
-              const options = isPrice
-                ? (filterData?.options || []).map((opt) => ({
-                    label: `${opt.from} - ${opt.to}`,
-                    value: `${opt.from}-${opt.to}`,
-                  }))
-                : (filterData?.options || []).map((opt) => ({
-                    label: opt,
-                    value: opt,
-                  }));
+      <Form.Item name="skus">
+        <DndContext
+          collisionDetection={closestCenter}
+          onDragEnd={(event) => {
+            const { active, over } = event;
+            if (active.id !== over.id) {
+              const oldIndex = skus.findIndex((_, i) => i === active.id);
+              const newIndex = skus.findIndex((_, i) => i === over.id);
+              const newSkus = arrayMove(skus, oldIndex, newIndex);
+              form.setFieldsValue({ skus: newSkus });
+            }
+          }}
+        >
+          <SortableContext
+            items={skus?.map((_, i) => i) || []}
+            strategy={verticalListSortingStrategy}
+          >
+            <Table
+              key={JSON.stringify(skus?.map(s => s.sku))}
+              components={{
+                body: { row: SortableRow },
+              }}
+              dataSource={skus || []}
+              rowKey={(record, index) => index}
+              pagination={false}
+              columns={[
+                {
+                  title: '',
+                  key: 'drag',
+                  width: 50,
+                  render: () => <MenuOutlined />,
+                },
+                {
+                  title: 'SKU',
+                  dataIndex: 'sku',
+                  key: 'sku',
+                  render: (text, record, index) => (
+                    <Form.Item
+                      name={['skus', index, 'sku']}
+                      rules={[{ required: true, message: 'SKU is required' }]}
+                      className="mb-0"
+                    >
+                      <Input placeholder="Enter SKU" />
+                    </Form.Item>
+                  ),
+                },
+                ...(filters?.map((filter) => {
+                  const filterData = filtersQuery.data?.data?.find(
+                    (f) => f.filterName === filter
+                  );
+                  const isPrice = filter === 'Price';
+                  const options = isPrice
+                    ? (filterData?.options || []).map((opt) => ({
+                        label: `${opt.from} - ${opt.to}`,
+                        value: `${opt.from}-${opt.to}`,
+                      }))
+                    : (filterData?.options || []).map((opt) => ({
+                        label: opt,
+                        value: opt,
+                      }));
 
-              return {
-                title: `${filter} (Filter)`,
-                dataIndex: filter,
-                key: filter,
-                render: (text, record, index) => (
-                  <Form.Item
-                    name={['skus', index, 'filters', filter]}
-                    rules={[
-                      { required: true, message: `Filter value is required` },
-                    ]}
-                    className="mb-0"
-                  >
-                    {options.length > 0 ? (
-                      <Select
-                        placeholder={`Select ${filter}`}
-                        options={options}
-                        showSearch
+                  return {
+                    title: `${filter} (Filter)`,
+                    dataIndex: filter,
+                    key: filter,
+                    render: (text, record, index) => (
+                      <Form.Item
+                        name={['skus', index, 'filters', filter]}
+                        rules={[
+                          { required: true, message: `Filter value is required` },
+                        ]}
+                        className="mb-0"
+                      >
+                        {options.length > 0 ? (
+                          <Select
+                            placeholder={`Select ${filter}`}
+                            options={options}
+                            showSearch
+                          />
+                        ) : (
+                          <Input placeholder={`Enter ${filter}`} />
+                        )}
+                      </Form.Item>
+                    ),
+                  };
+                }) || []),
+                {
+                  title: 'Available Quantity',
+                  dataIndex: 'quantity',
+                  key: 'quantity',
+                  render: (text, record, index) => (
+                    <Form.Item
+                      name={['skus', index, 'quantity']}
+                      rules={[{ required: true, message: 'Quantity is required' }]}
+                      className="mb-0"
+                    >
+                      <InputNumber
+                        className="w-full"
+                        min={0}
+                        placeholder="Enter Quantity"
                       />
-                    ) : (
-                      <Input placeholder={`Enter ${filter}`} />
-                    )}
-                  </Form.Item>
-                ),
-              };
-            }) || []),
-            {
-              title: 'Available Quantity',
-              dataIndex: 'quantity',
-              key: 'quantity',
-              render: (text, record, index) => (
-                <Form.Item
-                  name={['skus', index, 'quantity']}
-                  rules={[{ required: true, message: 'Quantity is required' }]}
-                  className="mb-0"
-                >
-                  <InputNumber
-                    className="w-full"
-                    min={0}
-                    placeholder="Enter Quantity"
-                  />
-                </Form.Item>
-              ),
-            },
-
-            {
-              title: 'Action',
-              dataIndex: 'action',
-              key: 'action',
-              align: 'center',
-              width: 80,
-              render: (_, record, index) => (
-                <DeleteButton
-                  disabled={skus.length === 1}
-                  onClick={() => handleDeleteSKU(index)}
-                />
-              ),
-            },
-          ]}
-          scroll={{ x: 600 + (filters?.length || 0) * 150 }}
-          pagination={false}
-        />
+                    </Form.Item>
+                  ),
+                },
+                {
+                  title: 'Action',
+                  dataIndex: 'action',
+                  key: 'action',
+                  align: 'center',
+                  width: 80,
+                  render: (_, record, index) => (
+                    <DeleteButton
+                      disabled={skus.length === 1}
+                      onClick={() => handleDeleteSKU(index)}
+                    />
+                  ),
+                },
+              ]}
+              scroll={{ x: 600 + (filters?.length || 0) * 150 }}
+            />
+          </SortableContext>
+        </DndContext>
       </Form.Item>
 
       {/* Active Switch */}
