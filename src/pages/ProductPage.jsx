@@ -7,7 +7,7 @@ import ProductGrid from '../components/listing/ProductGrid';
 import NewsLetter from '../components/global/NewsLetter';
 import bg from '../assets/bg.png';
 import Pagination from '../components/global/Pagination';
-import { useQuery } from '@tanstack/react-query';
+import { keepPreviousData, useQuery, useQueryClient } from '@tanstack/react-query';
 import { getAllProducts } from '../apis/nonAuth/products';
 import { getAllCategory } from '../apis/nonAuth/category';
 import CategoryNavBar from '../components/global/CategoryNavBar';
@@ -15,6 +15,7 @@ import CategoryNavBar from '../components/global/CategoryNavBar';
 const ProductPage = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [categories, setCategories] = useState([]);
+  const queryClient = useQueryClient();
   const [utils, setUtils] = useState({
     currentPage: 1,
     category: '',
@@ -28,7 +29,23 @@ const ProductPage = () => {
   const query = useQuery({
     queryKey: ['products', utils],
     queryFn: () => getAllProducts(utils),
+    placeholderData: keepPreviousData,
   });
+
+  useEffect(() => {
+    if (!query.data?.pagination?.hasNextPage) return;
+
+    const nextUtils = {
+      ...utils,
+      currentPage: utils.currentPage + 1,
+    };
+
+    queryClient.prefetchQuery({
+      queryKey: ['products', nextUtils],
+      queryFn: () => getAllProducts(nextUtils),
+      staleTime: 30000,
+    });
+  }, [query.data, queryClient, utils]);
 
   const categoryQuery = useQuery({
     queryKey: ['categories'],

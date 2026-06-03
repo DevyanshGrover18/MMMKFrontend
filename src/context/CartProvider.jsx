@@ -207,19 +207,6 @@ const CartProvider = ({ children }) => {
 
   const [cart, setCart] = useState([]);
 
-  useEffect(() => {
-    const summaryWithoutShipping = calculateCartSummary({
-      items: cart,
-      couponData,
-      isCouponApply,
-      appliedCreditAmount,
-    });
-
-    if (appliedCreditAmount > summaryWithoutShipping.subtotal - summaryWithoutShipping.couponDiscount) {
-      setAppliedCreditAmount(summaryWithoutShipping.total + summaryWithoutShipping.creditApplied);
-    }
-  }, [cart, couponData, isCouponApply, isBagAdded, appliedCreditAmount]);
-
   const showNotfication = ({ type, productName, quantity }) =>
     notification.open({
       message:

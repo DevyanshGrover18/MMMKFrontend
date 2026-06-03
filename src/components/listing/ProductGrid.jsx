@@ -43,7 +43,7 @@ const ProductGrid = ({ list = [], textColor = 'white' }) => {
     common.itemUnavailable;
 
   const getProductImage = (product) =>
-    product?.image || product?.images?.[0] || '';
+    product?.thumbnail || product?.image || product?.images?.[0] || '';
 
   const handleAddWishList = async (id) => {
     const userId = getStoredUserId();

@@ -17,10 +17,8 @@ const ThankYou = () => {
 
   return (
     <div className="w-full">
-      <Banner minHeight={20} bg={bg}>
+      <Banner minHeight={50} bg={bg}>
         <div className="w-full">
-          {/* navbar */}
-          <CategoryNavBar />
 
           {/* main section */}
           <main className="w-full py-20 text-black bg-white">

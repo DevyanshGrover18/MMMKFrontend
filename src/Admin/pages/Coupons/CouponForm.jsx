@@ -104,6 +104,7 @@ const CouponForm = ({ isModalVisible, handleCancel, tableQuery, currentEditCoupo
           applyToDelivery: false,
           deliveryDiscountType: 'percentage',
           perUserLimit: 1,
+          showToUsers: true,
         }}
       >
         <Form.Item
@@ -139,6 +140,12 @@ const CouponForm = ({ isModalVisible, handleCancel, tableQuery, currentEditCoupo
             style={{ flex: 1 }}
           >
             <Input type="number" min={1} placeholder="Limit per user" />
+          </Form.Item>
+        </div>
+
+        <div style={{ marginBottom: 16 }}>
+          <Form.Item name="showToUsers" valuePropName="checked" noStyle>
+            <Checkbox>Show to users in Cart</Checkbox>
           </Form.Item>
         </div>
 

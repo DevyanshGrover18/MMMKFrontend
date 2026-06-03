@@ -84,7 +84,7 @@ const RecentlyViewedSlider = () => {
     common?.itemUnavailable ||
     'Unavailable';
 
-  const getProductImage = (p) => p?.image || p?.images?.[0] || '';
+  const getProductImage = (p) => p?.thumbnail || p?.image || p?.images?.[0] || '';
 
   const handleWishlist = async (id) => {
     const userId = getStoredUserId();

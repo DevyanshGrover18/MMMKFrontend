@@ -15,7 +15,7 @@ const products = [
     title: 'Maaliyah',
     OriginalPrice: 418,
     OfferedPrice: 379,
-    productId: '6932b828f831c31cc6425581', 
+    productId: '6932b828f831c31cc6425581',
   },
   {
     id: 2,
@@ -62,24 +62,38 @@ const ProductVideoCard = memo(function ProductVideoCard({
   onOpen,
 }) {
   const videoRef = useRef(null);
+  const canvasRef = useRef(null);
   const containerRef = useRef(null);
   const isInView = useInView(containerRef, { margin: '200px 0px', once: true });
 
-  const handleMouseEnter = useCallback(() => {
+  const captureFirstFrame = useCallback(() => {
     const video = videoRef.current;
-    if (!video) return;
+    const canvas = canvasRef.current;
+    if (!video || !canvas) return;
 
-    video
-      .play()
-      .catch(() => {
-        // Browsers can reject autoplay even for muted videos; hover can retry.
-      });
+    // Seek to 0 to ensure we get frame 0, not a mid-decode frame
+    video.currentTime = 0;
+  }, []);
+
+  const handleSeeked = useCallback(() => {
+    const video = videoRef.current;
+    const canvas = canvasRef.current;
+    if (!video || !canvas || video.currentTime > 0.1) return;
+
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+    canvas.getContext('2d').drawImage(video, 0, 0);
+    // Fade in the canvas frame, fade out the background color
+    canvas.style.opacity = '1';
+  }, []);
+
+  const handleMouseEnter = useCallback(() => {
+    videoRef.current?.play().catch(() => {});
   }, []);
 
   const handleMouseLeave = useCallback(() => {
     const video = videoRef.current;
     if (!video || video.paused) return;
-
     video.pause();
     video.currentTime = 0;
   }, []);
@@ -99,22 +113,29 @@ const ProductVideoCard = memo(function ProductVideoCard({
       aria-label={`Open ${product.title}`}
     >
       <div
-        className={`relative aspect-square overflow-hidden rounded-lg ${product.backgroundColor} flex items-center justify-center`}
+        className={`relative aspect-square overflow-hidden rounded-lg ${product.backgroundColor}`}
       >
-        {isInView ? (
+        {/* First-frame canvas — shown before/between hover plays */}
+        <canvas
+          ref={canvasRef}
+          className="absolute inset-0 h-full w-full object-cover opacity-0 transition-opacity duration-300"
+          style={{ display: 'block' }}
+        />
+
+        {isInView && (
           <video
             ref={videoRef}
-            className="h-full w-full object-cover"
+            className="absolute inset-0 h-full w-full object-cover"
             src={product.video}
             muted
             loop
             playsInline
             preload="metadata"
+            onLoadedMetadata={captureFirstFrame}
+            onSeeked={handleSeeked}
           >
             Your browser does not support the video tag.
           </video>
-        ) : (
-          <div className="w-full h-full bg-gray-100 animate-pulse" />
         )}
       </div>
 

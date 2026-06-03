@@ -17,7 +17,6 @@ import {
 } from '../utils/globalMethods';
 import { convertPrice, formatPrice } from '../utils/currency';
 import { applyCoupon, getValidTokens } from '../apis/user/coupon';
-import { getUserCredits } from '../apis/user/profile';
 import { useQuery } from '@tanstack/react-query';
 import { LuX } from 'react-icons/lu';
 import {
@@ -79,17 +78,9 @@ const ShoppingCart = () => {
     (couponsQuery.data?.data || []).filter(
       (coupon) => coupon?.showToUsers !== false
     );
-  const creditsQuery = useQuery({
-    queryKey: ['credit'],
-    queryFn: getUserCredits,
-    enabled: isUserSignedIn(),
-    retry: false,
-  });
-  const availableCredits = Number(creditsQuery.data?.credits || 0);
   const { currency, rates } = useCurrency();
   const formatConvertedPrice = (amount) =>
     formatPrice(convertPrice(amount, currency, rates), currency);
-  const availableCreditsInCurrency = convertPrice(availableCredits, currency, rates);
 
   const cartSummary = calculateCartSummary({
     items: data,
@@ -316,33 +307,6 @@ const ShoppingCart = () => {
     } finally {
       setIsProceedingToCheckout(false);
     }
-  };
-
-  const handleApplyCredits = () => {
-    const baseSummary = calculateCartSummary({
-      items: data,
-      couponData,
-      isCouponApply,
-      isBagAdded,
-      appliedCreditAmount: 0,
-    });
-    const eligibleAmount = Math.min(
-      availableCredits,
-      baseSummary.subtotal - baseSummary.couponDiscount
-    );
-
-    if (eligibleAmount <= 0) {
-      message.warning('No wallet credit available to apply');
-      return;
-    }
-
-    setAppliedCreditAmount(Number(eligibleAmount.toFixed(2)));
-    message.success(`Applied ${formatConvertedPrice(eligibleAmount)} from My Credit`);
-  };
-
-  const handleRemoveCredits = () => {
-    setAppliedCreditAmount(0);
-    message.success('Removed applied wallet credit');
   };
 
   return (
@@ -644,42 +608,6 @@ const ShoppingCart = () => {
                             : `${couponData.deliveryDiscount}%`}{' '}
                           off on delivery!
                         </p>
-                      )}
-                    </div>
-                  )}
-
-                  {isUserSignedIn() && (
-                    <div className="my-5 rounded-lg border border-gray-300 bg-white p-4">
-                      <div className="flex items-center justify-between gap-3">
-                        <div>
-                          <p className="font-semibold">My Credit</p>
-                          <p className="text-sm text-gray-500">
-                            Available: {formatPrice(availableCreditsInCurrency, currency)}
-                          </p>
-                        </div>
-                        {appliedCreditAmount > 0 ? (
-                          <button
-                            type="button"
-                            onClick={handleRemoveCredits}
-                            className="text-sm font-semibold text-red-600"
-                          >
-                            Remove
-                          </button>
-                        ) : (
-                          <button
-                            type="button"
-                            onClick={handleApplyCredits}
-                            className="text-sm font-semibold text-black"
-                          >
-                            Apply
-                          </button>
-                        )}
-                      </div>
-                      {appliedCreditAmount > 0 && (
-                        <div className="mt-3 flex items-center justify-between text-green-600">
-                          <p>Applied Credit</p>
-                          <p>- {formatPrice(cartSummary.creditApplied, currency)}</p>
-                        </div>
                       )}
                     </div>
                   )}

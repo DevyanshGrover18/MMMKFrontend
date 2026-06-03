@@ -35,7 +35,8 @@ const OrderSuccess = () => {
   });
 
   const order = query.data?.data?.[0];
-  const juraSyncStatus = order?.juraSyncStatus || order?.depoterSyncStatus || 'Pending';
+  const juraSyncStatus =
+    order?.juraSyncStatus || order?.depoterSyncStatus || 'Pending';
   const juraOrderId = order?.jura_order_id || order?.depoter_order_id || null;
   const juraSyncError = order?.juraSyncError || order?.depoterSyncError || null;
   const orderTotal = Number(order?.price?.total || order?.amount || 0);
@@ -46,16 +47,15 @@ const OrderSuccess = () => {
     storedShipping > 0 &&
     storedShipping < 1000 &&
     Number(order?.price?.subtotal || 0) > 1000;
-  const normalizedOrderTotal = hasLegacyUnconvertedShipping
-    ? orderTotal -
-      storedShipping +
-      convertStoredPrice(storedShipping, BASE_CURRENCY, orderCurrency, rates)
-    : orderTotal;
-  const displayTotal = convertStoredPrice(
-    normalizedOrderTotal,
-    orderCurrency,
-    currency,
-    rates
+  const normalizedOrderTotal =
+    orderTotal > 0 && hasLegacyUnconvertedShipping
+      ? orderTotal -
+        storedShipping +
+        convertStoredPrice(storedShipping, BASE_CURRENCY, orderCurrency, rates)
+      : orderTotal;
+  const displayTotal = Math.max(
+    0,
+    convertStoredPrice(normalizedOrderTotal, orderCurrency, currency, rates)
   );
 
   useEffect(() => {
@@ -129,100 +129,98 @@ const OrderSuccess = () => {
 
   return (
     <div className="w-full">
-      <Banner minHeight={20} bg={bg}>
-        <div className="w-full">
-          <CategoryNavBar />
+      {/* Banner is just the decorative top strip */}
+      <Banner minHeight={35} bg={bg} />
 
-          <main className="w-full py-20 text-black bg-white">
-            <div className="w-full gap-5 px-5 py-12 text-center text-black bg-white border-t border-b text-2nd md:px-20">
-              <h2 className="text-xl font-bold text-5th md:text-3xl lg:text-5xl">
-                {order ? common.thankYou : 'Order update'}
-              </h2>
+      {/* Content lives outside the banner */}
+      <main className="w-full pb-20 text-black bg-white">
+        <div className="w-full gap-5 px-5 py-12 text-center text-black bg-white border-t border-b md:px-20">
+          <h2 className="text-xl font-bold text-5th md:text-3xl lg:text-5xl">
+            {order ? common.thankYou : 'Order update'}
+          </h2>
 
-              <p className="py-5 text-sm text-6th md:text-base lg:text-3xl">
-                {order
-                  ? thankYou.orderReceived
-                  : query.isLoading
-                    ? 'Checking your order...'
-                    : 'We could not verify this order yet.'}
-              </p>
+          <p className="py-5 text-sm text-6th md:text-base lg:text-3xl">
+            {order
+              ? thankYou.orderReceived
+              : query.isLoading
+                ? 'Checking your order...'
+                : 'We could not verify this order yet.'}
+          </p>
 
-              {refreshingOrder && (
-                <p className="py-2 text-sm text-gray-500 md:text-base">
-                  Refreshing payment confirmation...
-                </p>
-              )}
+          {refreshingOrder && (
+            <p className="py-2 text-sm text-gray-500 md:text-base">
+              Refreshing payment confirmation...
+            </p>
+          )}
 
-              {order && (
-                <div className="mx-auto mt-8 max-w-3xl rounded-3xl border border-gray-200 bg-gray-50 p-6 text-left shadow-sm">
-                  <div className="grid gap-4 md:grid-cols-2">
-                    <div>
-                      <p className="text-xs uppercase tracking-[0.3em] text-gray-500">
-                        Order ID
-                      </p>
-                      <p className="mt-1 text-lg font-semibold text-gray-900">
-                        {order.orderId}
-                      </p>
-                    </div>
-                    <div>
-                      <p className="text-xs uppercase tracking-[0.3em] text-gray-500">
-                        Status
-                      </p>
-                      <p className="mt-1 text-lg font-semibold text-gray-900">
-                        {order.status || 'Processing'}
-                      </p>
-                    </div>
-                    <div>
-                      <p className="text-xs uppercase tracking-[0.3em] text-gray-500">
-                        Mode
-                      </p>
-                      <p className="mt-1 text-lg font-semibold capitalize text-gray-900">
-                        {order.mode || 'N/A'}
-                      </p>
-                    </div>
-                    <div>
-                      <p className="text-xs uppercase tracking-[0.3em] text-gray-500">
-                        Payment
-                      </p>
-                      <p className="mt-1 text-lg font-semibold text-gray-900">
-                        {order.paymentStatus || 'Pending'}
-                      </p>
-                    </div>
-                    
-                    {juraOrderId && (
-                      <div>
-                        <p className="text-xs uppercase tracking-[0.3em] text-gray-500">
-                          Jura Order ID
-                        </p>
-                        <p className="mt-1 text-lg font-semibold text-gray-900">
-                          {juraOrderId}
-                        </p>
-                      </div>
-                    )}
-                    <div>
-                      <p className="text-xs uppercase tracking-[0.3em] text-gray-500">
-                        Total
-                      </p>
-                      <p className="mt-1 text-lg font-semibold text-gray-900">
-                        {formatPrice(displayTotal, currency)}
-                      </p>
-                    </div>
-                  </div>
+          {order && (
+            <div className="mx-auto mt-8 max-w-3xl rounded-3xl border border-gray-200 bg-gray-50 p-6 text-left shadow-sm">
+              <div className="grid gap-4 md:grid-cols-2">
+                <div>
+                  <p className="text-xs uppercase tracking-[0.3em] text-gray-500">
+                    Order ID
+                  </p>
+                  <p className="mt-1 text-lg font-semibold text-gray-900">
+                    {order.orderId}
+                  </p>
                 </div>
-              )}
-
-              <div className="flex flex-col gap-8 justify-center mt-6 md:flex-row">
-                <CommonButton variant={6} isLink to="/product-listings">
-                  {common.continueShopping}
-                </CommonButton>
-                <CommonButton variant={6} isLink to="/profile/my-orders">
-                  {common.myOrders}
-                </CommonButton>
+                <div>
+                  <p className="text-xs uppercase tracking-[0.3em] text-gray-500">
+                    Status
+                  </p>
+                  <p className="mt-1 text-lg font-semibold text-gray-900">
+                    {order.status || 'Processing'}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-xs uppercase tracking-[0.3em] text-gray-500">
+                    Mode
+                  </p>
+                  <p className="mt-1 text-lg font-semibold capitalize text-gray-900">
+                    {order.mode || 'N/A'}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-xs uppercase tracking-[0.3em] text-gray-500">
+                    Payment
+                  </p>
+                  <p className="mt-1 text-lg font-semibold text-gray-900">
+                    {order.paymentStatus || 'Pending'}
+                  </p>
+                </div>
+                {juraOrderId && (
+                  <div>
+                    <p className="text-xs uppercase tracking-[0.3em] text-gray-500">
+                      Jura Order ID
+                    </p>
+                    <p className="mt-1 text-lg font-semibold text-gray-900">
+                      {juraOrderId}
+                    </p>
+                  </div>
+                )}
+                <div>
+                  <p className="text-xs uppercase tracking-[0.3em] text-gray-500">
+                    Total
+                  </p>
+                  <p className="mt-1 text-lg font-semibold text-gray-900">
+                    {formatPrice(displayTotal, currency)}
+                  </p>
+                </div>
               </div>
             </div>
-          </main>
+          )}
+
+          <div className="flex flex-col gap-8 justify-center mt-6 md:flex-row">
+            <CommonButton variant={6} isLink to="/product-listings">
+              {common.continueShopping}
+            </CommonButton>
+            <CommonButton variant={6} isLink to="/profile/my-orders">
+              {common.myOrders}
+            </CommonButton>
+          </div>
         </div>
-      </Banner>
+      </main>
+
       <NewsLetter />
     </div>
   );
