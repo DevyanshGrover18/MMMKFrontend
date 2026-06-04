@@ -2,8 +2,8 @@ import { createUserApiClient } from './client';
 
 const card = createUserApiClient('/api/v1/user/gift-card', 30000);
 
-export const applyGiftCard = async (code, password) => {
-  const response = await card.post('/add-gift-card', { code, password });
+export const applyGiftCard = async (code, password, currency, currencyRate) => {
+  const response = await card.post('/add-gift-card', { code, password, currency, currencyRate });
   return response.data;
 };
 

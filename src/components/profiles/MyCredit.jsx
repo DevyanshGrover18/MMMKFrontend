@@ -4,7 +4,7 @@ import { Input, message, Modal, Select, Table } from 'antd';
 import { useState } from 'react';
 import { applyGiftCard } from '../../apis/user/giftCard';
 import { useTranslationContext } from '../../context/TranslationContext';
-import { convertPrice, formatPrice } from '../../utils/currency';
+import { convertPrice, formatPrice, convertStoredPrice } from '../../utils/currency';
 import { useCurrency } from '../../context/CurrencyContext';
 
 export default function MyCredit() {
@@ -44,7 +44,12 @@ export default function MyCredit() {
     }
     updateUtils({ isLoading: true });
     try {
-      const res = await applyGiftCard(utils.giftCardCode, utils.giftCardPass);
+      const res = await applyGiftCard(
+        utils.giftCardCode,
+        utils.giftCardPass,
+        currency,
+        rates[currency]
+      );
       message.success('Gift card added successfully');
       updateUtils({
         isOpen: false,
@@ -76,17 +81,18 @@ export default function MyCredit() {
       render: (amount, record) => {
         const isDeduction = record.type === 'Deduction';
         
-        // Use stored amount/currency if available for 100% accuracy
-        const displayAmount = record.amountInCurrency !== undefined && record.currency
-          ? record.amountInCurrency
-          : convertPrice(amount, currency, rates);
+        // Use convertStoredPrice for accurate conversion between stored currency and selected currency
+        const displayAmount = convertStoredPrice(
+          record.amountInCurrency || amount,
+          record.currency || 'USD',
+          currency,
+          rates
+        );
         
-        const displayCurrency = record.currency || currency;
-
         return (
           <span className={isDeduction ? 'text-red-600 font-medium' : 'text-green-600 font-medium'}>
             {isDeduction ? '-' : '+'}
-            {formatPrice(displayAmount, displayCurrency)}
+            {formatPrice(displayAmount, currency)}
           </span>
         );
       },
