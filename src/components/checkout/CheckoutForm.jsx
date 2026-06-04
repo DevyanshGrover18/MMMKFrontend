@@ -257,11 +257,17 @@ export default function CheckoutForm({
       currency,
       rates,
     });
-    
+
     // Convert order total to base currency for accurate comparison
-    const neededAmountInCurrency = baseSummary.total + (baseSummary.creditApplied || 0);
-    const neededAmountBase = convertStoredPrice(neededAmountInCurrency, currency, BASE_CURRENCY, rates);
-    
+    const neededAmountInCurrency =
+      baseSummary.total + (baseSummary.creditApplied || 0);
+    const neededAmountBase = convertStoredPrice(
+      neededAmountInCurrency,
+      currency,
+      BASE_CURRENCY,
+      rates
+    );
+
     const eligibleAmountBase = Math.min(availableCredits, neededAmountBase);
 
     if (eligibleAmountBase <= 0) {
@@ -270,9 +276,10 @@ export default function CheckoutForm({
     }
 
     // If we can cover the whole thing, use the exact neededAmountBase to ensure total becomes 0
-    const finalAmountBaseToSet = Math.abs(eligibleAmountBase - neededAmountBase) < 0.01 
-      ? neededAmountBase 
-      : eligibleAmountBase;
+    const finalAmountBaseToSet =
+      Math.abs(eligibleAmountBase - neededAmountBase) < 0.01
+        ? neededAmountBase
+        : eligibleAmountBase;
 
     setAppliedCreditAmount(Number(finalAmountBaseToSet.toFixed(2)));
     message.success(
@@ -396,6 +403,7 @@ export default function CheckoutForm({
   // ── Payment ──────────────────────────────────────────────────────────────────
 
   const handlePaymentChoice = async (mode) => {
+    console.log('[CHECKOUT DEBUG]', { currency, currencyRate, total: derivedSummary.total });
     setIsModalVisible(false);
     const { shippingAddress, billingAddress } =
       formatShippingBillingAddress(formData);

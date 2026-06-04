@@ -40,28 +40,10 @@ const OrderSuccess = () => {
   const juraOrderId = order?.jura_order_id || order?.depoter_order_id || null;
   const juraSyncError = order?.juraSyncError || order?.depoterSyncError || null;
   const orderTotal = Number(order?.price?.total || order?.amount || 0);
-  const creditApplied = Number(order?.price?.creditApplied || 0);
-  const actualOrderTotal = orderTotal + creditApplied;
   
   const orderCurrency = order?.currency || currency;
-  const storedShipping = Number(order?.price?.shippingCharges || 0);
-  const hasLegacyUnconvertedShipping =
-    orderCurrency !== BASE_CURRENCY &&
-    storedShipping > 0 &&
-    storedShipping < 1000 &&
-    Number(order?.price?.subtotal || 0) > 1000;
-
-  const normalizedOrderTotal =
-    actualOrderTotal > 0 && hasLegacyUnconvertedShipping
-      ? actualOrderTotal -
-        storedShipping +
-        convertStoredPrice(storedShipping, BASE_CURRENCY, orderCurrency, rates)
-      : actualOrderTotal;
-
-  const displayTotal = Math.max(
-    0,
-    convertStoredPrice(normalizedOrderTotal, orderCurrency, currency, rates)
-  );
+  
+  const displayTotal = convertStoredPrice(orderTotal, orderCurrency, currency, rates);
 
   useEffect(() => {
     if (!order) return;

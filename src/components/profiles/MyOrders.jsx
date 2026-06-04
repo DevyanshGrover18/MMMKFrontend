@@ -74,9 +74,8 @@ const MyOrders = () => {
       align: 'center',
       width: 120,
       render: (amount, record) => {
-        const creditApplied = record?.price?.creditApplied || 0;
-        const actualPrice = (amount || 0) + creditApplied;
-        return formatPrice(Number(actualPrice), record?.currency || currency);
+        const total = Number(record?.price?.total || amount || 0);
+        return formatPrice(total, record?.currency || currency);
       },
     },
     {
