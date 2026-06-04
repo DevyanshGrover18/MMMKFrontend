@@ -17,8 +17,8 @@ import {
 import SkeletonCard from '../components/listing/SkeletonCard';
 import { getCategoryLabel } from '../utils/categoryTranslation';
 
-const SidebarFilter = lazy(() => import('../components/listing/SidebarFilter'));
-const NewsLetter = lazy(() => import('../components/global/NewsLetter'));
+const SidebarFilter = lazy(() => import('../components/listing/SidebarFilter').catch(() => { window.location.reload(); }));
+const NewsLetter = lazy(() => import('../components/global/NewsLetter').catch(() => { window.location.reload(); }));
 
 const knownFilterParams = [
   'categories',

@@ -12,9 +12,9 @@ import { GlobalProvider } from './context/GlobalProvider';
 import { CurrencyProvider } from './context/CurrencyContext';
 import SiteLoading from './layout/SiteLoading';
 import RootLayout from './layout/RootLayout';
-const SiteRouter = lazy(() => import('./router/SiteRouter'));
-const AdminRouter = lazy(() => import('./router/AdminRouter'));
-const Login = lazy(() => import('./Admin/Auth/Login'));
+const SiteRouter = lazy(() => import('./router/SiteRouter').catch(() => { window.location.reload(); }));
+const AdminRouter = lazy(() => import('./router/AdminRouter').catch(() => { window.location.reload(); }));
+const Login = lazy(() => import('./Admin/Auth/Login').catch(() => { window.location.reload(); }));
 
 const router = createBrowserRouter(
   createRoutesFromElements(

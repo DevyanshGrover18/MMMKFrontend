@@ -6,17 +6,17 @@ import AdminSidebar from '../Admin/UI/AdminSidebar';
 import '../css/admin.css';
 
 // Lazy imports for all admin pages
-const Dashboard = lazy(() => import('../Admin/pages/Dashboard'));
-const CategoryPage = lazy(() => import('../Admin/pages/Category/CategoryPage'));
+const Dashboard = lazy(() => import('../Admin/pages/Dashboard').catch(() => { window.location.reload(); }));
+const CategoryPage = lazy(() => import('../Admin/pages/Category/CategoryPage').catch(() => { window.location.reload(); }));
 const AdminProductPage = lazy(
   () => import('../Admin/pages/Products/ProductPage')
 );
-const ReviewPage = lazy(() => import('../Admin/pages/review/ReviewPage'));
-const UserPage = lazy(() => import('../Admin/pages/Users/UserPage'));
-const GiftCardPage = lazy(() => import('../Admin/pages/giftCard/GiftCardPage'));
-const OrderPage = lazy(() => import('../Admin/pages/Orders/OrderPage'));
-const CouponPage = lazy(() => import('../Admin/pages/Coupons/CouponPage'));
-const SupportPage = lazy(() => import('../Admin/pages/Support/SupportPage'));
+const ReviewPage = lazy(() => import('../Admin/pages/review/ReviewPage').catch(() => { window.location.reload(); }));
+const UserPage = lazy(() => import('../Admin/pages/Users/UserPage').catch(() => { window.location.reload(); }));
+const GiftCardPage = lazy(() => import('../Admin/pages/giftCard/GiftCardPage').catch(() => { window.location.reload(); }));
+const OrderPage = lazy(() => import('../Admin/pages/Orders/OrderPage').catch(() => { window.location.reload(); }));
+const CouponPage = lazy(() => import('../Admin/pages/Coupons/CouponPage').catch(() => { window.location.reload(); }));
+const SupportPage = lazy(() => import('../Admin/pages/Support/SupportPage').catch(() => { window.location.reload(); }));
 const Section2 = lazy(
   () => import('../Admin/pages/editPage/home/section2/Section2')
 );
@@ -35,9 +35,9 @@ const Section12 = lazy(
 const FormWithFields = lazy(
   () => import('../Admin/pages/editPage/home/sectionProducts/SectionProducts')
 );
-const Footer = lazy(() => import('../Admin/pages/editPage/home/footer/Footer'));
-const FilterPage = lazy(() => import('../Admin/pages/Filters/FilterPage'));
-const PaymentPage = lazy(() => import('../Admin/pages/Payments/PaymentPage'));
+const Footer = lazy(() => import('../Admin/pages/editPage/home/footer/Footer').catch(() => { window.location.reload(); }));
+const FilterPage = lazy(() => import('../Admin/pages/Filters/FilterPage').catch(() => { window.location.reload(); }));
+const PaymentPage = lazy(() => import('../Admin/pages/Payments/PaymentPage').catch(() => { window.location.reload(); }));
 
 export default function AdminRouter() {
   return (

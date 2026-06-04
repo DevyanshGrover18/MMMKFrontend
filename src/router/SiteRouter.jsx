@@ -8,37 +8,37 @@ import '../css/index.css';
 import Root from '../pages/Root';
 import ComingSoon from '../layout/ComingSoon';
 // Lazy imports for all site pages
-const Home = lazy(() => import('../pages/Home'));
-const PrivacyPolicy = lazy(() => import('../pages/PrivacyPolicy.jsx'));
-const ReturnPolicy = lazy(() => import('../pages/ReturnPolicy'));
-const AuthPage = lazy(() => import('../pages/AuthPage'));
-const ForgetPassword = lazy(() => import('../pages/ForgetPassword'));
-const NewPassword = lazy(() => import('../pages/NewPassword'));
-const ProductListing = lazy(() => import('../pages/ProductListing'));
-const ProductDetails = lazy(() => import('../pages/ProductDetails'));
-const ShoppingCart = lazy(() => import('../pages/ShoppingCart'));
-const Checkout = lazy(() => import('../pages/Checkout'));
-const ThankYou = lazy(() => import('../pages/ThankYou'));
-const OrderSuccess = lazy(() => import('../pages/OrderSuccess'));
-const PaymentCancel = lazy(() => import('../pages/PaymentCancel'));
-const BuyGiftCard = lazy(() => import('../pages/BuyGiftCard'));
-const GiftCard = lazy(() => import('../pages/GiftCard'));
-const ContactUs = lazy(() => import('../pages/ContactUs'));
-const Profile = lazy(() => import('../pages/ProfileSidebar'));
-const CheckoutForm = lazy(() => import('../components/checkout/CheckoutForm'));
-const ProductPage = lazy(() => import('../pages/ProductPage'));
+const Home = lazy(() => import('../pages/Home').catch(() => { window.location.reload(); }));
+const PrivacyPolicy = lazy(() => import('../pages/PrivacyPolicy.jsx').catch(() => { window.location.reload(); }));
+const ReturnPolicy = lazy(() => import('../pages/ReturnPolicy').catch(() => { window.location.reload(); }));
+const AuthPage = lazy(() => import('../pages/AuthPage').catch(() => { window.location.reload(); }));
+const ForgetPassword = lazy(() => import('../pages/ForgetPassword').catch(() => { window.location.reload(); }));
+const NewPassword = lazy(() => import('../pages/NewPassword').catch(() => { window.location.reload(); }));
+const ProductListing = lazy(() => import('../pages/ProductListing').catch(() => { window.location.reload(); }));
+const ProductDetails = lazy(() => import('../pages/ProductDetails').catch(() => { window.location.reload(); }));
+const ShoppingCart = lazy(() => import('../pages/ShoppingCart').catch(() => { window.location.reload(); }));
+const Checkout = lazy(() => import('../pages/Checkout').catch(() => { window.location.reload(); }));
+const ThankYou = lazy(() => import('../pages/ThankYou').catch(() => { window.location.reload(); }));
+const OrderSuccess = lazy(() => import('../pages/OrderSuccess').catch(() => { window.location.reload(); }));
+const PaymentCancel = lazy(() => import('../pages/PaymentCancel').catch(() => { window.location.reload(); }));
+const BuyGiftCard = lazy(() => import('../pages/BuyGiftCard').catch(() => { window.location.reload(); }));
+const GiftCard = lazy(() => import('../pages/GiftCard').catch(() => { window.location.reload(); }));
+const ContactUs = lazy(() => import('../pages/ContactUs').catch(() => { window.location.reload(); }));
+const Profile = lazy(() => import('../pages/ProfileSidebar').catch(() => { window.location.reload(); }));
+const CheckoutForm = lazy(() => import('../components/checkout/CheckoutForm').catch(() => { window.location.reload(); }));
+const ProductPage = lazy(() => import('../pages/ProductPage').catch(() => { window.location.reload(); }));
 
-const MyAccounts = lazy(() => import('../components/profiles/MyAccounts'));
-const MyOrders = lazy(() => import('../components/profiles/MyOrders'));
-const SavedItems = lazy(() => import('../components/profiles/SavedItems'));
-const AddressBook = lazy(() => import('../components/profiles/AddressBook'));
-const MyCredit = lazy(() => import('../components/profiles/MyCredit'));
+const MyAccounts = lazy(() => import('../components/profiles/MyAccounts').catch(() => { window.location.reload(); }));
+const MyOrders = lazy(() => import('../components/profiles/MyOrders').catch(() => { window.location.reload(); }));
+const SavedItems = lazy(() => import('../components/profiles/SavedItems').catch(() => { window.location.reload(); }));
+const AddressBook = lazy(() => import('../components/profiles/AddressBook').catch(() => { window.location.reload(); }));
+const MyCredit = lazy(() => import('../components/profiles/MyCredit').catch(() => { window.location.reload(); }));
 const PaymentMethods = lazy(
-  () => import('../components/profiles/PaymentMethods')
+  () => import('../components/profiles/PaymentMethods').catch(() => { window.location.reload(); })
 );
-const AboutUs = lazy(() => import('../components/AboutUs'));
+const AboutUs = lazy(() => import('../components/AboutUs').catch(() => { window.location.reload(); }));
 // Add more lazy imports as needed
-const PageNotFound = lazy(() => import('../layout/PageNotFound'));
+const PageNotFound = lazy(() => import('../layout/PageNotFound').catch(() => { window.location.reload(); }));
 
 export default function SiteRouter() {
   return (

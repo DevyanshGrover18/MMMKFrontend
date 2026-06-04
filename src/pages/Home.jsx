@@ -8,24 +8,23 @@ import LazySection from '../components/global/LazySection';
 import Section8 from '../components/home/Section8';
 import Slider from '../components/global/Slider';
 
-const Section2 = lazy(() => import('../components/home/Section2'));
-const Section3 = lazy(() => import('../components/home/Section3'));
-const Section6 = lazy(() => import('../components/home/Section6'));
-const Section7 = lazy(() => import('../components/home/Section7'));
-const Enquiry = lazy(() => import('../components/home/Enquiry'));
-const NewsLetter = lazy(() => import('../components/global/NewsLetter'));
-const ShopInstant = lazy(() => import('../components/home/ShopInstant'));
-const RecommendedSection = lazy(() => import('../components/home/RecommendedSection'));
-const BannerSection = lazy(() => import('../components/home/BannerSection'));
-
-const BikiniSection = lazy(() => import('../components/home/BikiniSection'));
-const Section10 = lazy(() => import('../components/home/Section10'));
-const LuxurySection = lazy(() => import('../components/home/LuxurySection'));
-const Section11 = lazy(() => import('../components/home/Section11'));
+const Section2 = lazy(() => import('../components/home/Section2').catch(() => { window.location.reload(); }));
+const Section3 = lazy(() => import('../components/home/Section3').catch(() => { window.location.reload(); }));
+const Section6 = lazy(() => import('../components/home/Section6').catch(() => { window.location.reload(); }));
+const Section7 = lazy(() => import('../components/home/Section7').catch(() => { window.location.reload(); }));
+const Enquiry = lazy(() => import('../components/home/Enquiry').catch(() => { window.location.reload(); }));
+const NewsLetter = lazy(() => import('../components/global/NewsLetter').catch(() => { window.location.reload(); }));
+const ShopInstant = lazy(() => import('../components/home/ShopInstant').catch(() => { window.location.reload(); }));
+const RecommendedSection = lazy(() => import('../components/home/RecommendedSection').catch(() => { window.location.reload(); }));
+const BannerSection = lazy(() => import('../components/home/BannerSection').catch(() => { window.location.reload(); }));
+const BikiniSection = lazy(() => import('../components/home/BikiniSection').catch(() => { window.location.reload(); }));
+const Section10 = lazy(() => import('../components/home/Section10').catch(() => { window.location.reload(); }));
+const LuxurySection = lazy(() => import('../components/home/LuxurySection').catch(() => { window.location.reload(); }));
+const Section11 = lazy(() => import('../components/home/Section11').catch(() => { window.location.reload(); }));
 const ComingSoonSection = lazy(
-  () => import('../components/home/ComingSoonSection')
+  () => import('../components/home/ComingSoonSection').catch(() => { window.location.reload(); })
 );
-const VideoCard = lazy(() => import('../components/home/VideoCard'));
+const VideoCard = lazy(() => import('../components/home/VideoCard').catch(() => { window.location.reload(); }));
 
 const Home = () => {
   const {
