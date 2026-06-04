@@ -155,7 +155,10 @@ const GiftCardPage = () => {
             size="sm"
             title="Copy Password"
             icon={<FiCopy />}
-            onClick={() => navigator.clipboard.writeText(password)}
+            onClick={() => {
+              navigator.clipboard.writeText(password);
+              message.success('Password copied');
+            }}
             variant="ghost"
             type="text"
           />

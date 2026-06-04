@@ -172,7 +172,7 @@ const ShoppingCart = () => {
         Number(matchingItem.quantity || 0) >= availableQuantity
       ) {
         message.warning(
-          `Only ${availableQuantity} item(s) available for selected option`
+          `This item has only ${availableQuantity} pieces left`
         );
         return;
       }
@@ -486,22 +486,27 @@ const ShoppingCart = () => {
                         <span className="text-gray-600 px-2 text-lg">
                           {list.quantity}
                         </span>
-                        <CommonButton
-                          onClick={() =>
-                            handleAdjustQuantity(
-                              list.product?._id,
-                              list.sku,
-                              'inc',
-                              i
-                            )
-                          }
-                          size="xs"
-                          variant="primary1"
-                          disabled={loadings.includes(i) || atMaxStock}
-                          className="w-[40px] text-center"
+                        <div 
+                          className="inline-block"
+                          onClick={() => atMaxStock && !loadings.includes(i) && message.warning(`Only ${maxAvailable} item(s) available for selected option`)}
                         >
-                          +
-                        </CommonButton>
+                          <CommonButton
+                            onClick={() =>
+                              handleAdjustQuantity(
+                                list.product?._id,
+                                list.sku,
+                                'inc',
+                                i
+                              )
+                            }
+                            size="xs"
+                            variant="primary1"
+                            disabled={loadings.includes(i) || atMaxStock}
+                            className="w-[40px] text-center"
+                          >
+                            +
+                          </CommonButton>
+                        </div>
                         </div>
 
                         {/* Remove Button */}
