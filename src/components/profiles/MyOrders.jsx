@@ -60,7 +60,7 @@ const MyOrders = () => {
         const modeLabel = mode === 'cod' ? 'COD' : mode === 'card' ? 'Card' : mode;
         if (creditApplied > 0) {
           if (amount > 0) {
-            return `Credits + ${modeLabel}`;
+            return `Credits ${modeLabel === "credits"? "" : `+ ${modeLabel}`}`;
           }
           return 'Credits';
         }
@@ -78,12 +78,20 @@ const MyOrders = () => {
         const payable = Number(record?.price?.payableTotal || record?.amountDueCOD || record?.amountPaidOnline || 0);
         const isCOD = record?.paymentMethod?.includes('cod') || record?.mode === 'cod';
         
-        if (isCOD && payable > 0) {
+        if (isCOD && payable > 0 && total !== payable) {
           return (
             <div className="flex flex-col items-center">
               <span className="text-gray-400 line-through text-xs">
                 {formatPrice(total, record?.currency || currency)}
               </span>
+              <span className="text-red-600 font-bold text-sm whitespace-nowrap">
+                Pay {formatPrice(payable, record?.currency || currency)} on delivery
+              </span>
+            </div>
+          );
+        } else if (isCOD && payable > 0 && total === payable) {
+          return (
+            <div className="flex flex-col items-center">
               <span className="text-red-600 font-bold text-sm whitespace-nowrap">
                 Pay {formatPrice(payable, record?.currency || currency)} on delivery
               </span>

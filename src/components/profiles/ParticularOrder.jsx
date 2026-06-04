@@ -198,21 +198,13 @@ const ParticularOrder = ({ activeOrder, setActiveOrder }) => {
                   <h3 className="text-lg font-semibold">
                     {activeOrder.translated?.[`productName_${index}`]}
                   </h3>
-                  <div
-                    className="text-sm text-gray-600"
-                    dangerouslySetInnerHTML={{
-                      __html:
-                        activeOrder.translated?.[`productDescription_${index}`],
-                    }}
-                  ></div>
                   <div className="text-right flex items-center gap-2">
                     {product.id.discount > 0 && (
                       <p className="text-gray-500 text-sm">
                         <span className="line-through">
                           {' '}
                           {formatOrderPrice(
-                            Number(product?.id?.price || 0) *
-                              Number(product?.quantity || 0)
+                            (Number(product?.amount || 0) / (1 - Number(product.id.discount)/100))
                           )}
                         </span>
                         <span className="font-[600]">
@@ -222,16 +214,9 @@ const ParticularOrder = ({ activeOrder, setActiveOrder }) => {
                       </p>
                     )}
 
-                    {/* Discounted Price (10% off) */}
+                    {/* Discounted Price */}
                     <h3 className="text-lg font-semibold text-red-600">
-                      {formatOrderPrice(
-                        Number(
-                          getPercentageOf(
-                            product?.id?.price,
-                            product?.id?.discount
-                          )
-                        ) * Number(product?.quantity || 0)
-                      )}
+                      {formatOrderPrice(Number(product?.amount || 0))}
                     </h3>
 
                     {/* Quantity */}

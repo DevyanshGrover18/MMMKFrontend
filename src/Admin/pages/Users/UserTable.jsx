@@ -69,9 +69,9 @@ const UserTable = ({ data, tableQuery, setEditRow }) => {
       key: 'gender',
     },
     {
-      title: 'Date of Birth',
-      dataIndex: 'dateOfBirth',
-      key: 'dateOfBirth',
+      title: 'Date of Creation',
+      dataIndex: 'createdAt',
+      key: 'createdAt',
       render: (date) =>
         date ? new Date(date).toLocaleDateString('en-GB') : 'N/A',
     },

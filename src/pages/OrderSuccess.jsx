@@ -72,24 +72,6 @@ const OrderSuccess = () => {
       try {
         setRefreshingOrder(true);
         const response = await refreshPaymentStatus(orderId);
-        console.log('[ORDER_SUCCESS_PAGE] Refreshed card payment status', {
-          orderId,
-          stripe: response?.stripe || null,
-          paymentStatus: response?.data?.paymentStatus || null,
-          status: response?.data?.status || null,
-          juraSyncStatus:
-            response?.data?.juraSyncStatus ||
-            response?.data?.depoterSyncStatus ||
-            null,
-          jura_order_id:
-            response?.data?.jura_order_id ||
-            response?.data?.depoter_order_id ||
-            null,
-          juraSyncError:
-            response?.data?.juraSyncError ||
-            response?.data?.depoterSyncError ||
-            null,
-        });
         await query.refetch();
       } catch (error) {
         console.error('[ORDER_SUCCESS_PAGE] Failed to refresh card payment', {
@@ -176,7 +158,7 @@ const OrderSuccess = () => {
                         mode === 'cod' ? 'COD' : mode === 'card' ? 'Card' : mode;
                       if (creditApplied > 0) {
                         if (amount > 0) {
-                          return `Credits + ${modeLabel}`;
+                          return `Credits ${modeLabel === "credits"? "" : `+ ${modeLabel}`}`;
                         }
                         return 'Credits';
                       }

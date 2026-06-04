@@ -35,6 +35,15 @@ export const createUserApiClient = (basePath, timeout = 10000) => {
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
+    
+    // Prevent caching for GET requests
+    if (config.method === 'get') {
+      config.params = {
+        ...config.params,
+        _t: new Date().getTime(),
+      };
+    }
+    
     return config;
   });
 
