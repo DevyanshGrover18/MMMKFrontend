@@ -129,11 +129,18 @@ export default function OrdersTable({ data, tableQuery, setIsEditData }) {
       ),
     },
     {
-      title: 'Amount',
-      dataIndex: 'amount',
-      key: 'amount',
-      render: (amount) => formatPrice(convertPrice(amount, currency, rates), currency),
-      sorter: (a, b) => a.amount - b.amount,
+      title: 'Amount (USD)',
+      dataIndex: 'displayAmountUSD',
+      key: 'displayAmountUSD',
+      render: (amount) => formatPrice(amount, 'USD'),
+      sorter: (a, b) => a.displayAmountUSD - b.displayAmountUSD,
+    },
+    {
+      title: 'Paid Amount',
+      dataIndex: 'displayAmountOriginal',
+      key: 'displayAmountOriginal',
+      render: (amount, record) => formatPrice(amount, record.displayCurrency),
+      sorter: (a, b) => a.displayAmountOriginal - b.displayAmountOriginal,
     },
     {
       title: 'Payment Status',

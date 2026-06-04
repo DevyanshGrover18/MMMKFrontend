@@ -141,12 +141,20 @@ const OrderPage = () => {
         ),
       },
       {
-        title: 'Amount',
-        dataIndex: 'amount',
-        key: 'amount',
+        title: 'Amount (USD)',
+        dataIndex: 'displayAmountUSD',
+        key: 'displayAmountUSD',
         width: 120,
         align: 'center',
-        render: (amount) => formatPrice(convertPrice(amount, currency, rates), currency),
+        render: (amount) => formatPrice(amount, 'USD'),
+      },
+      {
+        title: 'Paid Amount',
+        dataIndex: 'displayAmountOriginal',
+        key: 'displayAmountOriginal',
+        width: 150,
+        align: 'center',
+        render: (amount, record) => formatPrice(amount, record.displayCurrency),
       },
       {
         title: 'Payment Status',
@@ -246,8 +254,6 @@ const OrderPage = () => {
     ],
     [currency, pagination, rates, screenSizeFactor]
   );
-
-  console.log('Orders Data:', Orders.data);
 
   return (
     <>

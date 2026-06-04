@@ -36,7 +36,8 @@ const OrderFormModal = ({ editData, onCancel, tableQuery }) => {
         user: editData?.userId?.firstName
           ? `${editData.userId.firstName} ${editData.userId.lastName || ''}`.trim()
           : '',
-        amount: editData?.amount,
+        amountUSD: editData?.displayAmountUSD,
+        amountOriginal: editData?.displayAmountOriginal,
         paymentType: editData?.mode,
         status: editData?.status,
         deliveryStatus: editData?.deliveryStatus,
@@ -111,21 +112,24 @@ const OrderFormModal = ({ editData, onCancel, tableQuery }) => {
           </Select>
         </Form.Item>
 
-        {/* Amount Field */}
+        {/* Amount USD Field */}
         <Form.Item
-          label="Amount"
-          name="amount"
-          rules={[
-            { required: true, message: 'Please enter an amount' },
-            {
-              type: 'number',
-              min: 0,
-              message: 'Amount must be a positive number',
-            },
-          ]}
+          label="Amount (USD)"
+          name="amountUSD"
         >
           <InputNumber
-            placeholder="Enter amount"
+            style={{ width: '100%' }}
+            disabled={true}
+            formatter={value => `$ ${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
+          />
+        </Form.Item>
+
+        {/* Amount Original Field */}
+        <Form.Item
+          label={`Paid Amount (${editData?.displayCurrency || 'Original'})`}
+          name="amountOriginal"
+        >
+          <InputNumber
             style={{ width: '100%' }}
             disabled={true}
           />
