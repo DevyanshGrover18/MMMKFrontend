@@ -29,7 +29,8 @@ const ParticularOrder = ({ activeOrder, setActiveOrder }) => {
     shippingCharges: Number(activeOrder?.price?.shippingCharges || 0),
     couponDiscount: Number(activeOrder?.price?.couponDiscount || 0),
     creditApplied: Number(activeOrder?.price?.creditApplied || 0),
-    total: Number(activeOrder?.price?.total || activeOrder?.amount || 0),
+    total: Number(activeOrder?.price?.total || activeOrder?.totalAmount || activeOrder?.amount || 0),
+    payableTotal: Number(activeOrder?.price?.payableTotal || activeOrder?.amountDueCOD || activeOrder?.amountPaidOnline || 0),
   };
 
   const handleTranslateProductData = async (data, language) => {
@@ -355,6 +356,10 @@ const ParticularOrder = ({ activeOrder, setActiveOrder }) => {
             <h4 className="mb-2 text-lg font-semibold md:text-xl">
               {profile.paymentBreakdown}
             </h4>
+            <div className="flex justify-between mb-2 text-gray-900 font-bold border-b pb-2">
+              <p>Order Total</p>
+              <p>{formatOrderPrice(paymentSummary.total)}</p>
+            </div>
             <div className="flex justify-between mb-2 text-gray-600">
               <p>{profile.subTotal}</p>
               <p>{formatOrderPrice(paymentSummary.subtotal)}</p>
@@ -378,23 +383,19 @@ const ParticularOrder = ({ activeOrder, setActiveOrder }) => {
               </div>
             )}
             {paymentSummary.creditApplied > 0 && (
-              <div className="flex justify-between mb-2 text-green-700">
-                <p>My Credit</p>
+              <div className="flex justify-between mb-2 text-green-700 font-medium">
+                <p>Credits Used</p>
                 <p>-{formatOrderPrice(paymentSummary.creditApplied)}</p>
               </div>
             )}
 
-            {/* <div className="flex justify-between mb-2 text-gray-600">
-              <p>{t("particularOrder.shippingCharges")}</p>
-              <p>{formatCurrency(30, activeOrder?.currency || currencyCode)}</p>
-            </div>
-            <div className="flex justify-between mb-2 text-gray-600">
-              <p>{t("particularOrder.taxes")}</p>
-              <p>{formatCurrency(98, activeOrder?.currency || currencyCode)}</p>
-            </div> */}
-            <div className="flex justify-between pt-2 mt-4 font-semibold text-black border-t">
-              <p>{profile.totalPaidByCustomer}</p>
-              <p>{formatOrderPrice(paymentSummary.total)}</p>
+            <div className="flex justify-between pt-2 mt-4 font-bold text-lg text-black border-t border-black">
+              <p>
+                {activeOrder?.paymentMethod?.includes('cod') || activeOrder?.mode === 'cod' 
+                  ? 'Amount Due on Delivery' 
+                  : activeOrder?.paymentStatus === 'Paid' ? 'Amount Paid' : 'Amount to be Paid'}
+              </p>
+              <p>{formatOrderPrice(paymentSummary.payableTotal)}</p>
             </div>
           </div>
 

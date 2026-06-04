@@ -143,6 +143,22 @@ export default function OrdersTable({ data, tableQuery, setIsEditData }) {
       sorter: (a, b) => a.displayAmountOriginal - b.displayAmountOriginal,
     },
     {
+      title: 'Pending Amount (COD)',
+      dataIndex: 'displayPendingAmount',
+      key: 'displayPendingAmount',
+      render: (amount, record) => {
+        if (record.mode === 'cod' && amount > 0) {
+          return (
+            <span className="text-red-600 font-bold">
+              {formatPrice(amount, record.displayCurrency)}
+            </span>
+          );
+        }
+        return '-';
+      },
+      sorter: (a, b) => a.displayPendingAmount - b.displayPendingAmount,
+    },
+    {
       title: 'Payment Status',
       dataIndex: 'paymentStatus',
       key: 'paymentStatus',

@@ -157,6 +157,23 @@ const OrderPage = () => {
         render: (amount, record) => formatPrice(amount, record.displayCurrency),
       },
       {
+        title: 'Pending Amount (COD)',
+        dataIndex: 'displayPendingAmount',
+        key: 'displayPendingAmount',
+        width: 180,
+        align: 'center',
+        render: (amount, record) => {
+          if ((record.mode === 'cod' || record.paymentMethod?.includes('cod')) && amount > 0) {
+            return (
+              <span className="text-red-600 font-bold">
+                {formatPrice(amount, record.displayCurrency)}
+              </span>
+            );
+          }
+          return '-';
+        },
+      },
+      {
         title: 'Payment Status',
         dataIndex: 'paymentStatus',
         key: 'paymentStatus',

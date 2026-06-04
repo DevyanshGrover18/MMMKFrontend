@@ -39,6 +39,7 @@ const OrderFormModal = ({ editData, onCancel, tableQuery }) => {
         amountUSD: editData?.displayAmountUSD,
         amountOriginal: editData?.displayAmountOriginal,
         paymentType: editData?.mode,
+        pendingAmount: editData?.displayPendingAmount,
         status: editData?.status,
         deliveryStatus: editData?.deliveryStatus,
         paymentStatus: editData?.paymentStatus,
@@ -134,6 +135,18 @@ const OrderFormModal = ({ editData, onCancel, tableQuery }) => {
             disabled={true}
           />
         </Form.Item>
+
+        {editData?.mode === 'cod' && (
+          <Form.Item
+            label={`Pending Amount (COD) (${editData?.displayCurrency || 'Original'})`}
+            name="pendingAmount"
+          >
+            <InputNumber
+              style={{ width: '100%', color: 'red', fontWeight: 'bold' }}
+              disabled={true}
+            />
+          </Form.Item>
+        )}
 
         {/* Payment Type Field */}
         <Form.Item

@@ -72,10 +72,37 @@ const MyOrders = () => {
       dataIndex: 'amount',
       key: 'amount',
       align: 'center',
-      width: 120,
+      width: 150,
       render: (amount, record) => {
-        const total = Number(record?.price?.total || amount || 0);
-        return formatPrice(total, record?.currency || currency);
+        const total = Number(record?.price?.total || record?.totalAmount || amount || 0);
+        const payable = Number(record?.price?.payableTotal || record?.amountDueCOD || record?.amountPaidOnline || 0);
+        const isCOD = record?.paymentMethod?.includes('cod') || record?.mode === 'cod';
+        
+        if (isCOD && payable > 0) {
+          return (
+            <div className="flex flex-col items-center">
+              <span className="text-gray-400 line-through text-xs">
+                {formatPrice(total, record?.currency || currency)}
+              </span>
+              <span className="text-red-600 font-bold text-sm whitespace-nowrap">
+                Pay {formatPrice(payable, record?.currency || currency)} on delivery
+              </span>
+            </div>
+          );
+        }
+
+        const isPaid = record?.paymentStatus === 'Paid';
+
+        return (
+          <div className="flex flex-col items-center">
+             <span className="font-semibold">
+                {formatPrice(total, record?.currency || currency)}
+              </span>
+              <span className={`${isPaid ? 'text-green-600' : 'text-amber-500'} font-bold text-xs uppercase`}>
+                {isPaid ? 'Paid' : 'Payment Pending'}
+              </span>
+          </div>
+        );
       },
     },
     {

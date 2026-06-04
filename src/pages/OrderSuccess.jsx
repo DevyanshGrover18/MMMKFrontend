@@ -39,11 +39,15 @@ const OrderSuccess = () => {
     order?.juraSyncStatus || order?.depoterSyncStatus || 'Pending';
   const juraOrderId = order?.jura_order_id || order?.depoter_order_id || null;
   const juraSyncError = order?.juraSyncError || order?.depoterSyncError || null;
-  const orderTotal = Number(order?.price?.total || order?.amount || 0);
+  const orderTotal = Number(order?.price?.total || order?.totalAmount || order?.amount || 0);
+  const creditApplied = Number(order?.price?.creditApplied || order?.creditsUsed || 0);
+  const payableTotal = Number(order?.price?.payableTotal || order?.amountDueCOD || order?.amountPaidOnline || (orderTotal - creditApplied));
   
   const orderCurrency = order?.currency || currency;
   
   const displayTotal = convertStoredPrice(orderTotal, orderCurrency, currency, rates);
+  const displayCredits = convertStoredPrice(creditApplied, orderCurrency, currency, rates);
+  const displayPayable = convertStoredPrice(payableTotal, orderCurrency, currency, rates);
 
   useEffect(() => {
     if (!order) return;
@@ -198,13 +202,37 @@ const OrderSuccess = () => {
                     </p>
                   </div>
                 )}
-                <div>
-                  <p className="text-xs uppercase tracking-[0.3em] text-gray-500">
-                    Total
-                  </p>
-                  <p className="mt-1 text-lg font-semibold text-gray-900">
-                    {formatPrice(displayTotal, currency)}
-                  </p>
+                <div className="md:col-span-2 border-t pt-4 mt-2">
+                  <div className="flex flex-col gap-2 max-w-sm">
+                    <div className="flex justify-between items-center">
+                      <p className="text-xs uppercase tracking-[0.3em] text-gray-500">
+                        Total
+                      </p>
+                      <p className="text-lg font-semibold text-gray-900">
+                        {formatPrice(displayTotal, currency)}
+                      </p>
+                    </div>
+                    {displayCredits > 0 && (
+                      <div className="flex justify-between items-center text-green-600">
+                        <p className="text-xs uppercase tracking-[0.3em]">
+                          Credits Used
+                        </p>
+                        <p className="text-lg font-semibold">
+                          -{formatPrice(displayCredits, currency)}
+                        </p>
+                      </div>
+                    )}
+                    <div className="flex justify-between items-center border-t pt-2 mt-1">
+                      <p className="text-xs uppercase tracking-[0.3em] text-gray-500">
+                        {order?.paymentMethod?.includes('cod') || order?.mode === 'cod' 
+                          ? 'Amount Due' 
+                          : order?.paymentStatus === 'Paid' ? 'Amount Paid' : 'Amount to be Paid'}
+                      </p>
+                      <p className="text-xl font-bold text-5th">
+                        {formatPrice(displayPayable, currency)}
+                      </p>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
