@@ -59,11 +59,9 @@ const Home = () => {
           <BikiniSection />
         </Suspense>
       </LazySection>
-      <LazySection minHeight="580px">
         <Suspense fallback={<div className="h-[680px]" />}>
           <RecommendedSection />
         </Suspense>
-      </LazySection>
       <LazySection minHeight="500px">
         <Suspense fallback={<div className="h-[700px]" />}>
           <BannerSection />
