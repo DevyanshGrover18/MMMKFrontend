@@ -24,9 +24,9 @@ const NewPassword = () => {
 
   useEffect(() => {
     if (!params.token) {
-      return <Navigate to="/" />;
+      navigate('/auth');
     }
-  }, []);
+  }, [params.token, navigate]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();

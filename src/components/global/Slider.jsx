@@ -104,19 +104,28 @@ export default function Slider() {
       window.addEventListener('resize', updateScrollBounds);
     }
 
-    const scrollInterval = window.setInterval(() => {
-      const maxScroll = maxScrollRef.current;
-      if (isHoveringRef.current || isTouchingRef.current || maxScroll <= 0)
-        return;
+    let animationId;
+    let scrollPos = carousel.scrollLeft;
 
-      if (carousel.scrollLeft < maxScroll) {
-        carousel.scrollLeft += 1;
+    const animate = () => {
+      const maxScroll = maxScrollRef.current;
+      if (!isHoveringRef.current && !isTouchingRef.current && maxScroll > 0) {
+        scrollPos += 0.5; // Slow scroll speed
+        if (scrollPos >= maxScroll) {
+          scrollPos = 0;
+        }
+        carousel.scrollLeft = scrollPos;
+      } else {
+        // Sync scrollPos with actual scroll position if user scrolled manually or hovering
+        scrollPos = carousel.scrollLeft;
       }
-      // at the end — do nothing, just stop
-    }, 50);
+      animationId = requestAnimationFrame(animate);
+    };
+
+    animationId = requestAnimationFrame(animate);
 
     return () => {
-      window.clearInterval(scrollInterval);
+      cancelAnimationFrame(animationId);
       resizeObserver?.disconnect();
       window.removeEventListener('resize', updateScrollBounds);
     };
@@ -143,6 +152,7 @@ export default function Slider() {
             onTouchStart={handleTouchStart}
             onTouchEnd={handleTouchEnd}
             renderItem={renderCategorySlide}
+            style={{ scrollSnapType: 'none' }}
           />
         </div>
       </div>

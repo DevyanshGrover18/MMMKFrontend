@@ -5,7 +5,7 @@ import {
   deleteSupport,
   addReply,
 } from '../../../apis/admin/support';
-import { Button, message, Modal, Form, Space, Table, Input } from 'antd';
+import { Button, message, Modal, Form, Space, Table, Input, Tag } from 'antd';
 import PageTitle from '../../UI/PageTitle';
 import { DeleteButton, RefreshButton, ViewButton } from '../../UI/Buttons';
 import SearchInTable from '../../UI/SearchInTable';
@@ -93,11 +93,30 @@ const SupportPage = () => {
         align: 'center',
       },
       {
+        title: 'Subject',
+        dataIndex: 'subject',
+        key: 'subject',
+        render: (subject) => subject || 'Contact Us',
+      },
+      {
         title: 'Query',
         dataIndex: 'query',
         key: 'query',
-        render: (query) =>
-          query?.length > 80 ? `${query.slice(0, 80)}...` : query || '-',
+        render: (query, record) => {
+          const text = query || record.description;
+          return text?.length > 50 ? `${text.slice(0, 50)}...` : text || '-';
+        },
+      },
+      {
+        title: 'Source',
+        dataIndex: 'source',
+        key: 'source',
+        align: 'center',
+        render: (source) => (
+          <Tag color={source === 'enquiry' ? 'blue' : 'green'}>
+            {(source || 'contact-us').toUpperCase()}
+          </Tag>
+        ),
       },
       {
         title: 'Locale',
@@ -155,6 +174,9 @@ const SupportPage = () => {
               </a>
             </p>
             <p>
+              <strong>Subject:</strong> {viewModal.record.subject || 'Contact Us'}
+            </p>
+            <p>
               <strong>Contact Number:</strong> {viewModal.record.phone}
             </p>
             <p>
@@ -190,7 +212,8 @@ const SupportPage = () => {
               { label: 'Name', value: 'name' },
               { label: 'Email', value: 'email' },
               { label: 'Contact Number', value: 'phone' },
-              { label: 'Query', value: 'query' },
+              { label: 'Subject', value: 'subject' },
+              { label: 'Source', value: 'source' },
               { label: 'Locale', value: 'locale' },
             ]}
             onSearch={(value, key) => {

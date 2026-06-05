@@ -2,6 +2,7 @@
 /* eslint-disable no-unused-vars */
 import { Table, Button, Empty } from 'antd';
 import { FaEye, FaExchangeAlt } from 'react-icons/fa';
+import { TbGiftCard } from 'react-icons/tb';
 import { useQuery } from '@tanstack/react-query';
 import { getOrders } from '../../apis/user/order';
 import { useState } from 'react';
@@ -21,18 +22,43 @@ const MyOrders = () => {
   const { currency } = useCurrency();
   const [activeOrder, setActiveOrder] = useState(null);
   const [searchOrder, setSearchOrder] = useState(null);
+  const [pagination, setPagination] = useState({
+    current: 1,
+    pageSize: 10,
+  });
 
   const Orders = useQuery({
-    queryKey: ['orders'],
-    queryFn: () => getOrders({ orderId: searchOrder }),
+    queryKey: ['orders', pagination.current, pagination.pageSize, searchOrder],
+    queryFn: () => getOrders({ 
+      orderId: searchOrder, 
+      page: pagination.current, 
+      limit: pagination.pageSize 
+    }),
     retry: false,
   });
+
+  const handleTableChange = (newPagination) => {
+    setPagination({
+      current: newPagination.current,
+      pageSize: newPagination.pageSize,
+    });
+  };
 
   const columns = [
     {
       title: profile.orderId,
       dataIndex: 'orderId',
       key: 'orderId',
+      render: (orderId, record) => {
+        const isGiftCard = record?.temp?.purchaseType === 'gift-card';
+        return isGiftCard ? (
+          <span className="font-bold text-orange-600 flex items-center gap-1">
+            <TbGiftCard className="inline" /> GIFT CARD
+          </span>
+        ) : (
+          orderId
+        );
+      },
     },
     {
       title: profile.date,
@@ -48,6 +74,10 @@ const MyOrders = () => {
       key: 'status',
       align: 'center',
       width: 100,
+      render: (status, record) => {
+        const isGiftCard = record?.temp?.purchaseType === 'gift-card';
+        return isGiftCard ? '-' : status;
+      },
     },
     {
       title: profile.paymentMethod,
@@ -179,9 +209,15 @@ const MyOrders = () => {
         <Table
           dataSource={Orders.data?.data}
           columns={columns}
-          rowKey="orderId"
+          rowKey="_id"
           bordered
-          pagination={{ pageSize: 5 }}
+          onChange={handleTableChange}
+          pagination={{
+            current: pagination.current,
+            pageSize: pagination.pageSize,
+            total: Orders.data?.pagination?.total || 0,
+            showSizeChanger: true,
+          }}
           scroll={{ x: 900 }}
           loading={Orders.isFetching}
         />

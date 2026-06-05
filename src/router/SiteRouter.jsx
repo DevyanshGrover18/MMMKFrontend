@@ -20,6 +20,8 @@ const ShoppingCart = lazy(() => import('../pages/ShoppingCart').catch(() => { wi
 const Checkout = lazy(() => import('../pages/Checkout').catch(() => { window.location.reload(); }));
 const ThankYou = lazy(() => import('../pages/ThankYou').catch(() => { window.location.reload(); }));
 const OrderSuccess = lazy(() => import('../pages/OrderSuccess').catch(() => { window.location.reload(); }));
+const GiftCardSuccess = lazy(() => import('../pages/GiftCardSuccess').catch(() => { window.location.reload(); }));
+const GiftCardCancel = lazy(() => import('../pages/GiftCardCancel').catch(() => { window.location.reload(); }));
 const PaymentCancel = lazy(() => import('../pages/PaymentCancel').catch(() => { window.location.reload(); }));
 const BuyGiftCard = lazy(() => import('../pages/BuyGiftCard').catch(() => { window.location.reload(); }));
 const GiftCard = lazy(() => import('../pages/GiftCard').catch(() => { window.location.reload(); }));
@@ -106,6 +108,26 @@ export default function SiteRouter() {
               <UserProtectedRoute>
                 <Suspense fallback={<SiteLoading />}>
                   <OrderSuccess />
+                </Suspense>
+              </UserProtectedRoute>
+            }
+          />
+          <Route
+            path="/gift-card-success/:orderId"
+            element={
+              <UserProtectedRoute>
+                <Suspense fallback={<SiteLoading />}>
+                  <GiftCardSuccess />
+                </Suspense>
+              </UserProtectedRoute>
+            }
+          />
+          <Route
+            path="/gift-card-cancel"
+            element={
+              <UserProtectedRoute>
+                <Suspense fallback={<SiteLoading />}>
+                  <GiftCardCancel />
                 </Suspense>
               </UserProtectedRoute>
             }

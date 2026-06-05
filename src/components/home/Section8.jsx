@@ -8,10 +8,10 @@ const Section8 = () => {
   } = useTranslationContext();
 
   return (
-    <div className="grid w-full grid-cols-1 overflow-hidden md:min-h-screen md:grid-cols-12">
+    <div className="grid w-full grid-cols-1 md:grid-cols-12 overflow-hidden md:min-h-screen">
       {/* Box 1 */}
       <div
-        className="col-span-12 flex min-h-[320px] items-center justify-center px-4 py-10 md:col-span-5 md:min-h-0 md:px-0 md:py-0"
+        className="col-span-1 flex h-[250px] items-center justify-center px-4 py-10 md:col-span-5 md:h-full md:px-0 md:py-0"
         style={{
           backgroundImage: `url("/section8Left.png")`,
           backgroundSize: 'cover',
@@ -20,18 +20,16 @@ const Section8 = () => {
         }}
       >
           <div className="max-w-full p-4 text-center">
-          <h4 className="mb-6 text-lg font-bold md:mb-10 md:text-2xl">
-            {/* {query.data?.data?.leftTitle[i18n.language]} */}
+          <h4 className="mb-2 text-sm font-bold md:mb-10 md:text-2xl">
             {common.mmmk}
           </h4>
-          <p className="mb-8 flex flex-col gap-3 text-lg leading-8 tracking-[4px] sm:text-xl md:gap-4 md:text-xl md:leading-10 md:tracking-[10px] lg:text-4xl lg:tracking-[14px]">
-            {/* {query.data?.data?.leftSubtitle[i18n.language] */}
+          <p className="mb-4 flex flex-row flex-wrap justify-center gap-2 text-lg leading-tight tracking-[2px] md:mb-8 md:flex-col md:gap-4 md:text-xl md:leading-10 md:tracking-[10px] lg:text-4xl lg:tracking-[14px]">
             {homepage.section4Heading1?.split(' ').map((word) => (
               <span key={word}>{word}</span>
             ))}
           </p>
           <Button4
-            className="pointer-events-none"
+            className="!static !px-4 !py-1.5 !text-[10px] md:!relative md:!top-8 md:!px-12 md:!py-3 md:!text-base pointer-events-none"
             isLink
             to="/product-listings"
           >
@@ -40,50 +38,47 @@ const Section8 = () => {
         </div>
       </div>
 
-      {/* Box 2 */}
-      <div className="col-span-12 flex min-h-[320px] flex-col items-center justify-center bg-yellow-900 p-4 py-10 text-center text-white md:col-span-2 md:min-h-0 md:p-6 md:py-[150px]">
+      {/* Box 2 - Horizontal Strip on Mobile */}
+      <div className="col-span-1 flex flex-row items-center justify-between bg-yellow-900 px-4 py-3 text-center text-white md:col-span-2 md:flex-col md:justify-center md:min-h-0 md:p-6 md:py-[150px]">
         <img
           src="Wode Logo.png"
-          className="w-20 h-20 mb-6 md:w-32 md:h-32"
+          className="w-10 h-10 md:w-32 md:h-32"
           alt={common.mmmk}
           width="128"
           height="128"
           loading="lazy"
           decoding="async"
         />
-        <p className="mb-8 flex flex-col gap-3 text-sm leading-8 tracking-[2px] md:gap-4 md:text-lg md:leading-10 md:tracking-[5px] lg:text-2xl">
-          {/* {query.data?.data?.centerTitle[i18n.language] */}
+        <p className="flex flex-row flex-wrap justify-center gap-1 text-[10px] font-medium uppercase tracking-wider md:my-8 md:flex-col md:gap-4 md:text-lg md:leading-10 md:tracking-[5px] lg:text-2xl">
           {homepage.section4Heading2?.split(' ').map((word) => (
             <span key={word}>{word}</span>
           ))}
         </p>
 
-        <Button4 isLink to={getModuleUrl('category', 'Jewellery & Accessories')}>
+        <Button4 
+          isLink 
+          to={getModuleUrl('category', 'Jewellery & Accessories')}
+          className="!static !px-4 !py-1.5 !text-[10px] md:!relative md:!top-8 md:!px-12 md:!py-3 md:!text-base"
+        >
           {common.shopNow}
         </Button4>
       </div>
 
       {/* Box 3 */}
       <div
-        className="col-span-12 flex min-h-[320px] items-center justify-center px-4 py-10 md:col-span-5 md:min-h-0 md:px-0 md:py-0"
+        className="col-span-1 flex h-[250px] items-center justify-center px-4 py-10 md:col-span-5 md:h-full md:px-0 md:py-0"
         style={{
-          // backgroundImage: `url(${
-          //   import.meta.env.VITE_IMAGE_URL + query.data?.data?.rightImage
-          // })`,
           backgroundImage: `url("/static8Right.jpg")`,
-
           backgroundSize: 'cover',
           backgroundPosition: 'center',
           backgroundRepeat: 'no-repeat',
         }}
       >
         <div className="max-w-full p-4 text-center text-white">
-          <h4 className="mb-6 text-lg font-bold md:mb-10 md:text-2xl">
-            {/* {query.data?.data?.rightTitle[i18n.language]} */}
+          <h4 className="mb-2 text-sm font-bold md:mb-10 md:text-2xl">
             {common.mmmk}
           </h4>
-          <p className="mb-8 flex flex-col gap-3 text-lg leading-8 tracking-[4px] sm:text-xl md:gap-4 md:text-xl md:leading-10 md:tracking-[8px] lg:text-4xl lg:tracking-[10px]">
-            {/* {query.data?.data?.rightSubtitle[i18n.language] */}
+          <p className="mb-4 flex flex-row flex-wrap justify-center gap-2 text-lg leading-tight tracking-[2px] md:mb-8 md:flex-col md:gap-4 md:text-xl md:leading-10 md:tracking-[8px] lg:text-4xl lg:tracking-[10px]">
             {homepage.section4Heading3?.split(' ').map((word) => (
               <span key={word}>{word}</span>
             ))}
@@ -91,6 +86,7 @@ const Section8 = () => {
           <Button4
             isLink
             to={getModuleUrl('category', 'Jewellery & Accessories')}
+            className="!static !px-4 !py-1.5 !text-[10px] md:!relative md:!top-8 md:!px-12 md:!py-3 md:!text-base"
           >
             {common.shopNow}
           </Button4>

@@ -26,7 +26,7 @@ const products = [
     title: 'Mada',
     OriginalPrice: 59,
     OfferedPrice: 54,
-    productId: '',
+    productId: '69ef60705f9f6f03b48d592e',
   },
   {
     id: 3,

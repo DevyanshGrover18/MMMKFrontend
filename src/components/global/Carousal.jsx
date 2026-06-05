@@ -2,7 +2,7 @@ import { forwardRef, memo } from 'react';
 
 const CustomCarousel = memo(
   forwardRef(function CustomCarousel(
-    { items = [], renderItem, onMouseEnter, onMouseLeave, onTouchStart, onTouchEnd },
+    { items = [], renderItem, onMouseEnter, onMouseLeave, onTouchStart, onTouchEnd, style = {} },
     ref
   ) {
     return (
@@ -15,12 +15,13 @@ const CustomCarousel = memo(
           ref={ref}
           className="overflow-x-auto flex items-center my-carousel"
           style={{
-            scrollBehavior: 'smooth',
+            scrollBehavior: 'auto',
             scrollbarWidth: 'none',
             msOverflowStyle: 'none',
             WebkitOverflowScrolling: 'touch',
             touchAction: 'pan-x',
             scrollSnapType: 'x mandatory',
+            ...style
           }}
           onTouchStart={onTouchStart}
           onTouchEnd={onTouchEnd}

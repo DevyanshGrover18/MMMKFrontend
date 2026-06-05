@@ -54,7 +54,7 @@ const Home = () => {
           <Section2 />
         </Suspense>
       </LazySection>
-      <LazySection minHeight="900px">
+      <LazySection minHeight="550px">
         <Suspense fallback={<div className="h-[900px]" />}>
           <BikiniSection />
         </Suspense>
@@ -77,11 +77,11 @@ const Home = () => {
           <Section6 />
         </Suspense>
       </LazySection>
-      <LazySection minHeight="680px">
+      {/* <LazySection minHeight="680px"> */}
         <Suspense fallback={<div className="h-[680px]" />}>
           <VideoCard />
         </Suspense>
-      </LazySection>
+      {/* </LazySection> */}
       {/* <Section9 /> */}
       <LazySection minHeight="520px">
         <Suspense fallback={<div className="h-[520px]" />}>
@@ -108,16 +108,16 @@ const Home = () => {
           <LuxurySection />
         </Suspense>
       </LazySection>
-      <LazySection minHeight="720px">
+      {/* <LazySection minHeight="720px"> */}
         <Suspense fallback={<div className="h-[720px]" />}>
           <Section10 />
         </Suspense>
-      </LazySection>
-      <LazySection minHeight="720px">
+      {/* </LazySection> */}
+      {/* <LazySection minHeight="720px"> */}
         <Suspense fallback={<div className="h-[720px]" />}>
           <Section11 />
         </Suspense>
-      </LazySection>
+      {/* </LazySection> */}
       <LazySection minHeight="240px">
         <Suspense fallback={<div className="h-[240px]" />}>
           <NewsLetter />

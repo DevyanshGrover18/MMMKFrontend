@@ -5,7 +5,7 @@ import { useInView } from 'framer-motion';
 // Import Swiper styles
 import 'swiper/css';
 import 'swiper/css/pagination';
-import { Pagination } from 'swiper/modules';
+import { Pagination, Mousewheel } from 'swiper/modules';
 import { useTranslationContext } from '../../context/TranslationContext';
 
 const VideoPlayer = ({ videoSrc }) => {
@@ -50,10 +50,12 @@ const VideoPlayer = ({ videoSrc }) => {
   );
 };
 
-export default function Section10() {
+export default function Section10({ direction = 'horizontal' }) {
   const {
     content: { common },
   } = useTranslationContext();
+
+  const isVertical = direction === 'vertical';
 
   return (
     <div className="videoSwiper py-10 md:py-[50px]">
@@ -67,14 +69,29 @@ export default function Section10() {
       </div>
 
       {/* Swiper Container */}
-      <div className="px-4 sm:px-6 md:px-12 lg:px-16">
+      <div className={`px-4 sm:px-6 md:px-12 lg:px-16 ${isVertical ? 'h-[600px] md:h-[700px]' : ''}`}>
         <Swiper
+          direction={direction}
           slidesPerView={1} // Default to 1 for mobile
           spaceBetween={20}
           pagination={{ clickable: true }}
-          modules={[Pagination]}
-          className="mySwiper"
-          breakpoints={{
+          modules={[Pagination, ...(isVertical ? [Mousewheel] : [])]}
+          mousewheel={isVertical}
+          className={`mySwiper ${isVertical ? 'h-full' : ''}`}
+          breakpoints={isVertical ? {
+            640: {
+              slidesPerView: 1.5,
+              spaceBetween: 20,
+            },
+            768: {
+              slidesPerView: 2,
+              spaceBetween: 30,
+            },
+            1024: {
+              slidesPerView: 2,
+              spaceBetween: 40,
+            },
+          } : {
             640: {
               slidesPerView: 2, // 2 slides for small devices
               spaceBetween: 20,

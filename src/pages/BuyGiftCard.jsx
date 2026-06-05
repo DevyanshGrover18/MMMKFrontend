@@ -34,11 +34,14 @@ const BuyGiftCard = () => {
     year: 'numeric',
   }).format(new Date(Date.now() + 365 * 24 * 60 * 60 * 1000));
 
-  // Predefined gift card amounts
-  const predefinedAmounts = [25, 75, 100, 250, 500, 1000];
+  // Predefined gift card amounts based on currency
+  const predefinedAmounts = 
+    currency === 'INR' ? [500, 1000, 2000, 5000, 10000] :
+    currency === 'AED' ? [50, 100, 250, 500, 1000] :
+    [25, 50, 100, 250, 500]; // Default (USD/EUR etc)
 
-  const handleAmountSelect = (amount) => {
-    form.setFieldValue('amount', amount);
+  const handleAmountSelect = (value) => {
+    form.setFieldValue('amount', value);
   };
 
   const handleSubmit = async (values) => {
@@ -106,7 +109,7 @@ const BuyGiftCard = () => {
       if (paymentIntent?.paidWithCredits && paymentIntent?.orderId) {
         message.success('Gift card purchase completed successfully');
         form.resetFields();
-        navigate(`/order-success/${paymentIntent.orderId}`);
+        navigate(`/gift-card-success/${paymentIntent.orderId}`);
         return;
       }
 

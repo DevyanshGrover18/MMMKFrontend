@@ -5,6 +5,7 @@ import { useTranslationContext } from '../../context/TranslationContext';
 
 const BannerSlider = () => {
   const [currentNumber, setCurrentNumber] = useState(0);
+  const [isHovered, setIsHovered] = useState(false);
   const {
     content: { common },
   } = useTranslationContext();
@@ -41,15 +42,21 @@ const BannerSlider = () => {
   };
 
   useEffect(() => {
+    if (isHovered) return;
+
     const interval = setInterval(() => {
       setCurrentNumber((prevNumber) => (prevNumber + 1) % data.length);
     }, 3000); // Change slide every 3 seconds
 
     return () => clearInterval(interval); // Cleanup interval on component unmount
-  }, [data.length]);
+  }, [data.length, isHovered]);
 
   return (
-    <div className="w-full flex flex-col lg:flex-row bg-[#59605c] py-10">
+    <div
+      className="w-full flex flex-col lg:flex-row bg-[#59605c] py-10"
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+    >
       {/* Image Section */}
       <div className="w-full lg:w-[50%] text-center mb-10 lg:mb-0">
         <img
