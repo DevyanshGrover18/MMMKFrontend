@@ -58,14 +58,14 @@ const ReviewPage = () => {
         title: 'Product',
         dataIndex: 'product',
         key: 'product',
-        render: (product) => product?.productName?.en,
+        render: (product) => product?.productName?.en || <span className="text-gray-400 italic">Deleted Product</span>,
       },
       {
         title: 'User',
         dataIndex: 'user',
         key: 'user',
         align: 'center',
-        render: (user) => user?.firstName,
+        render: (user) => user?.firstName || <span className="text-gray-400 italic">Deleted User</span>,
       },
       {
         title: 'Review',
@@ -77,7 +77,7 @@ const ReviewPage = () => {
             type="link"
             onClick={() =>
               Modal.info({
-                title: 'Review by ' + record.user.firstName,
+                title: 'Review by ' + (record.user?.firstName || 'Deleted User'),
                 content: (
                   <div className="flex items-start gap-2">
                     <span className="flex items-center gap-1 border rounded-md px-2">

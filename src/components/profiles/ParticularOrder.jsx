@@ -182,12 +182,19 @@ const ParticularOrder = ({ activeOrder, setActiveOrder }) => {
               >
                 <div className="flex">
                   <img
-                    src={resolveAssetUrl(product?.id?.images?.[0])}
+                    src={
+                      product.sku === 'MMMK-BAG' 
+                        ? '/mmmk-bag.jpeg' 
+                        : resolveAssetUrl(product?.id?.images?.[0])
+                    }
+                    onError={(e) => {
+                      if (product.sku === 'MMMK-BAG') e.target.src = '/logoIcon1.jpg';
+                    }}
                     className="object-cover w-20 h-20 mr-4 rounded bg-white"
                   />
                   <div className="flex-1">
                     <h3 className="text-lg font-semibold">
-                      {activeOrder.translated?.[`productName_${index}`] || product?.name}
+                      {product.sku === 'MMMK-BAG' ? 'MMMK Exclusive Bag' : (activeOrder.translated?.[`productName_${index}`] || product?.name)}
                     </h3>
                     <div className="flex items-center justify-between mt-2">
                       <div className="flex items-center gap-4">

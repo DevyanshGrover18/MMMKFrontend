@@ -130,10 +130,24 @@ const normalizeRange = (range = [], rangeType = 'month') => {
 };
 
 const getSequentialChartLabels = (series = [], rangeType = 'month') => {
-  const prefix =
-    rangeType === 'date' ? 'Day' : rangeType === 'week' ? 'Week' : 'Month';
+  if (!Array.isArray(series) || series.length === 0) return [];
 
-  return series.map((_, index) => `${prefix} ${index + 1}`);
+  return series.map((item) => {
+    const dateValue = getPointDate(item);
+    const date = dayjs(dateValue);
+    
+    if (!date.isValid()) return 'Unknown';
+
+    switch (rangeType) {
+      case 'date':
+        return date.format('DD MMM');
+      case 'week':
+        return `Wk ${date.format('DD MMM')}`;
+      case 'month':
+      default:
+        return date.format('MMM YYYY');
+    }
+  });
 };
 
 const getSeriesByType = (data, seriesName, rangeType) => {

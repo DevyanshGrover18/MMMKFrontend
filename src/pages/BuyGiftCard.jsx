@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { Form, Input, InputNumber, message } from 'antd';
 import Banner from '../components/global/Banner';
 import CategoryNavBar from '../components/global/CategoryNavBar';
@@ -10,7 +10,7 @@ import bg from '../assets/bg.png';
 import { useNavigate } from 'react-router-dom';
 import { createPaymentIntent } from '../apis/user/payment';
 import { loadStripe } from '@stripe/stripe-js';
-import { convertPrice, formatPrice } from '../utils/currency';
+import { convertPrice, formatPrice, convertStoredPrice } from '../utils/currency';
 import { useCurrency } from '../context/CurrencyContext';
 
 const BuyGiftCard = () => {
@@ -25,6 +25,24 @@ const BuyGiftCard = () => {
 
   const giftCardName = Form.useWatch('name', form);
   const amount = Form.useWatch('amount', form);
+  
+  const prevCurrencyRef = useRef(currency);
+
+  // Convert current amount when currency changes
+  useEffect(() => {
+    if (amount && prevCurrencyRef.current !== currency) {
+      const currentAmount = form.getFieldValue('amount');
+      const convertedAmount = convertStoredPrice(
+        currentAmount,
+        prevCurrencyRef.current,
+        currency,
+        rates
+      );
+      form.setFieldValue('amount', convertedAmount);
+    }
+    prevCurrencyRef.current = currency;
+  }, [currency, rates, amount, form]);
+
   const minAmount = convertPrice(10, currency, rates);
   const maxAmount = convertPrice(27000, currency, rates);
 
@@ -34,11 +52,8 @@ const BuyGiftCard = () => {
     year: 'numeric',
   }).format(new Date(Date.now() + 365 * 24 * 60 * 60 * 1000));
 
-  // Predefined gift card amounts based on currency
-  const predefinedAmounts = 
-    currency === 'INR' ? [500, 1000, 2000, 5000, 10000] :
-    currency === 'AED' ? [50, 100, 250, 500, 1000] :
-    [25, 50, 100, 250, 500]; // Default (USD/EUR etc)
+  // Predefined gift card amounts in USD
+  const predefinedAmountsUSD = [25, 50, 100, 250, 500];
 
   const handleAmountSelect = (value) => {
     form.setFieldValue('amount', value);
@@ -284,27 +299,23 @@ const BuyGiftCard = () => {
 
                     {/* Predefined Amounts */}
                     <div className="grid grid-cols-3 gap-3">
-                      {predefinedAmounts.map((value) => (
-                        <button
-                          key={value}
-                          type="button"
-                          onClick={() =>
-                            handleAmountSelect(
-                              convertPrice(value, currency, rates)
-                            )
-                          }
-                          className={`p-3 border-2 rounded-lg font-semibold transition-all ${
-                            convertPrice(value, currency, rates) === amount
-                              ? 'border-orange-200 bg-orange-50 text-orange-800'
-                              : 'border-gray-300 hover:border-orange-200'
-                          }`}
-                        >
-                          {formatPrice(
-                            convertPrice(value, currency, rates),
-                            currency
-                          )}
-                        </button>
-                      ))}
+                      {predefinedAmountsUSD.map((usdValue) => {
+                        const localValue = convertPrice(usdValue, currency, rates);
+                        return (
+                          <button
+                            key={usdValue}
+                            type="button"
+                            onClick={() => handleAmountSelect(localValue)}
+                            className={`p-3 border-2 rounded-lg font-semibold transition-all ${
+                              localValue === amount
+                                ? 'border-orange-200 bg-orange-50 text-orange-800'
+                                : 'border-gray-300 hover:border-orange-200'
+                            }`}
+                          >
+                            {formatPrice(localValue, currency)}
+                          </button>
+                        );
+                      })}
                     </div>
 
                     <Form.Item

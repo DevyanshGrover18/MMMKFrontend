@@ -164,7 +164,7 @@ const ShoppingCart = () => {
       const matchingItem = cartItems.find(
         (item) => item?.product?._id === id && item?.sku === sku
       );
-      const availableQuantity = Number(availableStockByItem[itemKey] ?? Infinity);
+      const availableQuantity = Number(availableStockByItem[itemKey] ?? matchingItem?.product?.quantity ?? Infinity);
 
       if (
         action === 'inc' &&
@@ -184,6 +184,7 @@ const ShoppingCart = () => {
           sku,
           quantity: 1,
           showMessage: false,
+          productData: matchingItem?.product, // Pass existing data to avoid API calls
         });
       else
         await removeFromCart({
@@ -201,32 +202,53 @@ const ShoppingCart = () => {
     }
   };
 
-  const handleTranslateCartData = async (data, language) => {
-    const toTranslate = data.map((item) => ({
-      productName: item?.product?.productName?.en,
-    }));
-    if (language === 'en') {
+  const translationCacheRef = React.useRef({});
+
+  const handleTranslateCartData = async (incomingData, language) => {
+    // Check if we need to translate anything
+    const needsTranslation = incomingData.filter(item => {
+      const cacheKey = `${item.product?._id}:${language}`;
+      return !translationCacheRef.current[cacheKey];
+    });
+
+    if (language === 'en' || needsTranslation.length === 0) {
       return setCartItems(
-        data.map((item, index) => ({
-          ...item,
-          translated: {
-            productName: item?.product?.productName?.en,
-          },
-        }))
+        incomingData.map((item) => {
+          const cacheKey = `${item.product?._id}:${language}`;
+          return {
+            ...item,
+            translated: {
+              productName: language === 'en' 
+                ? item?.product?.productName?.en 
+                : translationCacheRef.current[cacheKey] || item?.product?.productName?.[language] || item?.product?.productName?.en,
+            },
+          };
+        })
       );
     }
+
     const translatedProductNames = await translate(
-      toTranslate.map((item) => item.productName || ''),
+      needsTranslation.map((item) => item?.product?.productName?.en || ''),
       language
     );
 
-    const translatedCartItems = data.map((item, index) => ({
-      ...item,
-      translated: {
-        productName: translatedProductNames[index],
-      },
-    }));
-    setCartItems(translatedCartItems);
+    // Update cache
+    needsTranslation.forEach((item, index) => {
+      const cacheKey = `${item.product?._id}:${language}`;
+      translationCacheRef.current[cacheKey] = translatedProductNames[index];
+    });
+
+    setCartItems(
+      incomingData.map((item) => {
+        const cacheKey = `${item.product?._id}:${language}`;
+        return {
+          ...item,
+          translated: {
+            productName: translationCacheRef.current[cacheKey] || item?.product?.productName?.en,
+          },
+        };
+      })
+    );
   };
 
   useEffect(() => {
@@ -236,6 +258,8 @@ const ShoppingCart = () => {
       setCartItems([]);
     }
   }, [data, translateLanguage]);
+
+  const stockCacheRef = React.useRef({});
 
   useEffect(() => {
     let isMounted = true;
@@ -250,27 +274,34 @@ const ShoppingCart = () => {
         data.map(async (item) => {
           const productId = item?.product?._id;
           const sku = item?.sku;
+          const cacheKey = `${productId}:${sku}`;
 
-          if (!productId || !sku) {
-            return [
-              `${productId || 'unknown'}:${sku || ''}`,
-              Number(item?.product?.quantity || 0),
-            ];
+          // Skip if we already have a recent stock count for this exact item
+          if (stockCacheRef.current[cacheKey] !== undefined) {
+             return [cacheKey, stockCacheRef.current[cacheKey]];
           }
 
+          // Case 1: Product has no variants, stock is directly on product
           if (
-            Array.isArray(item?.product?.filters) &&
-            item.product.filters.length === 0
+            !item?.product?.filters || 
+            (Array.isArray(item.product.filters) && item.product.filters.length === 0)
           ) {
-            return [`${productId}:${sku}`, Number(item?.product?.quantity || 0)];
+            const qty = Number(item?.product?.quantity || 0);
+            stockCacheRef.current[cacheKey] = qty;
+            return [cacheKey, qty];
           }
 
+          // Case 2: Product has variants, fetch SKU details
           try {
             const productSkus = await getProductSkus(productId);
             const selectedSku = productSkus.find((skuItem) => skuItem?.sku === sku);
-            return [`${productId}:${sku}`, Number(selectedSku?.quantity || 0)];
+            const qty = Number(selectedSku?.quantity || 0);
+            stockCacheRef.current[cacheKey] = qty;
+            return [cacheKey, qty];
           } catch {
-            return [`${productId}:${sku}`, Number(item?.product?.quantity || 0)];
+            const qty = Number(item?.product?.quantity || 0);
+            stockCacheRef.current[cacheKey] = qty;
+            return [cacheKey, qty];
           }
         })
       );

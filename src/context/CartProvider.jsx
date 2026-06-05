@@ -287,26 +287,28 @@ const CartProvider = ({ children }) => {
       (item) => item.product._id === product._id && item.sku === sku
     );
 
-    if (isUserSignedIn()) {
-      try {
-        await addCartItem({
-          product: product._id,
-          sku,
-          filters,
-          quantity,
-        });
-      } catch (error) {
-        // Preserve client-side cart behavior when production cart auth fails.
-      }
+    const updatedItems = [...cartItems];
+    if (existingItemIndex > -1) {
+      updatedItems[existingItemIndex].quantity += quantity;
+    } else {
+      updatedItems.push({ product, sku, filters, quantity });
     }
 
-    if (existingItemIndex > -1) {
-      cartItems[existingItemIndex].quantity += quantity;
-    } else {
-      cartItems.push({ product, sku, filters, quantity });
+    // Update UI and Storage immediately (Optimistic)
+    setCartItems({ items: updatedItems });
+
+    if (isUserSignedIn()) {
+      addCartItem({
+        product: product._id,
+        sku,
+        filters,
+        quantity,
+      }).catch((err) => {
+        console.error('Failed to sync cart to backend:', err);
+        // Fallback: Re-sync from localStorage if needed or just keep local state
+      });
     }
-    localStorage.setItem('cartItems', JSON.stringify(cartItems));
-    setCartItems({ items: cartItems });
+
     if (showMessage)
       showNotfication({
         type: 'add',
@@ -330,20 +332,23 @@ const CartProvider = ({ children }) => {
     );
 
     if (foundIndex === -1) return;
+    
+    const updatedItems = [...cartItems];
     if (quantity > 0) {
-      cartItems[foundIndex].quantity -= quantity;
-      if (cartItems[foundIndex].quantity <= 0) {
-        cartItems.splice(foundIndex, 1);
+      updatedItems[foundIndex].quantity -= quantity;
+      if (updatedItems[foundIndex].quantity <= 0) {
+        updatedItems.splice(foundIndex, 1);
       }
     } else {
-      cartItems.splice(foundIndex, 1);
+      updatedItems.splice(foundIndex, 1);
     }
-    localStorage.setItem('cartItems', JSON.stringify(cartItems));
-    setCartItems({ items: cartItems });
+
+    // Update UI and Storage immediately (Optimistic)
+    setCartItems({ items: updatedItems });
 
     if (isUserSignedIn()) {
-      removeCartItems(productId, sku, quantity).catch(() => {
-        // Local cart remains the source of truth if backend removal fails.
+      removeCartItems(productId, sku, quantity).catch((err) => {
+         console.error('Failed to sync cart removal to backend:', err);
       });
     }
 
@@ -393,15 +398,29 @@ const CartProvider = ({ children }) => {
     sku,
     quantity = 1,
     showMessage,
+    productData = null, // Optional: pass data to avoid API call
   }) => {
-    const res = await getSingleProduct(productId);
-    const skus = await getProductSkus(productId);
-    const selectedSku = skus.find((s) => s.sku === sku);
+    let finalProduct = productData;
+    let selectedSku = null;
 
-    if (!res?.data) {
-      message.error('Product not found');
-      return false;
+    if (!finalProduct) {
+      const res = await getSingleProduct(productId);
+      finalProduct = res?.data;
+      if (!finalProduct) {
+        message.error('Product not found');
+        return false;
+      }
     }
+
+    // Resolve SKU details
+    if (Array.isArray(finalProduct?.filters) && finalProduct.filters.length === 0) {
+      // Product has no variants
+      selectedSku = { sku: sku || productId, quantity: finalProduct.quantity, filters: {} };
+    } else {
+      const skus = await getProductSkus(productId);
+      selectedSku = skus.find((s) => s.sku === sku);
+    }
+
     if (!selectedSku) {
       message.error('Selected SKU not found for this product.');
       return false;
@@ -421,10 +440,7 @@ const CartProvider = ({ children }) => {
       return total;
     }, 0);
 
-    const availableQuantity =
-      Array.isArray(res?.data?.filters) && res.data.filters.length === 0
-        ? Number(res?.data?.quantity || 0)
-        : Number(selectedSku?.quantity || 0);
+    const availableQuantity = Number(selectedSku?.quantity || 0);
     const remainingQuantity = availableQuantity - currentQuantityInCart;
 
     if (remainingQuantity <= 0) {
@@ -440,7 +456,7 @@ const CartProvider = ({ children }) => {
     }
 
     await addToCart({
-      product: res.data,
+      product: finalProduct,
       sku: selectedSku.sku,
       filters: selectedSku.filters,
       quantity: requestedQuantity,

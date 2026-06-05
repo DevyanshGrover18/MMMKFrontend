@@ -395,7 +395,7 @@ export const GiftCard = () => {
           })
         }
         onOk={handleShareSubmit}
-        okText="Save Recipient"
+        okText="Send"
         confirmLoading={shareGiftCardMutation.isPending}
         centered
       >
