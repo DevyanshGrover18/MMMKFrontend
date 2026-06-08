@@ -1,9 +1,15 @@
 import { createUserApiClient } from './client';
 
 const order = createUserApiClient('/api/v1/user/order', 30000);
+const guestOrder = createUserApiClient('/api/v1/order', 30000);
 
 export const createManualOrder = async (data) => {
   const response = await order.post('/create', data);
+  return response.data;
+};
+
+export const createGuestOrder = async (data) => {
+  const response = await guestOrder.post('/create-guest', data);
   return response.data;
 };
 

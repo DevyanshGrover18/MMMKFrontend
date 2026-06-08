@@ -54,7 +54,7 @@ const Home = () => {
           <Section2 />
         </Suspense>
       </LazySection>
-      <LazySection minHeight="550px">
+      <LazySection minHeight="55wishlist will still require 0px">
         <Suspense fallback={<div className="h-[900px]" />}>
           <BikiniSection />
         </Suspense>

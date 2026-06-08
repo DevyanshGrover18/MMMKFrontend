@@ -7,7 +7,7 @@ export const getValidTokens = async () => {
   return response.data;
 };
 
-export const applyCoupon = async (couponCode) => {
-  const response = await coupon.post('/apply-coupon', { couponCode });
+export const applyCoupon = async (data) => {
+  const response = await coupon.post('/apply-coupon', data);
   return response.data;
 };

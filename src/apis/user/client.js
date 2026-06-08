@@ -32,7 +32,7 @@ export const createUserApiClient = (basePath, timeout = 10000) => {
 
   client.interceptors.request.use((config) => {
     const token = getStoredUserToken();
-    if (token) {
+    if (token && !isStoredUserTokenExpired()) {
       config.headers.Authorization = `Bearer ${token}`;
     }
     

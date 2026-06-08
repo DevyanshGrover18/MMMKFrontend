@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import {
   getAddressBook,
   getMyAccount,
@@ -10,7 +10,10 @@ import { createPaymentIntent } from '../../apis/user/payment';
 import { message } from 'antd';
 import { useCart } from '../../context/CartProvider';
 import PaymentModal from './PaymentModal';
-import { createManualOrder } from '../../apis/user/order';
+import { createManualOrder, createGuestOrder } from '../../apis/user/order';
+import { applyCoupon, getValidTokens } from '../../apis/user/coupon';
+import { Modal } from 'antd';
+import { LuX } from 'react-icons/lu';
 import { useNavigate, Link } from 'react-router-dom';
 import countriesList from '../../countries.json';
 import rateByWeight from '../../rateByWeight.json';
@@ -26,17 +29,15 @@ import {
 } from '../../utils/currency';
 import { useCurrency } from '../../context/CurrencyContext';
 import { resolveAssetUrl } from '../../utils/assetUrl';
+import { Tag } from 'lucide-react';
+
+// ─── Unchanged business logic ─────────────────────────────────────────────────
 
 const calculateShippingCharges = (countryCode, weight) => {
   if (!countryCode) return 0;
   const countryData = Country.getCountryByCode(countryCode);
   if (!countryData?.name) return 0;
-
-  // Round weight up to nearest 0.5 increment, minimum 0.5
   const roundedWeight = Math.max(0.5, Math.ceil(Number(weight || 0) * 2) / 2);
-
-  // Try to find the zone for the country
-  // Use flexible matching for country names (e.g., 'Saudi Arabia' matches 'Saudi')
   let zone = countriesList?.countries[countryData.name];
   if (!zone) {
     const entry = Object.entries(countriesList?.countries || {}).find(
@@ -46,12 +47,13 @@ const calculateShippingCharges = (countryCode, weight) => {
     );
     if (entry) zone = entry[1];
   }
-
   const rate = zone ? rateByWeight[String(roundedWeight)]?.[zone] : 0;
   return parseFloat(rate) || 0;
 };
 
 const EMPTY_FORM = {
+  contactEmail: '',
+  contactPhone: '',
   shipping_firstName: '',
   shipping_lastName: '',
   shipping_streetAddress: '',
@@ -88,8 +90,165 @@ const addressToShippingFields = (addr, prefix) => ({
   [`${prefix}_landmark`]: addr?.landmark || '',
 });
 
-// ─── Saved Address Selector ───────────────────────────────────────────────────
+const formatShippingBillingAddress = (data) => ({
+  shippingAddress: {
+    firstName: data.shipping_firstName,
+    lastName: data.shipping_lastName,
+    streetAddress: data.shipping_streetAddress,
+    country: data.shipping_country,
+    state: data.shipping_state,
+    postalCode: data.shipping_postalCode,
+    city: data.shipping_city,
+    company: data.shipping_company,
+    phoneNumber: data.contactPhone,
+    landmark: data.shipping_landmark,
+  },
+  billingAddress: {
+    firstName: data.billing_firstName,
+    lastName: data.billing_lastName,
+    streetAddress: data.billing_streetAddress,
+    country: data.billing_country,
+    state: data.billing_state,
+    postalCode: data.billing_postalCode,
+    city: data.billing_city,
+    company: data.billing_company,
+    phoneNumber: data.billing_phoneNumber,
+    landmark: data.billing_landmark,
+  },
+});
 
+const getStripePublishableKey = () => {
+  const mode = (import.meta.env.VITE_STRIPE_MODE || 'live').toLowerCase();
+  if (mode === 'test')
+    return (
+      import.meta.env.VITE_STRIPE_TEST_API_KEY ||
+      import.meta.env.VITE_STRIPE_API_KEY ||
+      import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY
+    );
+  return (
+    import.meta.env.VITE_STRIPE_LIVE_API_KEY ||
+    import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY ||
+    import.meta.env.VITE_STRIPE_API_KEY
+  );
+};
+
+// ─── UI Sub-components ────────────────────────────────────────────────────────
+
+/** Floating-label text input */
+const Field = ({
+  label,
+  name,
+  value,
+  onChange,
+  type = 'text',
+  required,
+  disabled,
+  className = '',
+}) => (
+  <div className={`relative ${className}`}>
+    <input
+      id={name}
+      name={name}
+      type={type}
+      value={value}
+      onChange={onChange}
+      required={required}
+      disabled={disabled}
+      placeholder=" "
+      className={`
+        peer w-full rounded-xl border border-gray-200 bg-white px-4 pt-6 pb-2
+        text-sm text-gray-900 outline-none transition-all
+        focus:border-gray-800 focus:ring-2 focus:ring-gray-800/10
+        disabled:bg-gray-50 disabled:text-gray-400
+        placeholder-shown:pt-4
+      `}
+    />
+    <label
+      htmlFor={name}
+      className="
+        pointer-events-none absolute left-4 top-2 text-[10px] font-semibold
+        uppercase tracking-widest text-gray-400 transition-all
+        peer-placeholder-shown:top-1/2 peer-placeholder-shown:-translate-y-1/2
+        peer-placeholder-shown:text-sm peer-placeholder-shown:font-normal
+        peer-placeholder-shown:tracking-normal peer-placeholder-shown:text-gray-400
+        peer-focus:top-2 peer-focus:translate-y-0 peer-focus:text-[10px]
+        peer-focus:font-semibold peer-focus:tracking-widest peer-focus:text-gray-500
+      "
+    >
+      {label}
+      {required && <span className="text-rose-400 ml-0.5">*</span>}
+    </label>
+  </div>
+);
+
+/** Floating-label select */
+const SelectField = ({
+  label,
+  name,
+  value,
+  onChange,
+  required,
+  disabled,
+  children,
+  className = '',
+}) => (
+  <div className={`relative ${className}`}>
+    <select
+      id={name}
+      name={name}
+      value={value}
+      onChange={onChange}
+      required={required}
+      disabled={disabled}
+      className={`
+        peer w-full appearance-none rounded-xl border border-gray-200 bg-white
+        px-4 pt-6 pb-2 text-sm text-gray-900 outline-none transition-all
+        focus:border-gray-800 focus:ring-2 focus:ring-gray-800/10
+        disabled:bg-gray-50 disabled:text-gray-400
+      `}
+    >
+      {children}
+    </select>
+    <label
+      htmlFor={name}
+      className="pointer-events-none absolute left-4 top-2 text-[10px] font-semibold uppercase tracking-widest text-gray-400"
+    >
+      {label}
+      {required && <span className="text-rose-400 ml-0.5">*</span>}
+    </label>
+    {/* Chevron icon */}
+    <svg
+      className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400"
+      viewBox="0 0 20 20"
+      fill="currentColor"
+    >
+      <path
+        fillRule="evenodd"
+        d="M5.22 8.22a.75.75 0 0 1 1.06 0L10 11.94l3.72-3.72a.75.75 0 1 1 1.06 1.06l-4.25 4.25a.75.75 0 0 1-1.06 0L5.22 9.28a.75.75 0 0 1 0-1.06Z"
+        clipRule="evenodd"
+      />
+    </svg>
+  </div>
+);
+
+/** Section card wrapper */
+const SectionCard = ({ step, title, children }) => (
+  <div className="rounded-2xl border border-gray-100 bg-white shadow-sm overflow-hidden">
+    <div className="flex items-center gap-3 border-b border-gray-100 bg-gray-50/60 px-6 py-4">
+      {step && (
+        <span className="flex h-7 w-7 items-center justify-center rounded-full bg-gray-900 text-xs font-bold text-white">
+          {step}
+        </span>
+      )}
+      <h2 className="text-sm font-semibold uppercase tracking-widest text-gray-700">
+        {title}
+      </h2>
+    </div>
+    <div className="p-6">{children}</div>
+  </div>
+);
+
+/** Saved address pill selector */
 const AddressSelector = ({
   addresses = [],
   selectedId,
@@ -98,13 +257,12 @@ const AddressSelector = ({
   label,
 }) => {
   if (addresses.length === 0) return null;
-
   return (
-    <div className="mb-6">
-      <p className="text-sm font-medium text-black/60 mb-3">
+    <div className="mb-5">
+      <p className="mb-2 text-[11px] font-semibold uppercase tracking-widest text-gray-400">
         Saved {label} addresses
       </p>
-      <div className="flex flex-col gap-2">
+      <div className="flex flex-wrap gap-2">
         {addresses.map((addr) => {
           const isSelected = selectedId === addr._id;
           return (
@@ -112,27 +270,24 @@ const AddressSelector = ({
               key={addr._id}
               type="button"
               onClick={() => onSelect(addr)}
-              className={`text-left px-4 py-3 border rounded-lg transition-all text-sm ${
+              className={`rounded-xl border px-4 py-2.5 text-left text-xs transition-all ${
                 isSelected
-                  ? 'border-black bg-black/5 font-medium'
-                  : 'border-gray-200 hover:border-gray-400'
+                  ? 'border-gray-900 bg-gray-900 text-white'
+                  : 'border-gray-200 bg-white text-gray-700 hover:border-gray-400'
               }`}
             >
-              <span className="inline-block text-xs uppercase tracking-wide text-black/40 mr-2">
-                {addr.label || 'Home'}
-              </span>
+              <span className="font-semibold">{addr.label || 'Home'}</span>
               {addr.isDefault && (
-                <span className="inline-block text-xs bg-black text-white px-1.5 py-0.5 rounded-full mr-2">
+                <span
+                  className={`ml-1.5 rounded-full px-1.5 py-0.5 text-[9px] font-bold uppercase ${isSelected ? 'bg-white/20 text-white' : 'bg-gray-100 text-gray-500'}`}
+                >
                   Default
                 </span>
               )}
-              <span className="font-medium">
-                {addr.firstName} {addr.lastName}
-              </span>
-              {' · '}
-              <span className="text-black/60">
-                {addr.street_address}, {addr.city}, {addr.state}{' '}
-                {addr.postalCode}
+              <span
+                className={`ml-1 ${isSelected ? 'text-white/70' : 'text-gray-400'}`}
+              >
+                · {addr.city}
               </span>
             </button>
           );
@@ -140,18 +295,132 @@ const AddressSelector = ({
         <button
           type="button"
           onClick={onNewAddress}
-          className={`text-left px-4 py-3 border rounded-lg transition-all text-sm ${
+          className={`rounded-xl border px-4 py-2.5 text-xs transition-all ${
             selectedId === 'new'
-              ? 'border-black bg-black/5 font-medium'
-              : 'border-gray-200 hover:border-gray-400'
+              ? 'border-gray-900 bg-gray-900 text-white'
+              : 'border-dashed border-gray-300 bg-white text-gray-500 hover:border-gray-500'
           }`}
         >
-          <span className="text-black/60">+ Enter a new address</span>
+          + New address
         </button>
       </div>
     </div>
   );
 };
+
+/** Address form grid */
+const AddressForm = ({
+  prefix,
+  formData,
+  onChange,
+  stateList,
+  checkout,
+  disabled = false,
+}) => (
+  <div className="grid gap-3">
+    <div className="grid grid-cols-2 gap-3">
+      <Field
+        label={checkout.firstName || 'First Name'}
+        name={`${prefix}_firstName`}
+        value={formData[`${prefix}_firstName`]}
+        onChange={onChange}
+        required
+        disabled={disabled}
+      />
+      <Field
+        label={checkout.lastName || 'Last Name'}
+        name={`${prefix}_lastName`}
+        value={formData[`${prefix}_lastName`]}
+        onChange={onChange}
+        required
+        disabled={disabled}
+      />
+    </div>
+    <Field
+      label={checkout.streetAddress || 'Street Address'}
+      name={`${prefix}_streetAddress`}
+      value={formData[`${prefix}_streetAddress`]}
+      onChange={onChange}
+      required
+      disabled={disabled}
+    />
+    <div className="grid grid-cols-2 gap-3">
+      <SelectField
+        label={checkout.country || 'Country'}
+        name={`${prefix}_country`}
+        value={formData[`${prefix}_country`]}
+        onChange={onChange}
+        required
+        disabled={disabled}
+      >
+        <option value="" disabled />
+        {Country.getAllCountries().map((c) => (
+          <option key={c.isoCode} value={c.isoCode}>
+            {c.name} {c.flag}
+          </option>
+        ))}
+      </SelectField>
+      <SelectField
+        label={checkout.state || 'State'}
+        name={`${prefix}_state`}
+        value={formData[`${prefix}_state`]}
+        onChange={onChange}
+        required
+        disabled={disabled}
+      >
+        <option value="" disabled />
+        {stateList.map((s) => (
+          <option key={s.isoCode} value={s.isoCode}>
+            {s.name}
+          </option>
+        ))}
+      </SelectField>
+    </div>
+    <div className="grid grid-cols-2 gap-3">
+      <Field
+        label={checkout.city || 'City'}
+        name={`${prefix}_city`}
+        value={formData[`${prefix}_city`]}
+        onChange={onChange}
+        required
+        disabled={disabled}
+      />
+      <Field
+        label={checkout.postalCode || 'Postal Code'}
+        name={`${prefix}_postalCode`}
+        value={formData[`${prefix}_postalCode`]}
+        onChange={onChange}
+        required
+        disabled={disabled}
+      />
+    </div>
+    <div className="grid grid-cols-2 gap-3">
+      <Field
+        label={checkout.phoneNumber || 'Phone Number'}
+        name={`${prefix}_phoneNumber`}
+        value={formData[`${prefix}_phoneNumber`]}
+        onChange={onChange}
+        required
+        disabled={disabled}
+        type="tel"
+      />
+      <Field
+        label={checkout.landmark || 'Landmark (optional)'}
+        name={`${prefix}_landmark`}
+        value={formData[`${prefix}_landmark`]}
+        onChange={onChange}
+        disabled={disabled}
+      />
+    </div>
+    <Field
+      label={checkout.company || 'Company (optional)'}
+      name={`${prefix}_company`}
+      value={formData[`${prefix}_company`]}
+      onChange={onChange}
+      disabled={disabled}
+    />
+  </div>
+);
 
 // ─── Main Component ───────────────────────────────────────────────────────────
 
@@ -169,13 +438,17 @@ export default function CheckoutForm({
     content: { common: commonCtx, checkout },
   } = useTranslationContext();
   const common = commonProp || commonCtx;
+  const contactRef = useRef(null);
 
   const navigate = useNavigate();
   const {
     data: cartData,
     couponCode,
+    setCouponCode,
     isCouponApply,
+    setIsCouponApply,
     couponData,
+    setCouponData,
     calculateCartSummary,
     setCheckoutSummary,
     appliedCreditAmount,
@@ -183,6 +456,74 @@ export default function CheckoutForm({
     isBagAdded,
     clearCart,
   } = useCart();
+
+  const [couponInput, setCouponInput] = useState('');
+  const [isCouponModalOpen, setIsCouponModalOpen] = useState(false);
+  const [isApplyingCoupon, setIsApplyingCoupon] = useState(false);
+
+  const couponsQuery = useQuery({
+    queryKey: ['valid-coupons'],
+    queryFn: getValidTokens,
+    enabled: isUserSignedIn(),
+    retry: false,
+  });
+
+  const availableCoupons = (couponsQuery.data?.data || []).filter(
+    (coupon) => coupon?.showToUsers !== false
+  );
+
+  const handleApplyCoupon = async (coupon) => {
+    if (!coupon) return;
+
+    const hasContact = formData.contactEmail.trim() || formData.contactPhone.trim();
+    if (!hasContact) {
+      message.warning("Please provide your email or phone number first.");
+      contactRef.current?.scrollIntoView({ behavior: 'smooth' });
+      return;
+    }
+
+    setIsApplyingCoupon(true);
+
+    try {
+      const res = await applyCoupon({
+        couponCode: coupon,
+        guestEmail: formData.contactEmail,
+        guestPhone: formData.contactPhone
+      });
+      const validCoupon = res?.data;
+
+      // Check if coupon is eligible for current cart items
+      const tempSummary = calculateCartSummary({
+        items: cartData,
+        couponData: validCoupon,
+        isCouponApply: true,
+        currency,
+        rates,
+      });
+
+      if (
+        validCoupon.scope &&
+        validCoupon.scope !== 'All' &&
+        tempSummary.couponDiscount <= 0
+      ) {
+        message.error('This coupon is not eligible for your cart');
+        setIsApplyingCoupon(false);
+        return;
+      }
+
+      setCouponData(validCoupon);
+      setCouponInput('');
+      setCouponCode(validCoupon?.couponCode);
+      setIsCouponApply(true);
+      setIsCouponModalOpen(false);
+      message.success('Coupon applied successfully');
+    } catch (err) {
+      message.error(err?.response?.data?.message || 'Failed to apply coupon');
+    } finally {
+      setIsApplyingCoupon(false);
+    }
+  };
+
   const { currency, rates } = useCurrency();
   const currencyRate = Number(rates?.[currency] || 1);
 
@@ -193,10 +534,11 @@ export default function CheckoutForm({
   const [formData, setFormData] = useState(EMPTY_FORM);
   const [totalProductWeight, setTotalProductWeight] = useState(0);
   const [isSameAsShipping, setIsSameAsShipping] = useState(false);
-
-  // Track which saved address is selected per section ('new' = manual entry)
   const [selectedShippingId, setSelectedShippingId] = useState(null);
   const [selectedBillingId, setSelectedBillingId] = useState(null);
+  const [contactTab, setContactTab] = useState('email'); // 'email' | 'phone'
+  const [contactError, setContactError] = useState('');
+
   const formatConvertedPrice = (amount) =>
     formatPrice(convertPrice(amount, currency, rates), currency);
 
@@ -227,10 +569,12 @@ export default function CheckoutForm({
   const query = useQuery({
     queryKey: ['address-book'],
     queryFn: getAddressBook,
+    enabled: isUserSignedIn(),
   });
   const profileQuery = useQuery({
     queryKey: ['my-account'],
     queryFn: getMyAccount,
+    enabled: isUserSignedIn(),
   });
   const creditsQuery = useQuery({
     queryKey: ['credit'],
@@ -257,8 +601,6 @@ export default function CheckoutForm({
       currency,
       rates,
     });
-
-    // Convert order total to base currency for accurate comparison
     const neededAmountInCurrency =
       baseSummary.total + (baseSummary.creditApplied || 0);
     const neededAmountBase = convertStoredPrice(
@@ -267,20 +609,15 @@ export default function CheckoutForm({
       BASE_CURRENCY,
       rates
     );
-
     const eligibleAmountBase = Math.min(availableCredits, neededAmountBase);
-
     if (eligibleAmountBase <= 0) {
       message.warning('No wallet credit available to apply');
       return;
     }
-
-    // If we can cover the whole thing, use the exact neededAmountBase to ensure total becomes 0
     const finalAmountBaseToSet =
       Math.abs(eligibleAmountBase - neededAmountBase) < 0.01
         ? neededAmountBase
         : eligibleAmountBase;
-
     setAppliedCreditAmount(Number(finalAmountBaseToSet.toFixed(2)));
     message.success(
       `Applied ${formatConvertedPrice(finalAmountBaseToSet)} from My Credit`
@@ -295,16 +632,15 @@ export default function CheckoutForm({
   const shippingAddresses = query.data?.data?.shippingAddresses || [];
   const billingAddresses = query.data?.data?.billingAddresses || [];
 
-  // ── Populate form from a saved address ──────────────────────────────────────
-
   const applyShippingAddress = (addr) => {
     setSelectedShippingId(addr._id);
     const fields = addressToShippingFields(addr, 'shipping');
     setFormData((prev) => {
       const next = { ...prev, ...fields };
-      // Calculate shipping for the new country immediately
-      const weight = totalProductWeight;
-      const newRate = calculateShippingCharges(next.shipping_country, weight);
+      const newRate = calculateShippingCharges(
+        next.shipping_country,
+        totalProductWeight
+      );
       onShippingChange?.(newRate);
       return next;
     });
@@ -359,8 +695,6 @@ export default function CheckoutForm({
     setBillingStateList([]);
   };
 
-  // ── Form field change ────────────────────────────────────────────────────────
-
   const handleChange = (e) => {
     const { name, value } = e.target;
     if (name === 'shipping_country') {
@@ -400,10 +734,7 @@ export default function CheckoutForm({
     }
   };
 
-  // ── Payment ──────────────────────────────────────────────────────────────────
-
   const handlePaymentChoice = async (mode) => {
-    console.log('[CHECKOUT DEBUG]', { currency, currencyRate, total: derivedSummary.total });
     setIsModalVisible(false);
     const { shippingAddress, billingAddress } =
       formatShippingBillingAddress(formData);
@@ -411,7 +742,7 @@ export default function CheckoutForm({
     if (mode === 'card') {
       try {
         setLoading(true);
-        const data = await createPaymentIntent({
+        const payload = {
           products: cartData,
           shippingAddress,
           billingAddress,
@@ -423,20 +754,22 @@ export default function CheckoutForm({
           isBagAdded,
           currency,
           currencyRate,
-        });
-
+        };
+        if (!isUserSignedIn()) {
+          payload.guestEmail = formData.contactEmail;
+          payload.guestPhone = formData.contactPhone;
+        }
+        const data = await createPaymentIntent(payload);
         if (data?.paidWithCredits && data?.orderId) {
           clearCart({ updateOnBackend: true });
           navigate(`/order-success/${data.orderId}`);
           setAppliedCreditAmount(0);
           return;
         }
-
         const publishableKey = getStripePublishableKey();
         if (!publishableKey)
           throw new Error('Stripe publishable key is not configured');
         const stripePromise = await loadStripe(publishableKey);
-
         const result = await stripePromise.redirectToCheckout({
           sessionId: data.id,
         });
@@ -458,7 +791,7 @@ export default function CheckoutForm({
       }
     } else {
       try {
-        const res = await createManualOrder({
+        const payload = {
           products: cartData,
           shippingAddress,
           billingAddress,
@@ -470,9 +803,17 @@ export default function CheckoutForm({
           isBagAdded,
           currency,
           currencyRate,
-        });
+        };
+        let res;
+        if (isUserSignedIn()) {
+          res = await createManualOrder(payload);
+        } else {
+          payload.guestEmail = formData.contactEmail;
+          payload.guestPhone = formData.contactPhone;
+          res = await createGuestOrder(payload);
+        }
         message.success(res?.message || checkout.orderPlacedSuccessfully);
-        clearCart({ updateOnBackend: true });
+        clearCart({ updateOnBackend: isUserSignedIn() });
         navigate(`/order-success/${res?.data}`);
       } catch (err) {
         message.error(err?.response?.data?.message);
@@ -482,6 +823,17 @@ export default function CheckoutForm({
 
   const handleSubmit = (e) => {
     e.preventDefault();
+
+    const hasContact =
+      formData.contactEmail.trim() || formData.contactPhone.trim();
+    if (!hasContact) {
+      message.warning(
+        'Please provide either your email or phone number to continue.'
+      );
+      return;
+    }
+
+    setContactError('');
     if (derivedSummary.total === 0) {
       handlePaymentChoice('card');
     } else {
@@ -489,21 +841,15 @@ export default function CheckoutForm({
     }
   };
 
-  // ── Effects ──────────────────────────────────────────────────────────────────
-
-  // On load: pre-select default saved addresses if available
   useEffect(() => {
     if (!query.data) return;
-
     const defaultShipping =
       shippingAddresses.find((a) => a.isDefault) || shippingAddresses[0];
     const defaultBilling =
       billingAddresses.find((a) => a.isDefault) || billingAddresses[0];
-
     if (defaultShipping) {
       applyShippingAddress(defaultShipping);
     } else {
-      // Fall back to old flat address fields for backward compatibility
       const addr = query.data?.data?.shippingAddress || {};
       if (addr.street_address || addr.streetAddress) {
         setFormData((prev) => ({
@@ -514,7 +860,6 @@ export default function CheckoutForm({
         setSelectedShippingId('new');
       }
     }
-
     if (defaultBilling) {
       applyBillingAddress(defaultBilling);
     } else {
@@ -530,7 +875,6 @@ export default function CheckoutForm({
     }
   }, [query.data]);
 
-  // Fill name/phone from profile if still empty after address hydration
   useEffect(() => {
     if (!profileQuery.data?.data) return;
     const p = profileQuery.data.data;
@@ -547,38 +891,322 @@ export default function CheckoutForm({
 
   useEffect(() => {
     setTotalProductWeight(
-      cartData?.reduce((acc, item) => {
-        return (
+      cartData?.reduce(
+        (acc, item) =>
           acc +
           (parseFloat(item?.product?.weight) || 0) *
-            (parseFloat(item?.quantity) || 0)
-        );
-      }, 0) || 0
+            (parseFloat(item?.quantity) || 0),
+        0
+      ) || 0
     );
   }, [cartData]);
 
   useEffect(() => {
     onShippingChange?.(calculatedShippingCharges);
   }, [calculatedShippingCharges, onShippingChange]);
-
   useEffect(() => {
     setCheckoutSummary(derivedSummary);
   }, [derivedSummary, setCheckoutSummary]);
 
-  // ── Shared input/label classes ───────────────────────────────────────────────
-
-  const inputCls = 'w-full md:h-[65px] border-b focus:outline-none md:text-lg';
-  const selectCls = 'w-full md:h-[65px] border-b focus:outline-none md:text-lg';
-
-  // Whether to show the manual form for each section
   const showShippingForm =
     selectedShippingId === 'new' || shippingAddresses.length === 0;
   const showBillingForm =
     !isSameAsShipping &&
     (selectedBillingId === 'new' || billingAddresses.length === 0);
 
+  // ── Reusable Order Summary block (rendered in both mobile + desktop) ──────────
+  const OrderSummaryContent = (
+    <>
+      <p className="mb-4 text-xs text-gray-400">
+        {items?.length || 0} item{items?.length === 1 ? '' : 's'} in your bag
+      </p>
+
+      {items?.length > 0 && (
+        <div className="mb-5 divide-y divide-gray-100 rounded-xl border border-gray-100 overflow-hidden">
+          {items.map((item) => {
+            const unitPrice = Number(
+              getPercentageOf(
+                item?.product?.price || 0,
+                item?.product?.discount || 0
+              )
+            );
+            const lineTotal = unitPrice * Number(item?.quantity || 0);
+            const productImage =
+              item?.product?.thumbnail ||
+              item?.product?.image ||
+              item?.product?.images?.[0];
+            const productName =
+              item?.product?.translated?.productName ||
+              item?.product?.productName?.[translateLanguage] ||
+              item?.product?.productName?.en;
+            return (
+              <div
+                key={`${item?.product?._id}-${item?.sku}`}
+                className="flex items-center gap-3 bg-white px-4 py-3"
+              >
+                <Link
+                  to={`/product-details/${item?.product?._id}`}
+                  className="h-14 w-14 flex-shrink-0 overflow-hidden rounded-lg border border-gray-100 bg-gray-50"
+                >
+                  <img
+                    src={productImage ? resolveAssetUrl(productImage) : ''}
+                    alt={productName || common.productImageAlt}
+                    className="h-full w-full object-cover"
+                  />
+                </Link>
+                <div className="min-w-0 flex-1">
+                  <Link
+                    to={`/product-details/${item?.product?._id}`}
+                    className="block text-sm font-semibold text-gray-900 hover:opacity-70 truncate"
+                  >
+                    {productName}
+                  </Link>
+                  {item?.filters && Object.keys(item.filters).length > 0 && (
+                    <p className="mt-0.5 text-xs text-gray-400 truncate">
+                      {Object.entries(item.filters)
+                        .map(([k, v]) => `${k}: ${v}`)
+                        .join(' · ')}
+                    </p>
+                  )}
+                  <p className="mt-1 text-xs text-gray-400">
+                    Qty {item?.quantity} × {formatConvertedPrice(unitPrice)}
+                  </p>
+                </div>
+                <div className="text-right flex-shrink-0">
+                  {item?.product?.discount > 0 && (
+                    <p className="text-xs text-gray-300 line-through">
+                      {formatConvertedPrice(
+                        Number(item?.product?.price || 0) *
+                          Number(item?.quantity || 0)
+                      )}
+                    </p>
+                  )}
+                  <p className="text-sm font-bold text-gray-900">
+                    {formatConvertedPrice(lineTotal)}
+                  </p>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      {/* Wallet credit */}
+      {isUserSignedIn() && (
+        <div className="mb-4 flex items-center justify-between rounded-xl border border-gray-100 bg-gray-50 px-4 py-3">
+          <div>
+            <p className="text-sm font-semibold text-gray-800">My Credit</p>
+            <p className="text-xs text-gray-400">
+              Available: {formatPrice(availableCreditsInCurrency, currency)}
+            </p>
+          </div>
+          {appliedCreditAmount > 0 ? (
+            <button
+              type="button"
+              onClick={handleRemoveCredits}
+              className="rounded-lg border border-rose-200 bg-rose-50 px-3 py-1.5 text-xs font-semibold text-rose-600 hover:bg-rose-100 transition"
+            >
+              Remove
+            </button>
+          ) : (
+            <button
+              type="button"
+              onClick={handleApplyCredits}
+              className="rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-xs font-semibold text-gray-700 hover:bg-gray-100 transition"
+            >
+              Apply
+            </button>
+          )}
+        </div>
+      )}
+
+      {/* Coupon Section */}
+      <div className="mb-4">
+        {!isCouponApply ? (
+          <>
+            <p className="mb-2 text-sm font-medium text-gray-700">
+              {cart.enterPromoCode}
+            </p>
+            <div className="flex gap-2">
+              <input
+                type="text"
+                value={couponInput}
+                onChange={(e) => setCouponInput(e.target.value.toUpperCase())}
+                className="w-full rounded-xl border border-gray-200 px-4 py-2 text-sm outline-none focus:border-gray-800"
+                placeholder={cart.enterPromoCode}
+              />
+              <button
+                onClick={() => handleApplyCoupon(couponInput)}
+                className="rounded-xl bg-gray-900 px-4 py-2 text-sm font-semibold text-white hover:bg-gray-800 disabled:opacity-50"
+                disabled={!couponInput || isApplyingCoupon}
+              >
+                {isApplyingCoupon ? 'Applying...' : common.apply}
+              </button>
+            </div>
+            {isUserSignedIn() && (
+              <button
+                type="button"
+                onClick={() => setIsCouponModalOpen(true)}
+                className="mt-2 w-full text-sm font-medium text-gray-600 hover:text-gray-900 underline"
+              >
+                View Available Coupons
+              </button>
+            )}
+          </>
+        ) : (
+          <div className="inline-flex items-stretch overflow-hidden rounded-lg border border-gray-200">
+            <div className="flex items-center gap-1.5 px-3 py-1.5">
+              <Tag className="h-3 w-3 text-emerald-800" />
+              <span className="text-[14px] font-semibold tracking-widest text-emerald-800">
+                {couponCode}
+              </span>
+            </div>
+            <div className="flex items-center gap-2 border-l border-dashed border-gray-300 bg-gray-50 px-2.5 py-1.5">
+              <span className="text-[14px] font-medium text-emerald-600">
+                applied
+              </span>
+              <button
+                type="button"
+                aria-label="Remove coupon"
+                onClick={() => {
+                  setCouponCode(null);
+                  setIsCouponApply(false);
+                  setCouponData({});
+                }}
+                className="flex h-4 w-4 mb-1.5 items-center justify-center rounded-full border border-gray-300 bg-white text-gray-400 hover:border-gray-500 hover:text-gray-600 transition-colors"
+              >
+                <LuX size={8} />
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Price breakdown */}
+      <div>
+        <div className="flex justify-between text-gray-500">
+          <span>{common.subTotal}</span>
+          <span>{formatPrice(derivedSummary.subtotal, currency)}</span>
+        </div>
+        {derivedSummary.couponDiscount > 0 && (
+          <div className="flex flex-col gap-0.5">
+            <div className="flex justify-between text-emerald-600">
+              <span>{common.coupon}</span>
+              <span>
+                −{formatPrice(derivedSummary.couponDiscount, currency)}
+              </span>
+            </div>
+            {couponData?.scope && couponData.scope !== 'All' && (
+              <p className="text-right text-[10px] text-gray-400 italic">
+                Applied to:{' '}
+                {couponData.scope === 'Category'
+                  ? couponData.scopeCategory?.name?.[translateLanguage] ||
+                    couponData.scopeCategory?.name?.en
+                  : couponData.scopeProduct?.productName?.[translateLanguage] ||
+                    couponData.scopeProduct?.productName?.en}
+              </p>
+            )}
+          </div>
+        )}
+        {(effectiveShippingCharges > 0 || formData.shipping_country) && (
+          <>
+            <div className="flex justify-between text-gray-500">
+              <span>Shipping</span>
+              <span
+                className={
+                  derivedSummary.shipping <= 0
+                    ? 'text-emerald-600 font-medium'
+                    : ''
+                }
+              >
+                {derivedSummary.shipping > 0
+                  ? formatPrice(derivedSummary.shipping, currency)
+                  : 'Free'}
+              </span>
+            </div>
+            {derivedSummary.deliveryCouponDiscount > 0 && (
+              <div className="flex justify-between text-emerald-600">
+                <span className="pl-3 text-xs italic">Delivery Discount</span>
+                <span>
+                  −
+                  {formatPrice(derivedSummary.deliveryCouponDiscount, currency)}
+                </span>
+              </div>
+            )}
+          </>
+        )}
+        {derivedSummary.bagFee > 0 && (
+          <div className="flex justify-between text-gray-500">
+            <span>Bag Fee</span>
+            <span>+{formatPrice(derivedSummary.bagFee, currency)}</span>
+          </div>
+        )}
+        {Number(derivedSummary.creditApplied || 0) > 0 && (
+          <div className="flex justify-between text-emerald-600">
+            <span>My Credit</span>
+            <span>
+              −{formatPrice(Number(derivedSummary.creditApplied), currency)}
+            </span>
+          </div>
+        )}
+        <div className="flex justify-between border-t border-gray-100 pt-3 text-base font-bold text-gray-900">
+          <span>{common.total}</span>
+          <span>{formatPrice(derivedSummary.total, currency)}</span>
+        </div>
+      </div>
+    </>
+  );
+
   return (
     <>
+      <Modal
+        title="Available Coupons"
+        open={isCouponModalOpen}
+        onCancel={() => setIsCouponModalOpen(false)}
+        footer={null}
+        centered
+      >
+        {couponsQuery.isLoading ? (
+          <p className="text-sm text-gray-600">{common.loading}</p>
+        ) : availableCoupons.length ? (
+          <div className="space-y-3">
+            {availableCoupons.map((coupon) => {
+              const isActiveCoupon = couponCode === coupon.couponCode;
+              return (
+                <button
+                  key={coupon._id}
+                  type="button"
+                  onClick={() => handleApplyCoupon(coupon.couponCode)}
+                  className="w-full rounded-xl border border-gray-200 p-4 text-left transition hover:border-black disabled:cursor-not-allowed disabled:opacity-60"
+                  disabled={isActiveCoupon || isApplyingCoupon}
+                >
+                  <div className="flex items-center justify-between gap-3">
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <p className="font-semibold">{coupon.couponCode}</p>
+                        {isActiveCoupon && (
+                          <span className="rounded-full bg-black px-2 py-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-white">
+                            Applied
+                          </span>
+                        )}
+                      </div>
+                      <p className="text-sm text-gray-500">
+                        {coupon.couponName}
+                      </p>
+                    </div>
+                    <p className="font-semibold text-green-600">
+                      {coupon.discount}% OFF
+                    </p>
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+        ) : (
+          <p className="text-sm text-gray-600">No active coupons found.</p>
+        )}
+      </Modal>
+
       <PaymentModal
         visible={isModalVisible}
         onClose={() => setIsModalVisible(false)}
@@ -586,532 +1214,279 @@ export default function CheckoutForm({
         checkout={checkout}
       />
 
-      <form onSubmit={handleSubmit} className="max-w-5xl p-6 mx-auto">
-        <div className="flex flex-col gap-10 md:flex-row">
-          {/* ── Shipping ── */}
-          <div className="w-full space-y-6">
-            <h2 className="pb-2 text-xl font-normal md:text-5xl">
-              {checkout.shippingAddress}
-              <div className="bg-gray-900 border-b w-16 md:w-44 md:h-[4px] md:mt-4" />
-            </h2>
+      <form onSubmit={handleSubmit} className="mx-auto max-w-7xl px-4 py-8">
+        <div className="flex flex-col-reverse gap-6 lg:flex-row lg:items-start lg:gap-8">
+          {/* ── LEFT COLUMN: contact + shipping + billing + submit ── */}
+          <div className="flex-1 min-w-0 space-y-4">
+            {/* Step 1 – Contact */}
+            {!isUserSignedIn() && (
+              <SectionCard step="1" title="Contact Information">
+                <p className="mb-4 text-xs text-gray-400">
+                  We'll send your order confirmation here.
+                </p>
 
-            <AddressSelector
-              addresses={shippingAddresses}
-              selectedId={selectedShippingId}
-              onSelect={applyShippingAddress}
-              onNewAddress={clearShippingAddress}
-              label="shipping"
-            />
-
-            {showShippingForm && (
-              <div className="space-y-6">
-                <div className="grid grid-cols-2 gap-6">
-                  <input
-                    name="shipping_firstName"
-                    value={formData.shipping_firstName}
-                    onChange={handleChange}
-                    className={inputCls}
-                    placeholder={checkout.firstName}
-                    required
-                  />
-                  <input
-                    name="shipping_lastName"
-                    value={formData.shipping_lastName}
-                    onChange={handleChange}
-                    className={inputCls}
-                    placeholder={checkout.lastName}
-                    required
-                  />
-                </div>
-                <input
-                  name="shipping_streetAddress"
-                  value={formData.shipping_streetAddress}
-                  onChange={handleChange}
-                  className={inputCls}
-                  placeholder={checkout.streetAddress}
-                  required
-                />
-                <div className="grid grid-cols-2 gap-6">
-                  <select
-                    name="shipping_country"
-                    value={formData.shipping_country}
-                    onChange={handleChange}
-                    className={selectCls}
-                    required
-                  >
-                    <option value="" disabled>
-                      {checkout.country}
-                    </option>
-                    {Country.getAllCountries().map((c) => (
-                      <option key={c.isoCode} value={c.isoCode}>
-                        {c.name} {c.flag}
-                      </option>
-                    ))}
-                  </select>
-                  <select
-                    name="shipping_state"
-                    value={formData.shipping_state}
-                    onChange={handleChange}
-                    className={selectCls}
-                    required
-                  >
-                    <option value="" disabled>
-                      {checkout.state}
-                    </option>
-                    {shippingStateList.map((s) => (
-                      <option key={s.isoCode} value={s.isoCode}>
-                        {s.name}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-                <div className="grid grid-cols-2 gap-6">
-                  <input
-                    name="shipping_postalCode"
-                    value={formData.shipping_postalCode}
-                    onChange={handleChange}
-                    className={inputCls}
-                    placeholder={checkout.postalCode}
-                    required
-                  />
-                  <input
-                    name="shipping_city"
-                    value={formData.shipping_city}
-                    onChange={handleChange}
-                    className={inputCls}
-                    placeholder={checkout.city}
-                    required
-                  />
-                </div>
-                <input
-                  name="shipping_landmark"
-                  value={formData.shipping_landmark}
-                  onChange={handleChange}
-                  className={inputCls}
-                  placeholder={checkout.landmark}
-                />
-                <input
-                  name="shipping_company"
-                  value={formData.shipping_company}
-                  onChange={handleChange}
-                  className={inputCls}
-                  placeholder={checkout.company}
-                />
-                <input
-                  name="shipping_phoneNumber"
-                  value={formData.shipping_phoneNumber}
-                  onChange={handleChange}
-                  className={inputCls}
-                  placeholder={checkout.phoneNumber}
-                  required
-                />
-              </div>
-            )}
-          </div>
-
-          {/* Divider */}
-          <div className="w-px mx-4 bg-black h-[70vh] md:h-auto md:block hidden" />
-
-          {/* ── Billing ── */}
-          <div className="w-full space-y-6">
-            <h2 className="pb-2 text-xl font-normal md:text-5xl">
-              {checkout.billingAddress}
-              <div className="bg-gray-900 border-b w-16 md:w-44 md:h-[4px] md:mt-4" />
-            </h2>
-
-            <div className="flex items-center mb-2">
-              <input
-                type="checkbox"
-                id="sameAsShipping"
-                checked={isSameAsShipping}
-                onChange={handleSameAsShippingChange}
-                className="mr-2"
-              />
-              <label htmlFor="sameAsShipping">
-                {checkout.sameAsShippingAddress}
-              </label>
-            </div>
-
-            {!isSameAsShipping && (
-              <AddressSelector
-                addresses={billingAddresses}
-                selectedId={selectedBillingId}
-                onSelect={applyBillingAddress}
-                onNewAddress={clearBillingAddress}
-                label="billing"
-              />
-            )}
-
-            {showBillingForm && (
-              <div className="space-y-6">
-                <div className="grid grid-cols-2 gap-6">
-                  <input
-                    name="billing_firstName"
-                    value={formData.billing_firstName}
-                    onChange={handleChange}
-                    className={inputCls}
-                    placeholder={checkout.firstName}
-                    required
-                    disabled={isSameAsShipping}
-                  />
-                  <input
-                    name="billing_lastName"
-                    value={formData.billing_lastName}
-                    onChange={handleChange}
-                    className={inputCls}
-                    placeholder={checkout.lastName}
-                    required
-                    disabled={isSameAsShipping}
-                  />
-                </div>
-                <input
-                  name="billing_streetAddress"
-                  value={formData.billing_streetAddress}
-                  onChange={handleChange}
-                  className={inputCls}
-                  placeholder={checkout.streetAddress}
-                  required
-                  disabled={isSameAsShipping}
-                />
-                <div className="grid grid-cols-2 gap-6">
-                  <select
-                    name="billing_country"
-                    value={formData.billing_country}
-                    onChange={handleChange}
-                    className={selectCls}
-                    required
-                    disabled={isSameAsShipping}
-                  >
-                    <option value="" disabled>
-                      {checkout.country}
-                    </option>
-                    {Country.getAllCountries().map((c) => (
-                      <option key={c.isoCode} value={c.isoCode}>
-                        {c.name} {c.flag}
-                      </option>
-                    ))}
-                  </select>
-                  <select
-                    name="billing_state"
-                    value={formData.billing_state}
-                    onChange={handleChange}
-                    className={selectCls}
-                    required
-                    disabled={isSameAsShipping}
-                  >
-                    <option value="" disabled>
-                      {checkout.state}
-                    </option>
-                    {billingStateList.map((s) => (
-                      <option key={s.isoCode} value={s.isoCode}>
-                        {s.name}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-                <div className="grid grid-cols-2 gap-6">
-                  <input
-                    name="billing_postalCode"
-                    value={formData.billing_postalCode}
-                    onChange={handleChange}
-                    className={inputCls}
-                    placeholder={checkout.postalCode}
-                    required
-                    disabled={isSameAsShipping}
-                  />
-                  <input
-                    name="billing_city"
-                    value={formData.billing_city}
-                    onChange={handleChange}
-                    className={inputCls}
-                    placeholder={checkout.city}
-                    required
-                    disabled={isSameAsShipping}
-                  />
-                </div>
-                <input
-                  name="billing_landmark"
-                  value={formData.billing_landmark}
-                  onChange={handleChange}
-                  className={inputCls}
-                  placeholder={checkout.landmark}
-                  disabled={isSameAsShipping}
-                />
-                <input
-                  name="billing_company"
-                  value={formData.billing_company}
-                  onChange={handleChange}
-                  className={inputCls}
-                  placeholder={checkout.company}
-                  disabled={isSameAsShipping}
-                />
-                <input
-                  name="billing_phoneNumber"
-                  value={formData.billing_phoneNumber}
-                  onChange={handleChange}
-                  className={inputCls}
-                  placeholder={checkout.phoneNumber}
-                  required
-                  disabled={isSameAsShipping}
-                />
-              </div>
-            )}
-
-            {/* Show summary of selected saved billing address when form is hidden */}
-            {isSameAsShipping && (
-              <p className="text-sm text-black/50">
-                Billing address same as shipping.
-              </p>
-            )}
-          </div>
-        </div>
-
-        {/* ── Order Summary ── */}
-        <div className="mt-12 border-t brown-border pt-8">
-          <div className="flex items-end justify-between mb-6">
-            <div>
-              <p className="text-xs font-semibold uppercase tracking-[0.28em] text-black/50 mb-1">
-                {common.checkout}
-              </p>
-              <h3 className="text-2xl font-bold md:text-4xl">Order Summary</h3>
-            </div>
-            <p className="text-sm text-black/60">
-              {items?.length || 0} item{items?.length === 1 ? '' : 's'}
-            </p>
-          </div>
-
-          {items?.length > 0 && (
-            <div className="space-y-0 border-t brown-border">
-              {items.map((item) => {
-                const unitPrice = Number(
-                  getPercentageOf(
-                    item?.product?.price || 0,
-                    item?.product?.discount || 0
-                  )
-                );
-                const lineTotal = unitPrice * Number(item?.quantity || 0);
-                const productImage =
-                  item?.product?.thumbnail ||
-                  item?.product?.image ||
-                  item?.product?.images?.[0];
-                const productName =
-                  item?.product?.translated?.productName ||
-                  item?.product?.productName?.[translateLanguage] ||
-                  item?.product?.productName?.en;
-
-                return (
-                  <div
-                    key={`${item?.product?._id}-${item?.sku}`}
-                    className="grid gap-4 border-b px-0 py-5 brown-border md:grid-cols-[120px_minmax(0,1fr)_160px] md:items-center"
-                  >
-                    <Link
-                      to={`/product-details/${item?.product?._id}`}
-                      className="block overflow-hidden border brown-border bg-[#f8f8f8]"
-                    >
-                      <img
-                        src={productImage ? resolveAssetUrl(productImage) : ''}
-                        alt={productName || common.productImageAlt}
-                        className="h-[100px] w-auto object-cover"
-                      />
-                    </Link>
-                    <div className="min-w-0">
-                      <Link
-                        to={`/product-details/${item?.product?._id}`}
-                        className="block text-md font-bold text-black transition hover:opacity-70 md:text-xl"
+                {/* Tab switcher */}
+                <div className="mb-5 grid grid-cols-2 gap-3">
+                  {[
+                    {
+                      id: 'email',
+                      label: 'Email',
+                      filled: !!formData.contactEmail,
+                      icon: (
+                        <svg
+                          className="h-5 w-5"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="1.75"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        >
+                          <rect x="2" y="4" width="20" height="16" rx="2" />
+                          <path d="m2 7 10 7 10-7" />
+                        </svg>
+                      ),
+                    },
+                    {
+                      id: 'phone',
+                      label: 'Phone',
+                      filled: !!formData.contactPhone,
+                      icon: (
+                        <svg
+                          className="h-5 w-5"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="1.75"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        >
+                          <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12a19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 3.62 1.27h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 8.91a16 16 0 0 0 6.08 6.08l.99-.99a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z" />
+                        </svg>
+                      ),
+                    },
+                  ].map((tab) => {
+                    const isActive = contactTab === tab.id;
+                    return (
+                      <button
+                        key={tab.id}
+                        type="button"
+                        onClick={() => {
+                          setContactTab(tab.id);
+                          setContactError('');
+                        }}
+                        className={`relative flex items-center gap-3 rounded-2xl border-2 px-4 py-3.5 text-left transition-all duration-200 ${
+                          isActive
+                            ? 'border-gray-900 bg-gray-900 text-white'
+                            : 'border-gray-200 bg-white text-gray-500 hover:border-gray-300 hover:bg-gray-50'
+                        }`}
                       >
-                        {productName}
-                      </Link>
-                      {item?.filters &&
-                        Object.keys(item.filters).length > 0 && (
-                          <p className="mt-2 text-sm text-black/60">
-                            {Object.entries(item.filters)
-                              .map(([k, v]) => `${k}: ${v}`)
-                              .join(' | ')}
-                          </p>
+                        <span
+                          className={`flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl transition-colors ${isActive ? 'bg-white/15' : 'bg-gray-100'}`}
+                        >
+                          {tab.icon}
+                        </span>
+                        <span>
+                          <span
+                            className={`block text-sm font-semibold leading-tight ${isActive ? 'text-white' : 'text-gray-800'}`}
+                          >
+                            {tab.label}
+                          </span>
+                        </span>
+                        {tab.filled && (
+                          <span
+                            className={`absolute right-3 top-3 h-2 w-2 rounded-full ${isActive ? 'bg-emerald-400' : 'bg-emerald-500'}`}
+                          />
                         )}
-                      <p className="mt-3 text-sm text-black/60">
-                        Qty {item?.quantity} x {formatConvertedPrice(unitPrice)}
-                      </p>
-                    </div>
-                    <div className="text-left md:text-right">
-                      {item?.product?.discount > 0 && (
-                        <p className="text-sm text-black/35 line-through">
-                          {formatConvertedPrice(
-                            Number(item?.product?.price || 0) *
-                              Number(item?.quantity || 0)
-                          )}
-                        </p>
-                      )}
-                      <p className="text-xl font-bold md:text-2xl">
-                        {formatConvertedPrice(lineTotal)}
-                      </p>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          )}
+                      </button>
+                    );
+                  })}
+                </div>
 
-          <div className="mt-6 ml-auto w-full max-sm:px-4 md:max-w-sm">
-            <div className="space-y-3 text-sm">
-              <div className="flex items-center justify-between text-black/60">
-                <span>{common.subTotal}</span>
-                <span>{formatPrice(derivedSummary.subtotal, currency)}</span>
-              </div>
-              {derivedSummary.couponDiscount > 0 && (
-                <div className="flex flex-col gap-1">
-                  <div className="flex items-center justify-between text-green-700">
-                    <span>{common.coupon}</span>
-                    <span>
-                      -{formatPrice(derivedSummary.couponDiscount, currency)}
-                    </span>
-                  </div>
-                  {couponData?.scope && couponData.scope !== 'All' && (
-                    <p className="text-right text-[10px] text-gray-500 italic">
-                      Applied to:{' '}
-                      {couponData.scope === 'Category'
-                        ? couponData.scopeCategory?.name?.[translateLanguage] ||
-                          couponData.scopeCategory?.name?.en
-                        : couponData.scopeProduct?.productName?.[
-                            translateLanguage
-                          ] || couponData.scopeProduct?.productName?.en}
+                {/* Active tab input */}
+                <div>
+                  {contactTab === 'email' ? (
+                    <Field
+                      label={checkout.email || 'Email Address'}
+                      name="contactEmail"
+                      type="email"
+                      value={formData.contactEmail}
+                      onChange={(e) => {
+                        handleChange(e);
+                        setContactError('');
+                      }}
+                    />
+                  ) : (
+                    <Field
+                      label={checkout.phoneNumber || 'Phone Number'}
+                      name="contactPhone"
+                      type="tel"
+                      value={formData.contactPhone}
+                      onChange={(e) => {
+                        handleChange(e);
+                        setContactError('');
+                      }}
+                    />
+                  )}
+                  {contactError && (
+                    <p className="mt-2 flex items-center gap-1.5 text-xs font-medium text-rose-500">
+                      <svg
+                        className="h-3.5 w-3.5 flex-shrink-0"
+                        viewBox="0 0 20 20"
+                        fill="currentColor"
+                      >
+                        <path
+                          fillRule="evenodd"
+                          d="M18 10a8 8 0 1 1-16 0 8 8 0 0 1 16 0Zm-8-5a.75.75 0 0 1 .75.75v4.5a.75.75 0 0 1-1.5 0v-4.5A.75.75 0 0 1 10 5Zm0 10a1 1 0 1 0 0-2 1 1 0 0 0 0 2Z"
+                          clipRule="evenodd"
+                        />
+                      </svg>
+                      {contactError}
                     </p>
                   )}
                 </div>
-              )}
+              </SectionCard>
+            )}
 
-              {(effectiveShippingCharges > 0 || formData.shipping_country) && (
-                <>
-                  <div className="flex items-center justify-between text-black/60">
-                    <span>Shipping</span>
-                    <span>
-                      {derivedSummary.shipping > 0
-                        ? formatPrice(derivedSummary.shipping, currency)
-                        : 'Free'}
-                    </span>
+            {/* Step 2 – Shipping */}
+            <SectionCard
+              step={isUserSignedIn() ? '1' : '2'}
+              title={checkout.shippingAddress || 'Shipping Address'}
+            >
+              <AddressSelector
+                addresses={shippingAddresses}
+                selectedId={selectedShippingId}
+                onSelect={applyShippingAddress}
+                onNewAddress={clearShippingAddress}
+                label="shipping"
+              />
+              {showShippingForm && (
+                <AddressForm
+                  prefix="shipping"
+                  formData={formData}
+                  onChange={handleChange}
+                  stateList={shippingStateList}
+                  checkout={checkout}
+                />
+              )}
+              {!showShippingForm &&
+                selectedShippingId &&
+                selectedShippingId !== 'new' && (
+                  <div className="rounded-xl bg-gray-50 p-4 text-sm text-gray-600">
+                    <p className="font-semibold text-gray-800">
+                      {formData.shipping_firstName} {formData.shipping_lastName}
+                    </p>
+                    <p>{formData.shipping_streetAddress}</p>
+                    <p>
+                      {formData.shipping_city}, {formData.shipping_state}{' '}
+                      {formData.shipping_postalCode}
+                    </p>
+                    <p>
+                      {
+                        Country.getCountryByCode(formData.shipping_country)
+                          ?.name
+                      }
+                    </p>
                   </div>
-                  {derivedSummary.deliveryCouponDiscount > 0 && (
-                    <div className="flex items-center justify-between text-green-700">
-                      <span className="text-xs italic pl-2">
-                        Delivery Discount
-                      </span>
-                      <span>
-                        -
-                        {formatPrice(
-                          derivedSummary.deliveryCouponDiscount,
-                          currency
-                        )}
-                      </span>
-                    </div>
+                )}
+            </SectionCard>
+
+            {/* Step 3 – Billing */}
+            <SectionCard
+              step={isUserSignedIn() ? '2' : '3'}
+              title={checkout.billingAddress || 'Billing Address'}
+            >
+              <label className="mb-4 flex cursor-pointer items-center gap-3 rounded-xl border border-gray-200 px-4 py-3 transition hover:border-gray-400 has-[:checked]:border-gray-800 has-[:checked]:bg-gray-50">
+                <div className="relative">
+                  <input
+                    type="checkbox"
+                    id="sameAsShipping"
+                    checked={isSameAsShipping}
+                    onChange={handleSameAsShippingChange}
+                    className="sr-only peer"
+                  />
+                  <div className="h-5 w-9 rounded-full bg-gray-200 peer-checked:bg-gray-900 transition-colors" />
+                  <div className="absolute top-0.5 left-0.5 h-4 w-4 rounded-full bg-white shadow transition-transform peer-checked:translate-x-4" />
+                </div>
+                <span className="text-sm font-medium text-gray-700">
+                  {checkout.sameAsShippingAddress || 'Same as shipping address'}
+                </span>
+              </label>
+
+              {isSameAsShipping ? (
+                <p className="text-sm text-gray-400 px-1">
+                  Your billing address matches your shipping address.
+                </p>
+              ) : (
+                <>
+                  <AddressSelector
+                    addresses={billingAddresses}
+                    selectedId={selectedBillingId}
+                    onSelect={applyBillingAddress}
+                    onNewAddress={clearBillingAddress}
+                    label="billing"
+                  />
+                  {showBillingForm && (
+                    <AddressForm
+                      prefix="billing"
+                      formData={formData}
+                      onChange={handleChange}
+                      stateList={billingStateList}
+                      checkout={checkout}
+                    />
                   )}
+                  {!showBillingForm &&
+                    selectedBillingId &&
+                    selectedBillingId !== 'new' && (
+                      <div className="rounded-xl bg-gray-50 p-4 text-sm text-gray-600">
+                        <p className="font-semibold text-gray-800">
+                          {formData.billing_firstName}{' '}
+                          {formData.billing_lastName}
+                        </p>
+                        <p>{formData.billing_streetAddress}</p>
+                        <p>
+                          {formData.billing_city}, {formData.billing_state}{' '}
+                          {formData.billing_postalCode}
+                        </p>
+                        <p>
+                          {
+                            Country.getCountryByCode(formData.billing_country)
+                              ?.name
+                          }
+                        </p>
+                      </div>
+                    )}
                 </>
               )}
-              {derivedSummary.bagFee > 0 && (
-                <div className="flex items-center justify-between text-black/60">
-                  <span>Bag Fee</span>
-                  <span>+ {formatPrice(derivedSummary.bagFee, currency)}</span>
-                </div>
-              )}
-              {Number(derivedSummary.creditApplied || 0) > 0 && (
-                <div className="flex items-center justify-between text-green-700">
-                  <span>My Credit</span>
-                  <span>
-                    -
-                    {formatPrice(
-                      Number(derivedSummary.creditApplied),
-                      currency
-                    )}
-                  </span>
-                </div>
-              )}
-              {isUserSignedIn() && (
-                <div className="mb-6 rounded-lg border brown-border bg-[#f8f8f8] p-4">
-                  <div className="flex items-center justify-between gap-3">
-                    <div>
-                      <p className="font-semibold">My Credit</p>
-                      <p className="text-sm text-black/50">
-                        Available:{' '}
-                        {formatPrice(availableCreditsInCurrency, currency)}
-                      </p>
-                    </div>
-                    {appliedCreditAmount > 0 ? (
-                      <button
-                        type="button"
-                        onClick={handleRemoveCredits}
-                        className="text-sm font-semibold text-red-600"
-                      >
-                        Remove
-                      </button>
-                    ) : (
-                      <button
-                        type="button"
-                        onClick={handleApplyCredits}
-                        className="text-sm font-semibold text-black"
-                      >
-                        Apply
-                      </button>
-                    )}
-                  </div>
-                </div>
-              )}
-              <div className="flex items-center justify-between border-t brown-border pt-3 text-lg font-bold">
-                <span>{common.total}</span>
-                <span>{formatPrice(derivedSummary.total, currency)}</span>
-              </div>
+            </SectionCard>
+
+            {/* Submit — left column */}
+            <div className="pt-2 pb-8">
+              <CommonButton
+                variant={6}
+                disabled={loading}
+                type="submit"
+                className="w-full"
+              >
+                {loading ? `${common.pleaseWait}…` : common.checkout}
+              </CommonButton>
+              <p className="mt-3 text-center text-xs text-gray-400">
+                Your payment is secured and encrypted
+              </p>
             </div>
           </div>
-        </div>
 
-        <div className="flex justify-center mt-8">
-          <CommonButton variant={6} disabled={loading} type="submit">
-            {loading ? `${common.pleaseWait} ...` : `${common.checkout}`}
-          </CommonButton>
+          {/* ── RIGHT COLUMN: order summary (sticky on desktop, top on mobile) ── */}
+          <div className="w-full lg:w-[400px] lg:flex-shrink-0">
+            {/* Mobile: plain card at top; Desktop: sticky card */}
+            <div className="lg:sticky lg:top-6">
+              <SectionCard title="Order Summary">
+                {OrderSummaryContent}
+              </SectionCard>
+            </div>
+          </div>
         </div>
       </form>
     </>
   );
 }
-
-// ─── Helpers ──────────────────────────────────────────────────────────────────
-
-const formatShippingBillingAddress = (data) => ({
-  shippingAddress: {
-    firstName: data.shipping_firstName,
-    lastName: data.shipping_lastName,
-    streetAddress: data.shipping_streetAddress,
-    country: data.shipping_country,
-    state: data.shipping_state,
-    postalCode: data.shipping_postalCode,
-    city: data.shipping_city,
-    company: data.shipping_company,
-    phoneNumber: data.shipping_phoneNumber,
-    landmark: data.shipping_landmark,
-  },
-  billingAddress: {
-    firstName: data.billing_firstName,
-    lastName: data.billing_lastName,
-    streetAddress: data.billing_streetAddress,
-    country: data.billing_country,
-    state: data.billing_state,
-    postalCode: data.billing_postalCode,
-    city: data.billing_city,
-    company: data.billing_company,
-    phoneNumber: data.billing_phoneNumber,
-    landmark: data.billing_landmark,
-  },
-});
-
-const getStripePublishableKey = () => {
-  const mode = (import.meta.env.VITE_STRIPE_MODE || 'live').toLowerCase();
-  if (mode === 'test')
-    return (
-      import.meta.env.VITE_STRIPE_TEST_API_KEY ||
-      import.meta.env.VITE_STRIPE_API_KEY ||
-      import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY
-    );
-  return (
-    import.meta.env.VITE_STRIPE_LIVE_API_KEY ||
-    import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY ||
-    import.meta.env.VITE_STRIPE_API_KEY
-  );
-};

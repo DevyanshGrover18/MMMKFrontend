@@ -658,37 +658,14 @@ const ShoppingCart = () => {
                     <h4 className="font-bold text-center md:text-left">
                       {cart.enterPromoCode}
                     </h4>
-                    <div className="flex flex-col lg:flex-row gap-2 my-5">
-                      <input
-                        type="text"
-                        value={couponInput}
-                        onChange={(e) =>
-                          setCouponInput(e.target.value.toUpperCase())
-                        }
-                        className="flex-1 p-3 bg-white border-2 border-gray-300 rounded-lg focus:outline-none focus:border-black transition-colors"
-                        placeholder={cart.enterPromoCode}
-                      />
-                      <button
-                        onClick={() => handleApplyCoupon(couponInput)}
-                        className="px-6 py-3 font-semibold text-white bg-black rounded-lg hover:bg-gray-800 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
-                        disabled={!couponInput || isApplyingCoupon}
-                      >
-                        {isApplyingCoupon ? 'Applying...' : common.apply}
-                      </button>
+                    {/* Promo Code input moved to checkout */}
+                    <div className="mt-4">
+                      <p className="text-gray-500 text-sm">Please proceed to checkout to apply coupon codes.</p>
                     </div>
-                    <CommonButton
-                      variant={1}
-                      className="w-full mb-3 text-black border-2 border-black hover:bg-black hover:text-white transition-colors"
-                      size="md"
-                      type="button"
-                      onClick={() => setIsCouponModalOpen(true)}
-                      disabled={isApplyingCoupon}
-                    >
-                      View Available Coupons
-                    </CommonButton>
+
                     <CommonButton
                       variant={6}
-                      className="w-full mb-6 ms-auto block"
+                      className="w-full mb-6 ms-auto block mt-4"
                       size="md"
                       type="button"
                       onClick={handleProceedToCheckout}
@@ -696,11 +673,6 @@ const ShoppingCart = () => {
                     >
                       {isProceedingToCheckout ? 'Processing...' : common.checkout}
                     </CommonButton>
-                    {/* <NavLink to="/checkout">
-                      <button className="w-full px-3 py-1 font-bold text-white bg-black border-2 md:px-5 md:py-2 brown-border hover:bg-white hover:text-black ">
-                        {common.checkout}
-                      </button>
-                    </NavLink> */}
                   </div>
                 </div>
               </div>

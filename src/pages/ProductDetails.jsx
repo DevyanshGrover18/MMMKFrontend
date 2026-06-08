@@ -204,14 +204,8 @@ const ProductDetails = () => {
     return <ProductDetailsSkeleton />;
   }
 
-  const handleAddToWishList = async (e) => {
+  const handleAddToCart = async (e) => {
     try {
-      if (!isUserSignedIn()) {
-        message.info(common.pleaseLoginToContinue || 'Please login to continue');
-        navigate('/auth', { state: { from: window.location.pathname } });
-        return;
-      }
-
       if (isOutOfStock) {
         message.warning(common.outOfStock || 'Sold out');
         return;
@@ -419,7 +413,7 @@ const ProductDetails = () => {
                         !isOutOfStock && (
                           <button
                             name="buyNow"
-                            onClick={handleAddToWishList}
+                            onClick={handleAddToCart}
                             className="w-full px-3 py-1 font-semibold text-black bg-white md:px-4 md:py-2"
                           >
                             {common.buyNow}
@@ -430,7 +424,7 @@ const ProductDetails = () => {
                       <button
                         name="wishList"
                         type="button"
-                        onClick={handleAddToWishList}
+                        onClick={handleAddToCart}
                         className="w-full py-2 mt-3 font-semibold text-black bg-white"
                         disabled={isOutOfStock}
                     >

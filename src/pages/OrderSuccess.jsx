@@ -126,6 +126,14 @@ const OrderSuccess = () => {
             </p>
           )}
 
+          {order && !order.userId && (
+            <div className="mt-4 p-4 bg-amber-50 border border-amber-200 rounded-xl inline-block">
+              <p className="text-amber-800 font-medium">
+                {common.saveOrderIdReminder || 'Please save this Order ID for future reference, as you are checking out as a guest.'}
+              </p>
+            </div>
+          )}
+
           {order && (
             <div className="mx-auto mt-8 max-w-3xl rounded-3xl border border-gray-200 bg-gray-50 p-6 text-left shadow-sm">
               <div className="grid gap-4 md:grid-cols-2">
@@ -224,9 +232,11 @@ const OrderSuccess = () => {
             <CommonButton variant={6} isLink to="/product-listings">
               {common.continueShopping}
             </CommonButton>
-            <CommonButton variant={6} isLink to="/profile/my-orders">
-              {common.myOrders}
-            </CommonButton>
+            {isUserSignedIn() && (
+              <CommonButton variant={6} isLink to="/profile/my-orders">
+                {common.myOrders}
+              </CommonButton>
+            )}
           </div>
         </div>
       </main>

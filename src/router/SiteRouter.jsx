@@ -75,71 +75,57 @@ export default function SiteRouter() {
           <Route
             path="/shopping-cart"
             element={
-              <UserProtectedRoute>
-                <Suspense fallback={<SiteLoading />}>
-                  <ShoppingCart />
-                </Suspense>
-              </UserProtectedRoute>
+              <Suspense fallback={<SiteLoading />}>
+                <ShoppingCart />
+              </Suspense>
             }
           />
           <Route
             path="/checkout"
             element={
-              <UserProtectedRoute>
-                <Suspense fallback={<SiteLoading />}>
-                  <Checkout />
-                </Suspense>
-              </UserProtectedRoute>
+              <Suspense fallback={<SiteLoading />}>
+                <Checkout />
+              </Suspense>
             }
           />
           <Route
             path="/thank-you/:orderId"
             element={
-              <UserProtectedRoute>
-                <Suspense fallback={<SiteLoading />}>
-                  <ThankYou />
-                </Suspense>
-              </UserProtectedRoute>
+              <Suspense fallback={<SiteLoading />}>
+                <ThankYou />
+              </Suspense>
             }
           />
           <Route
             path="/order-success/:orderId"
             element={
-              <UserProtectedRoute>
-                <Suspense fallback={<SiteLoading />}>
-                  <OrderSuccess />
-                </Suspense>
-              </UserProtectedRoute>
+              <Suspense fallback={<SiteLoading />}>
+                <OrderSuccess />
+              </Suspense>
             }
           />
           <Route
             path="/gift-card-success/:orderId"
             element={
-              <UserProtectedRoute>
-                <Suspense fallback={<SiteLoading />}>
-                  <GiftCardSuccess />
-                </Suspense>
-              </UserProtectedRoute>
+              <Suspense fallback={<SiteLoading />}>
+                <GiftCardSuccess />
+              </Suspense>
             }
           />
           <Route
             path="/gift-card-cancel"
             element={
-              <UserProtectedRoute>
-                <Suspense fallback={<SiteLoading />}>
-                  <GiftCardCancel />
-                </Suspense>
-              </UserProtectedRoute>
+              <Suspense fallback={<SiteLoading />}>
+                <GiftCardCancel />
+              </Suspense>
             }
           />
           <Route
             path="/cancel"
             element={
-              <UserProtectedRoute>
-                <Suspense fallback={<SiteLoading />}>
-                  <PaymentCancel />
-                </Suspense>
-              </UserProtectedRoute>
+              <Suspense fallback={<SiteLoading />}>
+                <PaymentCancel />
+              </Suspense>
             }
           />
           <Route path="/profile">
