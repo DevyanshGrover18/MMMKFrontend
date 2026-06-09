@@ -398,4 +398,9 @@ export const TEXT = {
     term3: 'Cannot be redeemed for cash',
     term4: 'Terms and conditions apply',
   },
+  legal: {
+    privacyPolicy: 'Privacy Policy',
+    returnPolicy: 'Return & Refund Policy',
+    termsConditions: 'Terms & Conditions',
+  },
 };

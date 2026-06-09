@@ -11,6 +11,7 @@ import ComingSoon from '../layout/ComingSoon';
 const Home = lazy(() => import('../pages/Home').catch(() => { window.location.reload(); }));
 const PrivacyPolicy = lazy(() => import('../pages/PrivacyPolicy.jsx').catch(() => { window.location.reload(); }));
 const ReturnPolicy = lazy(() => import('../pages/ReturnPolicy').catch(() => { window.location.reload(); }));
+const TermsConditions = lazy(() => import('../pages/TermsConditions').catch(() => { window.location.reload(); }));
 const AuthPage = lazy(() => import('../pages/AuthPage').catch(() => { window.location.reload(); }));
 const ForgetPassword = lazy(() => import('../pages/ForgetPassword').catch(() => { window.location.reload(); }));
 const NewPassword = lazy(() => import('../pages/NewPassword').catch(() => { window.location.reload(); }));
@@ -303,19 +304,14 @@ export default function SiteRouter() {
               </Suspense>
             }
           />
-          {...[
-            'terms-conditions',
-          ].map((path) => (
-            <Route
-              key={path}
-              path={`/${path}`}
-              element={
-                <Suspense fallback={<SiteLoading />}>
-                  <ComingSoon />
-                </Suspense>
-              }
-            />
-          ))}
+          <Route
+            path="/terms-conditions"
+            element={
+              <Suspense fallback={<SiteLoading />}>
+                <TermsConditions />
+              </Suspense>
+            }
+          />
 
           <Route
             path="*"

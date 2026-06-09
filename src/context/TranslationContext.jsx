@@ -134,7 +134,7 @@ const STATIC_PAGE_TRANSLATIONS = {
         'Descubra a MMMK WODE: onde o luxo encontra a versatilidade. De perfumes sofisticados e joias finas a biquínis elegantes, moda fitness, sandálias artesanais e vestidos de seda refinados, mergulhe em um mundo de estilo elegante.',
       mmmkOfficialWebsite: 'SITE OFICIAL MMMK WODE',
       copyright: 'Copyright © 2026 MMMK WODE. Todos os direitos reservados',
-      productImageAlt: 'Imagem do produto',
+      productImageAlt: 'Imagem do producto',
       collections: 'Coleções',
       collection: 'Coleção',
       bikini: 'Biquíni',
@@ -166,10 +166,10 @@ const STATIC_PAGE_TRANSLATIONS = {
       section11Heading1: 'M MUSK SEDOSO',
       section11Description1:
         'Nosso novo Sensational White Tahara M Silky Musk Intime é uma fragrância única e poderosa, criada originalmente para uso na intimidade. É uma mistura de aromas raros e exóticos, projetada para criar uma atmosfera íntima. Um musk branco luxuoso e exótico é uma fragrância incrivelmente versátil e única. Com seu aroma sensual e textura leve, ele tem sido usado por séculos para criar uma variedade de perfumes. Apesar da presença histórica, secreta e misteriosa entre as mulheres orientais, a aplicação do musk íntimo Tahara é, na verdade, muito simples. É uma fragrância natural derivada de plantas e flores, usada há séculos no Oriente como um cuidado ancestral para nós, Rainhas. Esses ingredientes são combinados de forma a ajudar a relaxar sua mente enquanto estimulam as respostas naturais de excitação do seu corpo e farão milagres para manter você confiante, valiosa, leve e confortável o dia todo. Um segredo perfeito para quem quer melhorar sua rotina de higiene pessoal.',
-      section12Heading1: 'RABO DE CAVALO LOIRO NATURAL DE LUXO',
+      section12Heading1: 'RABO DE CAVALO LOIRO NATURAL DE LUJO',
       section13Heading1: 'TEM PERGUNTAS?',
       section14Heading1:
-        'Nossa Martinica caribenha Miss Universe adora nossa fragrância e joias',
+        'Nossa Martinica caribeña Miss Universe adora nossa fragrância e joias',
       section16Heading1: 'Bastidores das marcas',
       section17Heading1: 'Elegância do dia a dia: guarda-roupa e decoração',
     },
@@ -233,7 +233,7 @@ const STATIC_PAGE_TRANSLATIONS = {
       section12Heading1: 'CODA DI CAVALLO BIONDA NATURALE DI LUSSO',
       section13Heading1: 'HAI DOMANDE?',
       section14Heading1:
-        'La nostra Martinica caraibica Miss Universe ama la nostra fragranza e i gioielli',
+        'La nostra Martinica caraibica Miss Universe ama la nostra fraganza e i gioielli',
       section16Heading1: 'Dietro le quinte dei brand',
       section17Heading1: 'Eleganza quotidiana: guardaroba e arredo',
     },
@@ -489,7 +489,6 @@ const getStaticCategoryTranslation = (name, language) => {
 
   return getFirstDefined(locale, mappedPaths) || null;
 };
-
 const buildStaticPageContent = (page, language) => {
   const staticOverride = STATIC_PAGE_TRANSLATIONS[language]?.[page];
   if (staticOverride) {
@@ -499,8 +498,17 @@ const buildStaticPageContent = (page, language) => {
     };
   }
 
+  // Use local legal translations if available
+  if (page === 'legal') {
+    // Get translations for current language, fallback to 'en'
+    return legalTranslations[language] || legalTranslations['en'];
+  }
+
   if (language === 'en') return TEXT[page];
+// ... (rest of function)
+
   if (FORCE_TRANSLATION_LANGUAGES.has(language)) return null;
+// ... (rest of function)
 
   const locale = STATIC_LOCALES[language];
   if (!locale) return null;
@@ -1164,20 +1172,22 @@ const TranslationProvider = ({ children }) => {
       });
     }
   }, [utils.translateLanguage, categories, recommendedProducts]);
-
   const translatePages = async (pages, language) => {
+    console.log(`[DEBUG] translatePages called for: ${pages.join(', ')}, language: ${language}`);
     const nextContent = { ...utils.content };
     const nextContentInLanguage = { ...utils.contentInLanguage };
 
     for (const page of pages) {
       const cachedPage = utils.contentInLanguage?.[page]?.[language];
       if (cachedPage) {
+        console.log(`[DEBUG] Using cached translation for ${page}`);
         nextContent[page] = cachedPage;
         continue;
       }
 
       const staticPageContent = buildStaticPageContent(page, language);
       if (staticPageContent) {
+        console.log(`[DEBUG] Using static translation for ${page}`);
         nextContent[page] = staticPageContent;
         nextContentInLanguage[page] = {
           ...nextContentInLanguage[page],
@@ -1187,6 +1197,14 @@ const TranslationProvider = ({ children }) => {
       }
 
       try {
+        console.log(`[DEBUG] Requesting translation for ${page}`);
+        
+        // For legal pages, use local legal translations
+        if (page === 'legal') {
+           nextContent[page] = legalTranslations[language] || legalTranslations['en'];
+           continue;
+        }
+
         const translated = await translate(Object.values(TEXT[page]), language);
         const pageContent = Object.fromEntries(
           Object.keys(TEXT[page]).map((key, index) => [key, translated[index]])
@@ -1196,8 +1214,9 @@ const TranslationProvider = ({ children }) => {
           ...nextContentInLanguage[page],
           [language]: pageContent,
         };
+        console.log(`[DEBUG] Successfully translated ${page}`);
       } catch (error) {
-        console.error(`Failed to translate ${page} for ${language}:`, error);
+        console.error(`[DEBUG] Failed to translate ${page} for ${language}:`, error);
         nextContent[page] = TEXT[page];
       }
     }
@@ -1319,4 +1338,7 @@ const pagesWithKeys = {
   '/forgot-password': 'forgotPasswordPage',
   '/gift-cards': 'giftCard',
   '/gift-cards/buy': 'buyGiftCard',
+  '/privacy-policy': 'legal',
+  '/return-policy': 'legal',
+  '/terms-conditions': 'legal',
 };
