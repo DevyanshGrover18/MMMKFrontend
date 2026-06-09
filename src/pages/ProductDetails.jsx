@@ -30,6 +30,8 @@ import { CommonButton } from '../components/global/UIButtons';
 import { convertPrice, formatPrice } from '../utils/currency';
 import { useCurrency } from '../context/CurrencyContext';
 
+const FRAGRANCE_CATEGORY_ID = '690b4024b9a79dc584c332fa';
+
 const ProductDetails = () => {
   const {
     content: { common, productDetails },
@@ -41,6 +43,8 @@ const ProductDetails = () => {
   const navigate = useNavigate();
   const [product, setProduct] = useState({});
   const [selectedSku, setSelectedSku] = useState(null);
+  const [bagCount, setBagCount] = useState(0);
+
   const { currency, rates } = useCurrency();
   const formatConvertedPrice = (amount) =>
     formatPrice(convertPrice(amount, currency, rates), currency);
@@ -53,6 +57,13 @@ const ProductDetails = () => {
   });
   
   const productData = useMemo(() => query.data?.data || {}, [query.data]);
+  const isFragrance = String(productData?.category?._id || productData?.category) === FRAGRANCE_CATEGORY_ID;
+
+  useEffect(() => {
+    if (isFragrance) {
+      setBagCount(1);
+    }
+  }, [isFragrance]);
 
   const SkuQuery = useQuery({
     queryKey: ['product-skus', params.id],
@@ -251,6 +262,7 @@ const ProductDetails = () => {
         productId: params.id,
         sku: selectedSku,
         quantity: count,
+        bags: bagCount,
         showMessage: true,
       });
 
@@ -426,6 +438,35 @@ const ProductDetails = () => {
                           </button>
                         )}
                     </div>
+
+                    {/* Bag Toggle Button */}
+                    {!isOutOfStock && (
+                      <div className="mt-4 flex flex-col gap-2">
+                        <label className="text-sm font-semibold">
+                          {cart.addABag.replace('?', '')} ({isFragrance ? "Free" : formatConvertedPrice(1.79)})
+                        </label>
+                        {isFragrance ? (
+                          <button
+                            className="w-fit px-4 py-2 text-sm font-semibold text-green-700 bg-green-50 border border-green-200 rounded cursor-default"
+                            type="button"
+                          >
+                            Bag Included
+                          </button>
+                        ) : (
+                          <button
+                            className={`w-fit px-4 py-2 text-sm font-semibold rounded border transition-colors ${
+                              bagCount > 0 
+                                ? 'bg-red-50 text-red-600 border-red-200 hover:bg-red-100' 
+                                : 'bg-white text-black border-black hover:bg-gray-50'
+                            }`}
+                            type="button"
+                            onClick={() => setBagCount(prev => prev > 0 ? 0 : 1)}
+                          >
+                            {bagCount > 0 ? 'Remove Bag' : 'Add Bag'}
+                          </button>
+                        )}
+                      </div>
+                    )}
 
                       <button
                         name="wishList"

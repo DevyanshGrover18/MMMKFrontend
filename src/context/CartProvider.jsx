@@ -22,13 +22,15 @@ const APPLIED_COUPON_DATA_KEY = 'appliedCouponData';
 const APPLIED_COUPON_FLAG_KEY = 'isCouponApplied';
 const APPLIED_CREDIT_KEY = 'appliedGiftCardCredit';
 
+const FRAGRANCE_CATEGORY_ID = '690b4024b9a79dc584c332fa';
+
 const calculateCartSummary = ({
   items = [],
   couponData = {},
   isCouponApply = false,
   shippingCharges = 0,
   appliedCreditAmount = 0,
-  isBagAdded = false,
+  isBagAdded = false, // Legacy global bag
   currency = BASE_CURRENCY,
   rates = {},
 }) => {
@@ -107,7 +109,18 @@ const calculateCartSummary = ({
   }
 
   const shipping = convertPrice(shippingCharges || 0, currency, rates);
-  const bagFee = convertPrice(isBagAdded ? 1.79 : 0, currency, rates);
+  
+  // Calculate Bag Fee based on per-product bags
+  const totalChargedBags = items.reduce((acc, item) => {
+    const isFragrance = String(item?.product?.category?._id || item?.product?.category) === FRAGRANCE_CATEGORY_ID;
+    if (isFragrance) return acc;
+    // Enforce 1 bag limit per product line item even if data has more
+    return acc + (Number(item?.bags || 0) > 0 ? 1 : 0);
+  }, 0);
+  
+  const bagFeeBase = totalChargedBags * 1.79;
+  const bagFee = convertPrice(bagFeeBase, currency, rates);
+
   const convertedCredit = convertPrice(appliedCreditAmount || 0, currency, rates);
   const totalBeforeCredits = subtotal - productCouponDiscount - deliveryCouponDiscount + shipping + bagFee;
   const creditApplied = Math.min(
@@ -254,6 +267,7 @@ const CartProvider = ({ children }) => {
           sku: item.sku,
           filters: item.filters || {},
           quantity: item.quantity,
+          bags: item.bags || 0,
         })),
       }).catch(() => {
         // Keep the local cart usable when the backend cart API is unavailable.
@@ -274,6 +288,7 @@ const CartProvider = ({ children }) => {
           );
           if (existingItemIndex > -1) {
             acc[existingItemIndex].quantity += item.quantity;
+            acc[existingItemIndex].bags = (acc[existingItemIndex].bags || 0) + (item.bags || 0);
             acc[existingItemIndex]._id = item._id;
           } else {
             acc.push(item);
@@ -293,8 +308,12 @@ const CartProvider = ({ children }) => {
     sku,
     filters,
     quantity = 1,
+    bags = 0,
     showMessage = true,
   }) => {
+    const isFragrance = String(product?.category?._id || product?.category) === FRAGRANCE_CATEGORY_ID;
+    const finalBags = isFragrance ? 1 : Math.min(1, bags);
+
     const cartItems = JSON.parse(localStorage.getItem('cartItems')) || [];
     const existingItemIndex = cartItems.findIndex(
       (item) => item.product._id === product._id && item.sku === sku
@@ -303,8 +322,10 @@ const CartProvider = ({ children }) => {
     const updatedItems = [...cartItems];
     if (existingItemIndex > -1) {
       updatedItems[existingItemIndex].quantity += quantity;
+      // If fragrance, always force 1. If not, only set to 1 if requested or already 1.
+      updatedItems[existingItemIndex].bags = isFragrance ? 1 : Math.min(1, Math.max(Number(updatedItems[existingItemIndex].bags || 0), finalBags));
     } else {
-      updatedItems.push({ product, sku, filters, quantity });
+      updatedItems.push({ product, sku, filters, quantity, bags: finalBags });
     }
 
     // Update UI and Storage immediately (Optimistic)
@@ -316,9 +337,9 @@ const CartProvider = ({ children }) => {
         sku,
         filters,
         quantity,
+        bags: finalBags,
       }).catch((err) => {
         console.error('Failed to sync cart to backend:', err);
-        // Fallback: Re-sync from localStorage if needed or just keep local state
       });
     }
 
@@ -336,6 +357,7 @@ const CartProvider = ({ children }) => {
     productId,
     sku,
     quantity = 0,
+    bags = 0, // Option to remove bags
     showMessage = true,
   }) => {
     const cartItems = JSON.parse(localStorage.getItem('cartItems')) || [];
@@ -352,6 +374,8 @@ const CartProvider = ({ children }) => {
       if (updatedItems[foundIndex].quantity <= 0) {
         updatedItems.splice(foundIndex, 1);
       }
+    } else if (bags > 0) {
+      updatedItems[foundIndex].bags = Math.max(0, (updatedItems[foundIndex].bags || 0) - bags);
     } else {
       updatedItems.splice(foundIndex, 1);
     }
@@ -360,9 +384,10 @@ const CartProvider = ({ children }) => {
     setCartItems({ items: updatedItems });
 
     if (isUserSignedIn()) {
-      removeCartItems(productId, sku, quantity).catch((err) => {
-         console.error('Failed to sync cart removal to backend:', err);
-      });
+      // NOTE: removeCartItems API currently only supports quantity removal via query params.
+      // If bags need to be removed specifically, we might need to use setCartData for full sync
+      // or update the removal API. For now, we'll use optimistic local update.
+      setCartItems({ items: updatedItems, updateOnBackend: true });
     }
 
     if (showMessage) showNotfication({ type: 'remove' });
@@ -406,6 +431,7 @@ const CartProvider = ({ children }) => {
     productId,
     sku,
     quantity = 1,
+    bags = 0,
     showMessage,
     productData = null, // Optional: pass data to avoid API call
   }) => {
@@ -469,6 +495,7 @@ const CartProvider = ({ children }) => {
       sku: selectedSku.sku,
       filters: selectedSku.filters,
       quantity: requestedQuantity,
+      bags: Number(bags || 0),
       showMessage,
     });
     return true;
@@ -489,6 +516,7 @@ const CartProvider = ({ children }) => {
         removeFromCart,
         clearCart,
         mergeCart,
+        setCartItems,
         addProductToCart,
         calculateCartSummary,
         checkoutSummary,

@@ -144,7 +144,7 @@ export const TEXT = {
     paymentBreakdown: 'Payment Breakdown',
     enterPromoCode: 'Enter Promo Code',
     continueShopping: 'CONTINUE SHOPPING',
-    addABag: 'Add a bag?',
+    addABag: 'Add an exclusive MMMK Wode bag?',
     bagIncludes: 'Premium MMMK WODE gift bag & tissue paper',
     addBag: 'Add Bag',
     removeBag: 'Remove Bag',

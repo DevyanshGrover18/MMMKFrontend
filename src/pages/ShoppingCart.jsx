@@ -29,6 +29,8 @@ import { useCurrency } from '../context/CurrencyContext';
 import RecentlyViewedSlider from '../components/listing/RecentlyViewedSlider';
 import { resolveAssetUrl } from '../utils/assetUrl';
 
+const FRAGRANCE_CATEGORY_ID = '690b4024b9a79dc584c332fa';
+
 const ShoppingCart = () => {
   const {
     content: { cart, common },
@@ -52,7 +54,30 @@ const ShoppingCart = () => {
     setAppliedCreditAmount,
     isBagAdded,
     setIsBagAdded,
+    setCartItems: updateCart,
   } = useCart();
+
+  const handleAdjustBags = async (id, sku, action) => {
+    try {
+      const updatedItems = data.map(item => {
+        if (item.product?._id === id && item.sku === sku) {
+          const isFragrance = String(item.product?.category?._id || item.product?.category) === FRAGRANCE_CATEGORY_ID;
+          if (isFragrance) return item; // No adjustment for fragrance
+
+          // Force 1 or 0
+          return {
+            ...item,
+            bags: action === 'inc' ? 1 : 0
+          };
+        }
+        return item;
+      });
+      
+      updateCart({ items: updatedItems, updateOnBackend: true });
+    } catch (err) {
+      console.error(err);
+    }
+  };
 
   useEffect(() => {
     console.log(`[DEBUG] ShoppingCart Content for ${translateLanguage}:`, { cart, common });
@@ -442,6 +467,7 @@ const ShoppingCart = () => {
                     availableStockByItem[itemKey] ?? Infinity
                   );
                   const atMaxStock = Number(list?.quantity || 0) >= maxAvailable;
+                  const isFragrance = String(list?.product?.category?._id || list?.product?.category) === FRAGRANCE_CATEGORY_ID;
 
                   return (
                     <div
@@ -520,6 +546,41 @@ const ShoppingCart = () => {
 
                       {/* Pricing Section */}
                     </div>
+
+                      {/* Bag Toggle Button per Product */}
+                      <div className="mt-4 flex flex-col md:flex-row justify-between items-center bg-gray-50 p-3 rounded-lg border border-gray-100">
+                        <div className="flex items-center gap-3">
+                           <div className="flex items-center gap-2">
+                              <img src="/mmmk-bag.jpeg" alt="Bag" className="w-8 h-8 object-cover rounded shadow" onError={(e) => { e.target.style.display = 'none'; }} />
+                              <span className="text-sm font-semibold">{cart.addABag} {isFragrance && <span className="text-green-600 font-bold">(Free)</span>}</span>
+                           </div>
+                           
+                           {isFragrance ? (
+                              <button
+                                className="px-3 py-1 text-xs font-semibold text-green-700 bg-green-50 border border-green-200 rounded cursor-default"
+                                type="button"
+                              >
+                                Bag Included
+                              </button>
+                           ) : (
+                              <button
+                                className={`px-3 py-1 text-xs font-semibold rounded border transition-colors ${
+                                  (list.bags || 0) > 0 
+                                    ? 'bg-red-50 text-red-600 border-red-200 hover:bg-red-100' 
+                                    : 'bg-white text-black border-black hover:bg-gray-50'
+                                }`}
+                                type="button"
+                                onClick={() => handleAdjustBags(list.product?._id, list.sku, (list.bags || 0) > 0 ? 'dec' : 'inc')}
+                              >
+                                {(list.bags || 0) > 0 ? 'Remove Bag' : 'Add Bag'}
+                              </button>
+                           )}
+                        </div>
+                        <p className="text-sm font-semibold mt-2 md:mt-0">
+                          {isFragrance ? "Free" : formatConvertedPrice(1.79)}
+                        </p>
+                      </div>
+
                       <div className="flex items-center justify-end gap-4 mt-4">
                         <div className="flex items-center gap-2">
                         <CommonButton
@@ -579,32 +640,6 @@ const ShoppingCart = () => {
                     </div>
                   );
                 })}
-
-                {/* Add Bag Option */}
-                <div className="w-full py-6 px-6 md:px-10 mb-10 bg-white shadow-lg rounded-lg flex items-center justify-between border border-gray-200 mt-4">
-                  <div className="flex items-center gap-4">
-                    <img 
-                      src="/mmmk-bag.jpeg" 
-                      alt="MMMK Bag" 
-                      className="w-16 h-16 object-cover rounded shadow border"
-                      onError={(e) => { e.target.style.display = 'none'; }}
-                    />
-                    <div>
-                      <h3 className="font-semibold text-lg text-gray-800">{cart.addABag}</h3>
-                      <p className="text-sm text-gray-500">{cart.bagIncludes}</p>
-                      <p className="font-semibold">{formatConvertedPrice(1.79)}</p>
-                    </div>
-                  </div>
-                  <div>
-                    <CommonButton 
-                      variant={isBagAdded ? 'danger1' : 'primary1'} 
-                      onClick={() => setIsBagAdded(!isBagAdded)}
-                      size="sm"
-                    >
-                      {isBagAdded ? cart.removeBag : cart.addBag}
-                    </CommonButton>
-                  </div>
-                </div>
 
               </div>
 
