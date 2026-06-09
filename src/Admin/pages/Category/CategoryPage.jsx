@@ -333,9 +333,18 @@ const CategoryPage = () => {
                 total: pagination.total,
                 pageSize: pagination.pageSize,
                 showSizeChanger: true,
-                pageSizeOptions: tablePageSizes,
-                onChange: (page, pageSize) =>
-                  updatePagination({ currentPage: page, pageSize }),
+                pageSizeOptions: ['10', '20', '50', '100', '10000'],
+                onChange: (page, pageSize) => {
+                  const actualPageSize = Number(pageSize);
+                  
+                  // Reset to page 1 only if pageSize changes, otherwise keep current page
+                  const isPageSizeChanged = actualPageSize !== pagination.pageSize;
+                  
+                  updatePagination({ 
+                    currentPage: isPageSizeChanged ? 1 : page, 
+                    pageSize: !isNaN(actualPageSize) ? actualPageSize : pagination.pageSize 
+                  });
+                },
               }}
             />
           </SortableContext>

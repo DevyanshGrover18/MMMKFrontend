@@ -69,7 +69,7 @@ const Footer = () => {
                 <div className="flex justify-center gap-4 mb-8 text-2xl cursor-pointer sm:gap-6 sm:text-3xl">
                   <a
                     className="w-10 h-10 text-black bg-white rounded-md hover:bg-yellow-300 hover:text-white inline-flex items-center justify-center transition-colors"
-                    href="https://www.instagram.com/mmmk_wode?igsh=MXRvbWZhOGJ6dXVyNA=="
+                    href="https://snapchat.com/t/iadrVQMK"
                     target="_blank"
                     rel="noopener noreferrer"
                     aria-label="Snapchat"
@@ -87,7 +87,7 @@ const Footer = () => {
                   </a>
                   <a
                     className="w-10 h-10 text-black bg-white rounded-md hover:text-white hover:bg-violet-800 inline-flex items-center justify-center transition-colors"
-                    href="https://www.instagram.com/mmmk_wode?igsh=MXRvbWZhOGJ6dXVyNA=="
+                    href="https://www.tiktok.com/@mmmk.wode?_r=1&_t=ZS-93aBxbSUzRY"
                     target="_blank"
                     rel="noopener noreferrer"
                     aria-label="TikTok"
