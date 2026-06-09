@@ -7,7 +7,7 @@ import NewsLetter from '../components/global/NewsLetter';
 import bg from '../assets/bg.png';
 import CategoryNavBar from '../components/global/CategoryNavBar';
 import { getOrders } from '../apis/user/order';
-import { refreshPaymentStatus } from '../apis/user/payment';
+import { refreshPaymentStatus, refreshTabbyStatus } from '../apis/user/payment';
 import { useCart } from '../context/CartProvider';
 import { useTranslationContext } from '../context/TranslationContext';
 import { CommonButton } from '../components/global/UIButtons';
@@ -65,17 +65,22 @@ const OrderSuccess = () => {
 
   useEffect(() => {
     if (!orderId || !order || refreshingOrder) return;
-    if (order.mode !== 'card') return;
+    if (order.mode !== 'card' && order.mode !== 'tabby') return;
     if (order.paymentStatus === 'Paid') return;
 
     const refreshOrderStatus = async () => {
       try {
         setRefreshingOrder(true);
-        const response = await refreshPaymentStatus(orderId);
+        if (order.mode === 'card') {
+          await refreshPaymentStatus(orderId);
+        } else if (order.mode === 'tabby') {
+          await refreshTabbyStatus(orderId);
+        }
         await query.refetch();
       } catch (error) {
-        console.error('[ORDER_SUCCESS_PAGE] Failed to refresh card payment', {
+        console.error('[ORDER_SUCCESS_PAGE] Failed to refresh payment', {
           orderId,
+          mode: order.mode,
           error:
             error?.response?.data?.message ||
             error?.response?.data?.error ||
@@ -109,20 +114,20 @@ const OrderSuccess = () => {
       <main className="w-full pb-20 text-black bg-white">
         <div className="w-full gap-5 px-5 py-12 text-center text-black bg-white border-t border-b md:px-20">
           <h2 className="text-xl font-bold text-5th md:text-3xl lg:text-5xl">
-            {order ? common.thankYou : 'Order update'}
+            {order ? common.thankYou : thankYou.orderUpdate}
           </h2>
 
           <p className="py-5 text-sm text-6th md:text-base lg:text-3xl">
             {order
               ? thankYou.orderReceived
               : query.isLoading
-                ? 'Checking your order...'
-                : 'We could not verify this order yet.'}
+                ? thankYou.checkingOrder
+                : thankYou.couldNotVerify}
           </p>
 
           {refreshingOrder && (
             <p className="py-2 text-sm text-gray-500 md:text-base">
-              Refreshing payment confirmation...
+              {thankYou.refreshingPayment}
             </p>
           )}
 
@@ -131,7 +136,7 @@ const OrderSuccess = () => {
               <div className="grid gap-4 md:grid-cols-2">
                 <div>
                   <p className="text-xs uppercase tracking-[0.3em] text-gray-500">
-                    Order ID
+                    {thankYou.orderId}
                   </p>
                   <p className="mt-1 text-lg font-semibold text-gray-900">
                     {order.orderId}
@@ -139,7 +144,7 @@ const OrderSuccess = () => {
                 </div>
                 <div>
                   <p className="text-xs uppercase tracking-[0.3em] text-gray-500">
-                    Status
+                    {thankYou.status}
                   </p>
                   <p className="mt-1 text-lg font-semibold text-gray-900">
                     {order.status || 'Processing'}
@@ -147,7 +152,7 @@ const OrderSuccess = () => {
                 </div>
                 <div>
                   <p className="text-xs uppercase tracking-[0.3em] text-gray-500">
-                    Mode
+                    {thankYou.mode}
                   </p>
                   <p className="mt-1 text-lg font-semibold capitalize text-gray-900">
                     {(() => {
@@ -168,7 +173,7 @@ const OrderSuccess = () => {
                 </div>
                 <div>
                   <p className="text-xs uppercase tracking-[0.3em] text-gray-500">
-                    Payment
+                    {thankYou.payment}
                   </p>
                   <p className="mt-1 text-lg font-semibold text-gray-900">
                     {order.paymentStatus || 'Pending'}
@@ -177,7 +182,7 @@ const OrderSuccess = () => {
                 {juraOrderId && (
                   <div>
                     <p className="text-xs uppercase tracking-[0.3em] text-gray-500">
-                      Jura Order ID
+                      {thankYou.juraOrderId}
                     </p>
                     <p className="mt-1 text-lg font-semibold text-gray-900">
                       {juraOrderId}
@@ -188,7 +193,7 @@ const OrderSuccess = () => {
                   <div className="flex flex-col gap-2 max-w-sm">
                     <div className="flex justify-between items-center">
                       <p className="text-xs uppercase tracking-[0.3em] text-gray-500">
-                        Total
+                        {thankYou.total}
                       </p>
                       <p className="text-lg font-semibold text-gray-900">
                         {formatPrice(displayTotal, currency)}
@@ -197,7 +202,7 @@ const OrderSuccess = () => {
                     {displayCredits > 0 && (
                       <div className="flex justify-between items-center text-green-600">
                         <p className="text-xs uppercase tracking-[0.3em]">
-                          Credits Used
+                          {thankYou.creditsUsed}
                         </p>
                         <p className="text-lg font-semibold">
                           -{formatPrice(displayCredits, currency)}
@@ -207,8 +212,8 @@ const OrderSuccess = () => {
                     <div className="flex justify-between items-center border-t pt-2 mt-1">
                       <p className="text-xs uppercase tracking-[0.3em] text-gray-500">
                         {order?.paymentMethod?.includes('cod') || order?.mode === 'cod' 
-                          ? 'Amount Due' 
-                          : order?.paymentStatus === 'Paid' ? 'Amount Paid' : 'Amount to be Paid'}
+                          ? thankYou.amountDue 
+                          : order?.paymentStatus === 'Paid' ? thankYou.amountPaid : thankYou.amountToBePaid}
                       </p>
                       <p className="text-xl font-bold text-5th">
                         {formatPrice(displayPayable, currency)}

@@ -34,6 +34,7 @@ const ShoppingCart = () => {
     content: { cart, common },
     translateLanguage,
   } = useTranslationContext();
+
   const {
     data,
     refetch,
@@ -52,6 +53,12 @@ const ShoppingCart = () => {
     isBagAdded,
     setIsBagAdded,
   } = useCart();
+
+  useEffect(() => {
+    console.log(`[DEBUG] ShoppingCart Content for ${translateLanguage}:`, { cart, common });
+    console.log(`[DEBUG] ShoppingCart Data on render:`, data);
+  }, [cart, common, translateLanguage, data]);
+
   const navigate = useNavigate();
   const [couponInput, setCouponInput] = useState(null);
   const [cartItems, setCartItems] = useState([]);
@@ -83,7 +90,7 @@ const ShoppingCart = () => {
     formatPrice(convertPrice(amount, currency, rates), currency);
 
   const cartSummary = calculateCartSummary({
-    items: data,
+    items: data || [],
     couponData,
     isCouponApply,
     appliedCreditAmount,
@@ -91,6 +98,14 @@ const ShoppingCart = () => {
     currency,
     rates,
   });
+
+  if (!data) {
+    return (
+      <div className="flex justify-center items-center h-64">
+        <p>{common.loading}</p>
+      </div>
+    );
+  }
 
   const handleApplyCoupon = async (coupon) => {
     if (!coupon) return;
@@ -172,7 +187,7 @@ const ShoppingCart = () => {
         Number(matchingItem.quantity || 0) >= availableQuantity
       ) {
         message.warning(
-          `This item has only ${availableQuantity} pieces left`
+          cart.stockWarning.replace('{qty}', availableQuantity)
         );
         return;
       }
@@ -205,50 +220,59 @@ const ShoppingCart = () => {
   const translationCacheRef = React.useRef({});
 
   const handleTranslateCartData = async (incomingData, language) => {
-    // Check if we need to translate anything
+    console.log(`[DEBUG] handleTranslateCartData: Processing ${incomingData.length} items for language: ${language}`);
+    
+    // 1. Immediately render with English fallback
+    setCartItems(
+      incomingData.map((item) => ({
+        ...item,
+        translated: {
+          productName: item?.product?.productName?.[language] || item?.product?.productName?.en,
+        },
+      }))
+    );
+
+    // 2. Check if we need to translate anything not already in cache or local locale
     const needsTranslation = incomingData.filter(item => {
       const cacheKey = `${item.product?._id}:${language}`;
-      return !translationCacheRef.current[cacheKey];
+      // Only translate if we don't have it in cache AND it's not already in the product data
+      return !translationCacheRef.current[cacheKey] && !item?.product?.productName?.[language];
     });
 
+    console.log(`[DEBUG] Items needing API translation:`, needsTranslation.length);
+
     if (language === 'en' || needsTranslation.length === 0) {
-      return setCartItems(
-        incomingData.map((item) => {
+      return; // Already rendered
+    }
+
+    try {
+      const translatedProductNames = await translate(
+        needsTranslation.map((item) => item?.product?.productName?.en || ''),
+        language
+      );
+      console.log(`[DEBUG] API translation results:`, translatedProductNames);
+
+      // Update cache
+      needsTranslation.forEach((item, index) => {
+        const cacheKey = `${item.product?._id}:${language}`;
+        translationCacheRef.current[cacheKey] = translatedProductNames[index];
+      });
+
+      // Update rendered items with new translations
+      setCartItems(prevItems => 
+        prevItems.map((item) => {
           const cacheKey = `${item.product?._id}:${language}`;
           return {
             ...item,
             translated: {
-              productName: language === 'en' 
-                ? item?.product?.productName?.en 
-                : translationCacheRef.current[cacheKey] || item?.product?.productName?.[language] || item?.product?.productName?.en,
+              productName: translationCacheRef.current[cacheKey] || item?.product?.productName?.[language] || item?.product?.productName?.en,
             },
           };
         })
       );
+    } catch (err) {
+      console.error(`[DEBUG] handleTranslateCartData Error:`, err);
     }
-
-    const translatedProductNames = await translate(
-      needsTranslation.map((item) => item?.product?.productName?.en || ''),
-      language
-    );
-
-    // Update cache
-    needsTranslation.forEach((item, index) => {
-      const cacheKey = `${item.product?._id}:${language}`;
-      translationCacheRef.current[cacheKey] = translatedProductNames[index];
-    });
-
-    setCartItems(
-      incomingData.map((item) => {
-        const cacheKey = `${item.product?._id}:${language}`;
-        return {
-          ...item,
-          translated: {
-            productName: translationCacheRef.current[cacheKey] || item?.product?.productName?.en,
-          },
-        };
-      })
-    );
   };
 
   useEffect(() => {
@@ -519,7 +543,7 @@ const ShoppingCart = () => {
                         </span>
                         <div 
                           className="inline-block"
-                          onClick={() => atMaxStock && !loadings.includes(i) && message.warning(`Only ${maxAvailable} item(s) available for selected option`)}
+                          onClick={() => atMaxStock && !loadings.includes(i) && message.warning(cart.stockWarning.replace('{qty}', maxAvailable))}
                         >
                           <CommonButton
                             onClick={() =>
@@ -566,8 +590,8 @@ const ShoppingCart = () => {
                       onError={(e) => { e.target.style.display = 'none'; }}
                     />
                     <div>
-                      <h3 className="font-semibold text-lg text-gray-800">Add a Bag</h3>
-                      <p className="text-sm text-gray-500">Includes an exclusive MMMK bag with your order.</p>
+                      <h3 className="font-semibold text-lg text-gray-800">{cart.addABag}</h3>
+                      <p className="text-sm text-gray-500">{cart.bagIncludes}</p>
                       <p className="font-semibold">{formatConvertedPrice(1.79)}</p>
                     </div>
                   </div>
@@ -577,7 +601,7 @@ const ShoppingCart = () => {
                       onClick={() => setIsBagAdded(!isBagAdded)}
                       size="sm"
                     >
-                      {isBagAdded ? 'Remove Bag' : 'Add Bag'}
+                      {isBagAdded ? cart.removeBag : cart.addBag}
                     </CommonButton>
                   </div>
                 </div>
@@ -597,7 +621,7 @@ const ShoppingCart = () => {
 
                   {cartSummary.bagFee > 0 && (
                     <div className="flex items-center justify-between my-5 text-gray-600">
-                      <p>Bag Fee</p>
+                      <p>{cart.bagFeeLabel}</p>
                       <p>+ {formatPrice(cartSummary.bagFee, currency)}</p>
                     </div>
                   )}
@@ -673,29 +697,29 @@ const ShoppingCart = () => {
                         className="px-6 py-3 font-semibold text-white bg-black rounded-lg hover:bg-gray-800 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
                         disabled={!couponInput || isApplyingCoupon}
                       >
-                        {isApplyingCoupon ? 'Applying...' : common.apply}
+                        {isApplyingCoupon ? common.applying : common.apply}
                       </button>
-                    </div>
-                    <CommonButton
+                      </div>
+                      <CommonButton
                       variant={1}
                       className="w-full mb-3 text-black border-2 border-black hover:bg-black hover:text-white transition-colors"
                       size="md"
                       type="button"
                       onClick={() => setIsCouponModalOpen(true)}
                       disabled={isApplyingCoupon}
-                    >
-                      View Available Coupons
-                    </CommonButton>
-                    <CommonButton
+                      >
+                      {common.viewAvailableCoupons}
+                      </CommonButton>
+                      <CommonButton
                       variant={6}
                       className="w-full mb-6 ms-auto block"
                       size="md"
                       type="button"
                       onClick={handleProceedToCheckout}
                       disabled={isProceedingToCheckout}
-                    >
-                      {isProceedingToCheckout ? 'Processing...' : common.checkout}
-                    </CommonButton>
+                      >
+                      {isProceedingToCheckout ? common.processing : common.checkout}
+                      </CommonButton>
                     {/* <NavLink to="/checkout">
                       <button className="w-full px-3 py-1 font-bold text-white bg-black border-2 md:px-5 md:py-2 brown-border hover:bg-white hover:text-black ">
                         {common.checkout}

@@ -6,7 +6,7 @@ import {
   getUserCredits,
 } from '../../apis/user/profile';
 import { Country, State } from 'country-state-city';
-import { createPaymentIntent } from '../../apis/user/payment';
+import { createPaymentIntent, createTabbySession } from '../../apis/user/payment';
 import { message } from 'antd';
 import { useCart } from '../../context/CartProvider';
 import PaymentModal from './PaymentModal';
@@ -96,13 +96,14 @@ const AddressSelector = ({
   onSelect,
   onNewAddress,
   label,
+  checkout,
 }) => {
   if (addresses.length === 0) return null;
 
   return (
     <div className="mb-6">
       <p className="text-sm font-medium text-black/60 mb-3">
-        Saved {label} addresses
+        {checkout.saved} {label} {checkout.addresses}
       </p>
       <div className="flex flex-col gap-2">
         {addresses.map((addr) => {
@@ -119,11 +120,11 @@ const AddressSelector = ({
               }`}
             >
               <span className="inline-block text-xs uppercase tracking-wide text-black/40 mr-2">
-                {addr.label || 'Home'}
+                {addr.label || checkout.home}
               </span>
               {addr.isDefault && (
                 <span className="inline-block text-xs bg-black text-white px-1.5 py-0.5 rounded-full mr-2">
-                  Default
+                  {checkout.default}
                 </span>
               )}
               <span className="font-medium">
@@ -146,7 +147,7 @@ const AddressSelector = ({
               : 'border-gray-200 hover:border-gray-400'
           }`}
         >
-          <span className="text-black/60">+ Enter a new address</span>
+          <span className="text-black/60">+ {checkout.enterNewAddress}</span>
         </button>
       </div>
     </div>
@@ -163,12 +164,14 @@ export default function CheckoutForm({
   cartItems,
   translateLanguage,
   common: commonProp,
+  checkout: checkoutProp,
   cart,
 }) {
   const {
-    content: { common: commonCtx, checkout },
+    content: { common: commonCtx, checkout: checkoutCtx },
   } = useTranslationContext();
   const common = commonProp || commonCtx;
+  const checkout = checkoutProp || checkoutCtx;
 
   const navigate = useNavigate();
   const {
@@ -271,7 +274,7 @@ export default function CheckoutForm({
     const eligibleAmountBase = Math.min(availableCredits, neededAmountBase);
 
     if (eligibleAmountBase <= 0) {
-      message.warning('No wallet credit available to apply');
+      message.warning(checkout.noWalletCredit);
       return;
     }
 
@@ -283,13 +286,16 @@ export default function CheckoutForm({
 
     setAppliedCreditAmount(Number(finalAmountBaseToSet.toFixed(2)));
     message.success(
-      `Applied ${formatConvertedPrice(finalAmountBaseToSet)} from My Credit`
+      checkout.creditAppliedMsg.replace(
+        '{amount}',
+        formatConvertedPrice(finalAmountBaseToSet)
+      )
     );
   };
 
   const handleRemoveCredits = () => {
     setAppliedCreditAmount(0);
-    message.success('Removed applied wallet credit');
+    message.success(checkout.creditRemovedMsg);
   };
 
   const shippingAddresses = query.data?.data?.shippingAddresses || [];
@@ -400,7 +406,7 @@ export default function CheckoutForm({
     }
   };
 
-  // ── Payment ──────────────────────────────────────────────────────────────────
+// ── Payment ──────────────────────────────────────────────────────────────────
 
   const handlePaymentChoice = async (mode) => {
     console.log('[CHECKOUT DEBUG]', { currency, currencyRate, total: derivedSummary.total });
@@ -456,6 +462,36 @@ export default function CheckoutForm({
             checkout.checkoutFailed
         );
       }
+    } else if (mode === 'tabby') {
+      try {
+        setLoading(true);
+        const data = await createTabbySession({
+          products: cartData,
+          shippingAddress,
+          billingAddress,
+          shippingCharges: effectiveShippingCharges,
+          couponCode: isCouponApply ? couponCode : null,
+          creditsUsed: derivedSummary.creditApplied,
+          creditsUsedBase: appliedCreditAmount,
+          totalAmount: derivedSummary.total,
+          isBagAdded,
+          currency,
+          currencyRate,
+        });
+
+        if (data?.url) {
+          window.location.href = data.url;
+        } else {
+          throw new Error('Tabby session URL not found');
+        }
+      } catch (err) {
+        setLoading(false);
+        message.error(
+          err?.response?.data?.message ||
+            err?.response?.data?.error ||
+            checkout.checkoutFailed
+        );
+      }
     } else {
       try {
         const res = await createManualOrder({
@@ -475,7 +511,7 @@ export default function CheckoutForm({
         clearCart({ updateOnBackend: true });
         navigate(`/order-success/${res?.data}`);
       } catch (err) {
-        message.error(err?.response?.data?.message);
+        message.error(err?.response?.data?.message || checkout.checkoutFailed);
       }
     }
   };
@@ -601,6 +637,7 @@ export default function CheckoutForm({
               onSelect={applyShippingAddress}
               onNewAddress={clearShippingAddress}
               label="shipping"
+              checkout={checkout}
             />
 
             {showShippingForm && (
@@ -738,7 +775,8 @@ export default function CheckoutForm({
                 selectedId={selectedBillingId}
                 onSelect={applyBillingAddress}
                 onNewAddress={clearBillingAddress}
-                label="billing"
+                label={checkout.billing}
+                checkout={checkout}
               />
             )}
 
@@ -860,7 +898,7 @@ export default function CheckoutForm({
             {/* Show summary of selected saved billing address when form is hidden */}
             {isSameAsShipping && (
               <p className="text-sm text-black/50">
-                Billing address same as shipping.
+                {checkout.billingSameAsShipping}
               </p>
             )}
           </div>
@@ -873,10 +911,10 @@ export default function CheckoutForm({
               <p className="text-xs font-semibold uppercase tracking-[0.28em] text-black/50 mb-1">
                 {common.checkout}
               </p>
-              <h3 className="text-2xl font-bold md:text-4xl">Order Summary</h3>
+              <h3 className="text-2xl font-bold md:text-4xl">{checkout.orderSummary}</h3>
             </div>
             <p className="text-sm text-black/60">
-              {items?.length || 0} item{items?.length === 1 ? '' : 's'}
+              {items?.length || 0} {checkout.item}
             </p>
           </div>
 
@@ -930,7 +968,7 @@ export default function CheckoutForm({
                           </p>
                         )}
                       <p className="mt-3 text-sm text-black/60">
-                        Qty {item?.quantity} x {formatConvertedPrice(unitPrice)}
+                        {checkout.qty} {item?.quantity} x {formatConvertedPrice(unitPrice)}
                       </p>
                     </div>
                     <div className="text-left md:text-right">
@@ -968,7 +1006,7 @@ export default function CheckoutForm({
                   </div>
                   {couponData?.scope && couponData.scope !== 'All' && (
                     <p className="text-right text-[10px] text-gray-500 italic">
-                      Applied to:{' '}
+                      {checkout.appliedTo}:{' '}
                       {couponData.scope === 'Category'
                         ? couponData.scopeCategory?.name?.[translateLanguage] ||
                           couponData.scopeCategory?.name?.en
@@ -983,17 +1021,17 @@ export default function CheckoutForm({
               {(effectiveShippingCharges > 0 || formData.shipping_country) && (
                 <>
                   <div className="flex items-center justify-between text-black/60">
-                    <span>Shipping</span>
+                    <span>{checkout.shippingCharges}</span>
                     <span>
                       {derivedSummary.shipping > 0
                         ? formatPrice(derivedSummary.shipping, currency)
-                        : 'Free'}
+                        : checkout.free}
                     </span>
                   </div>
                   {derivedSummary.deliveryCouponDiscount > 0 && (
                     <div className="flex items-center justify-between text-green-700">
                       <span className="text-xs italic pl-2">
-                        Delivery Discount
+                        {checkout.deliveryDiscount}
                       </span>
                       <span>
                         -
@@ -1008,13 +1046,13 @@ export default function CheckoutForm({
               )}
               {derivedSummary.bagFee > 0 && (
                 <div className="flex items-center justify-between text-black/60">
-                  <span>Bag Fee</span>
+                  <span>{checkout.bagFee}</span>
                   <span>+ {formatPrice(derivedSummary.bagFee, currency)}</span>
                 </div>
               )}
               {Number(derivedSummary.creditApplied || 0) > 0 && (
                 <div className="flex items-center justify-between text-green-700">
-                  <span>My Credit</span>
+                  <span>{checkout.myCredit}</span>
                   <span>
                     -
                     {formatPrice(
@@ -1028,9 +1066,9 @@ export default function CheckoutForm({
                 <div className="mb-6 rounded-lg border brown-border bg-[#f8f8f8] p-4">
                   <div className="flex items-center justify-between gap-3">
                     <div>
-                      <p className="font-semibold">My Credit</p>
+                      <p className="font-semibold">{checkout.myCredit}</p>
                       <p className="text-sm text-black/50">
-                        Available:{' '}
+                        {checkout.available}:{' '}
                         {formatPrice(availableCreditsInCurrency, currency)}
                       </p>
                     </div>
@@ -1040,7 +1078,7 @@ export default function CheckoutForm({
                         onClick={handleRemoveCredits}
                         className="text-sm font-semibold text-red-600"
                       >
-                        Remove
+                        {common.remove}
                       </button>
                     ) : (
                       <button
@@ -1048,7 +1086,7 @@ export default function CheckoutForm({
                         onClick={handleApplyCredits}
                         className="text-sm font-semibold text-black"
                       >
-                        Apply
+                        {common.apply}
                       </button>
                     )}
                   </div>
@@ -1064,7 +1102,7 @@ export default function CheckoutForm({
 
         <div className="flex justify-center mt-8">
           <CommonButton variant={6} disabled={loading} type="submit">
-            {loading ? `${common.pleaseWait} ...` : `${common.checkout}`}
+            {loading ? `${common.pleaseWait} ...` : `${checkout.checkoutButton}`}
           </CommonButton>
         </div>
       </form>

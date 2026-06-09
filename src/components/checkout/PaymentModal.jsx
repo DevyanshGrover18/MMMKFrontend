@@ -1,7 +1,44 @@
 import { Modal } from 'antd';
 import { BsCreditCard2Front, BsCashCoin } from 'react-icons/bs';
+import { LuArrowRight, LuLock } from 'react-icons/lu';
+import { useGlobalContext } from '../../context/GlobalProvider';
 
 const PaymentModal = ({ visible, onClose, onSelectPayment, checkout }) => {
+  const { detectedCountry } = useGlobalContext();
+  const gccCountries = ['AE', 'SA', 'KW', 'BH', 'EG', 'IN'];
+  
+  const isTabbyAllowed = detectedCountry && gccCountries.includes(detectedCountry);
+
+  const allOptions = [
+    {
+      id: 'card',
+      label: checkout?.payWithCard || 'Pay Online',
+      description: checkout?.cardPaymentDescription || 'Visa, Mastercard, Amex, Apple pay etc.',
+      icon: <BsCreditCard2Front size={20} />,
+      iconBg: 'bg-gray-900',
+      iconColor: 'text-white',
+    },
+    {
+      id: 'tabby',
+      label: checkout?.payLaterWithTabby || 'Pay later with Tabby',
+      description: checkout?.tabbyDescription || '4 interest-free payments',
+      icon: <span className="text-[11px] font-black tracking-tight">tabby</span>,
+      iconBg: 'bg-[#3efad9]',
+      iconColor: 'text-black',
+      allowed: isTabbyAllowed,
+    },
+    {
+      id: 'cod',
+      label: checkout?.cashOnDelivery || 'Cash on delivery',
+      description: checkout?.codPaymentDescription || 'Pay when your order arrives',
+      icon: <BsCashCoin size={20} />,
+      iconBg: 'bg-amber-100',
+      iconColor: 'text-amber-700',
+    },
+  ];
+
+  const options = allOptions.filter(opt => opt.allowed !== false);
+
   return (
     <Modal
       title={null}
@@ -9,63 +46,50 @@ const PaymentModal = ({ visible, onClose, onSelectPayment, checkout }) => {
       onCancel={onClose}
       footer={null}
       centered
+      width={420}
       className="checkout-payment-modal"
+      styles={{ content: { padding: 0, borderRadius: 20, overflow: 'hidden' } }}
     >
-      <div className="space-y-4">
-        <div className="space-y-1">
-          <p className="text-xs tracking-[0.3em] uppercase text-gray-400">
-            {checkout?.selectPaymentMethod}
-          </p>
-          <h3 className="text-2xl font-semibold text-gray-900">
-            {checkout?.chooseHowToPay || checkout?.selectPaymentMethod}
-          </h3>
-        </div>
+      {/* Header */}
+      <div className="px-7 pt-7 pb-5">
+        <p className="mb-1.5 text-[10px] font-semibold uppercase tracking-[0.25em] text-gray-400">
+          {checkout?.secureCheckout || 'Secure checkout'}
+        </p>
+        <h3 className="text-[22px] font-semibold text-gray-900">
+          {checkout?.chooseHowToPay || 'How would you like to pay?'}
+        </h3>
+      </div>
 
-        <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+      {/* Options */}
+      <div className="flex flex-col gap-2.5 px-7 pb-7">
+        {options.map((opt) => (
           <button
+            key={opt.id}
             type="button"
-            onClick={() => onSelectPayment('card')}
-            className="flex items-center justify-between rounded-2xl border border-gray-200 bg-white px-4 py-4 text-left transition hover:border-gray-900 hover:shadow-md"
+            onClick={() => onSelectPayment(opt.id)}
+            className="group flex w-full items-center gap-4 rounded-2xl border border-gray-200 bg-white px-4 py-3.5 text-left transition-all duration-150 hover:border-gray-900"
           >
-            <div className="flex items-center gap-3">
-              <span className="flex h-11 w-11 items-center justify-center rounded-full bg-gray-900 text-white">
-                <BsCreditCard2Front />
-              </span>
-              <span>
-                <span className="block text-base font-semibold text-gray-900">
-                  {checkout?.payWithCard}
-                </span>
-                <span className="block text-sm text-gray-500">
-                  {checkout?.cardPaymentDescription ||
-                    checkout?.selectPaymentMethod}
-                </span>
-              </span>
-            </div>
-            <span className="text-sm font-medium text-gray-400">→</span>
+            <span className={`flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-xl ${opt.iconBg} ${opt.iconColor}`}>
+              {opt.icon}
+            </span>
+            <span className="flex-1 min-w-0">
+              <span className="block text-sm font-semibold text-gray-900">{opt.label}</span>
+              <span className="block text-xs text-gray-400 mt-0.5">{opt.description}</span>
+            </span>
+            <LuArrowRight
+              size={16}
+              className="flex-shrink-0 text-gray-300 transition-transform duration-150 group-hover:translate-x-0.5 group-hover:text-gray-600"
+            />
           </button>
+        ))}
+      </div>
 
-          <button
-            type="button"
-            onClick={() => onSelectPayment('cod')}
-            className="flex items-center justify-between rounded-2xl border border-gray-200 bg-white px-4 py-4 text-left transition hover:border-gray-900 hover:shadow-md"
-          >
-            <div className="flex items-center gap-3">
-              <span className="flex h-11 w-11 items-center justify-center rounded-full bg-amber-100 text-amber-700">
-                <BsCashCoin />
-              </span>
-              <span>
-                <span className="block text-base font-semibold text-gray-900">
-                  {checkout?.cashOnDelivery}
-                </span>
-                <span className="block text-sm text-gray-500">
-                  {checkout?.codPaymentDescription ||
-                    checkout?.selectPaymentMethod}
-                </span>
-              </span>
-            </div>
-            <span className="text-sm font-medium text-gray-400">→</span>
-          </button>
-        </div>
+      {/* Footer */}
+      <div className="flex items-center justify-center gap-1.5 border-t border-gray-100 px-7 py-3.5">
+        <LuLock size={11} className="text-gray-300" />
+        <span className="text-[11px] text-gray-400">
+          {checkout?.sslEncrypted || '256-bit SSL encrypted · your data is safe'}
+        </span>
       </div>
     </Modal>
   );

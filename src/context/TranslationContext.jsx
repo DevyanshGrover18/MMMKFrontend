@@ -43,7 +43,7 @@ const STATIC_LOCALES = {
   zh: translationZH,
 };
 
-const FORCE_TRANSLATION_LANGUAGES = new Set(['de', 'es', 'it', 'pt']);
+const FORCE_TRANSLATION_LANGUAGES = new Set([]);
 
 const STATIC_PAGE_TRANSLATIONS = {
   es: {
@@ -80,6 +80,11 @@ const STATIC_PAGE_TRANSLATIONS = {
       whatOurInfluencersSay: '¿Qué dicen nuestros influencers?',
       itemUnavailable: 'Próximamente',
       fragrance: 'Fragancia',
+      checkout: 'Pago',
+      viewAvailableCoupons: 'Ver cupones disponibles',
+      total: 'Total',
+      subTotal: 'Subtotal',
+      continueShopping: 'Continuar comprando',
     },
     homepage: {
       section1Heading1: 'PRESENTAMOS LO NUEVO DE MMMK WODE',
@@ -139,6 +144,11 @@ const STATIC_PAGE_TRANSLATIONS = {
       whatOurInfluencersSay: 'O que nossos influenciadores estão dizendo?',
       itemUnavailable: 'Em breve',
       fragrance: 'Fragrância',
+      checkout: 'Finalizar compra',
+      viewAvailableCoupons: 'Ver cupons disponíveis',
+      total: 'Total',
+      subTotal: 'Subtotal',
+      continueShopping: 'Continuar comprando',
     },
     homepage: {
       section1Heading1: 'APRESENTANDO O NOVO MMMK WODE',
@@ -198,6 +208,11 @@ const STATIC_PAGE_TRANSLATIONS = {
       whatOurInfluencersSay: 'Cosa dicono i nostri influencer?',
       itemUnavailable: 'Prossimamente',
       fragrance: 'Fragranza',
+      checkout: 'Pagamento',
+      viewAvailableCoupons: 'Visualizza coupon disponibili',
+      total: 'Totale',
+      subTotal: 'Subtotale',
+      continueShopping: 'Continua lo shopping',
     },
     homepage: {
       section1Heading1: 'PRESENTIAMO IL NUOVISSIMO MMMK WODE',
@@ -257,6 +272,11 @@ const STATIC_PAGE_TRANSLATIONS = {
       whatOurInfluencersSay: 'Was sagen unsere Influencer?',
       itemUnavailable: 'Demnächst verfügbar',
       fragrance: 'Duft',
+      checkout: 'Bezahlen',
+      viewAvailableCoupons: 'Verfügbare Gutscheine ansehen',
+      total: 'Gesamt',
+      subTotal: 'Zwischensumme',
+      continueShopping: 'Weiter einkaufen',
     },
     homepage: {
       section1Heading1: 'WIR PRÄSENTIEREN DAS BRANDNEUE MMMK WODE',
@@ -557,6 +577,34 @@ const buildStaticPageContent = (page, language) => {
       fragrance:
         getFirstDefined(locale, ['productDetails.fragrance', 'filter.fragrance']) ||
         TEXT.common.fragrance,
+      subTotal:
+        getFirstDefined(locale, ['shopping.SubTotal']) || TEXT.common.subTotal,
+      total:
+        getFirstDefined(locale, ['shopping.Total', 'checkout.total']) ||
+        TEXT.common.total,
+      apply: getFirstDefined(locale, ['shopping.Apply']) || TEXT.common.apply,
+      coupon: getFirstDefined(locale, ['shopping.Coupon']) || TEXT.common.coupon,
+      checkout:
+        getFirstDefined(locale, [
+          'shopping.checkout',
+          'checkout.checkout',
+          'menu.checkout',
+        ]) || TEXT.common.checkout,
+      remove: getFirstDefined(locale, ['shopping.Remove']) || TEXT.common.remove,
+      applying: getFirstDefined(locale, ['applying']) || TEXT.common.applying,
+      viewAvailableCoupons:
+        getFirstDefined(locale, [
+          'viewAvailableCoupons',
+          'shopping.viewAvailableCoupons',
+        ]) || TEXT.common.viewAvailableCoupons,
+      processing:
+        getFirstDefined(locale, ['processing']) || TEXT.common.processing,
+      continueShopping:
+        getFirstDefined(locale, [
+          'shopping.ContinueShopping',
+          'checkout.continueShopping',
+          'continueShopping',
+        ]) || TEXT.common.continueShopping,
     };
   }
 
@@ -678,6 +726,259 @@ const buildStaticPageContent = (page, language) => {
       requiredQuery:
         getFirstDefined(locale, ['contactPage.requiredQuery']) ||
         TEXT.contact.requiredQuery,
+    };
+  }
+
+  if (page === 'cart') {
+    return {
+      ...TEXT.cart,
+      shoppingCart:
+        getFirstDefined(locale, [
+          'shopping.SHOPPING_CART',
+          'shopping.SHIPPING_CART',
+          'cart',
+        ]) || TEXT.cart.shoppingCart,
+      paymentBreakdown:
+        getFirstDefined(locale, [
+          'shopping.PaymentBreakdown',
+          'particularOrder.paymentBreakdown',
+        ]) || TEXT.cart.paymentBreakdown,
+      enterPromoCode:
+        getFirstDefined(locale, ['shopping.EnterPromoCode']) ||
+        TEXT.cart.enterPromoCode,
+      continueShopping:
+        getFirstDefined(locale, [
+          'shopping.ContinueShopping',
+          'checkout.continueShopping',
+        ]) || TEXT.cart.continueShopping,
+      addABag: getFirstDefined(locale, ['shopping.addABag']) || TEXT.cart.addABag,
+      bagIncludes:
+        getFirstDefined(locale, ['shopping.bagIncludes']) || TEXT.cart.bagIncludes,
+      addBag: getFirstDefined(locale, ['shopping.addBag']) || TEXT.cart.addBag,
+      removeBag:
+        getFirstDefined(locale, ['shopping.removeBag']) || TEXT.cart.removeBag,
+      bagFeeLabel:
+        getFirstDefined(locale, ['shopping.bagFeeLabel']) || TEXT.cart.bagFeeLabel,
+      stockWarning:
+        getFirstDefined(locale, ['shopping.stockWarning']) ||
+        TEXT.cart.stockWarning,
+    };
+  }
+
+  if (page === 'checkout') {
+    return {
+      ...TEXT.checkout,
+      shippingCharges:
+        getFirstDefined(locale, [
+          'particularOrder.shippingCharges',
+          'shopping.ShippingCharge',
+          'checkout.shippingCharges',
+        ]) || TEXT.checkout.shippingCharges,
+      tax:
+        getFirstDefined(locale, ['shopping.Taxes', 'checkout.tax']) ||
+        TEXT.checkout.tax,
+      cashOnDeliveryShort:
+        getFirstDefined(locale, [
+          'myOrders.paymentMethods.COD',
+          'checkout.cashOnDeliveryShort',
+        ]) || TEXT.checkout.cashOnDeliveryShort,
+      extraCharges:
+        getFirstDefined(locale, ['checkout.extraCharges']) ||
+        TEXT.checkout.extraCharges,
+      shippingAddress:
+        getFirstDefined(locale, [
+          'checkout.shippingAddress',
+          'addressBook.shippingAddress',
+        ]) || TEXT.checkout.shippingAddress,
+      billingAddress:
+        getFirstDefined(locale, [
+          'checkout.billingAddress',
+          'addressBook.billingAddress',
+        ]) || TEXT.checkout.billingAddress,
+      firstName:
+        getFirstDefined(locale, ['checkout.firstName', 'addressBook.firstName']) ||
+        TEXT.checkout.firstName,
+      lastName:
+        getFirstDefined(locale, ['checkout.lastName', 'addressBook.lastName']) ||
+        TEXT.checkout.lastName,
+      streetAddress:
+        getFirstDefined(locale, [
+          'checkout.streetAddress',
+          'addressBook.streetAddress',
+        ]) || TEXT.checkout.streetAddress,
+      city:
+        getFirstDefined(locale, ['checkout.city', 'addressBook.city']) ||
+        TEXT.checkout.city,
+      state:
+        getFirstDefined(locale, ['checkout.state', 'addressBook.state']) ||
+        TEXT.checkout.state,
+      postalCode:
+        getFirstDefined(locale, [
+          'checkout.postalCode',
+          'addressBook.zipPostalCode',
+        ]) || TEXT.checkout.postalCode,
+      country:
+        getFirstDefined(locale, ['checkout.country', 'addressBook.country']) ||
+        TEXT.checkout.country,
+      company:
+        getFirstDefined(locale, ['checkout.company', 'addressBook.company']) ||
+        TEXT.checkout.company,
+      landmark:
+        getFirstDefined(locale, ['checkout.landmark']) || TEXT.checkout.landmark,
+      sameAsShippingAddress:
+        getFirstDefined(locale, ['checkout.sameAsShippingAddress']) ||
+        TEXT.checkout.sameAsShippingAddress,
+      phoneNumber:
+        getFirstDefined(locale, [
+          'checkout.phoneNumber',
+          'addressBook.phoneNumber',
+        ]) || TEXT.checkout.phoneNumber,
+      selectPaymentMethod:
+        getFirstDefined(locale, ['checkout.selectPaymentMethod']) ||
+        TEXT.checkout.selectPaymentMethod,
+      chooseHowToPay:
+        getFirstDefined(locale, ['checkout.chooseHowToPay']) ||
+        TEXT.checkout.chooseHowToPay,
+      payWithCard:
+        getFirstDefined(locale, ['checkout.payWithCard']) ||
+        TEXT.checkout.payWithCard,
+      cardPaymentDescription:
+        getFirstDefined(locale, ['checkout.cardPaymentDescription']) ||
+        TEXT.checkout.cardPaymentDescription,
+      cashOnDelivery:
+        getFirstDefined(locale, ['checkout.cashOnDelivery']) ||
+        TEXT.checkout.cashOnDelivery,
+      codPaymentDescription:
+        getFirstDefined(locale, ['checkout.codPaymentDescription']) ||
+        TEXT.checkout.codPaymentDescription,
+      redirectingToPaymentGateway:
+        getFirstDefined(locale, ['checkout.redirectingToPaymentGateway']) ||
+        TEXT.checkout.redirectingToPaymentGateway,
+      checkoutFailed:
+        getFirstDefined(locale, ['checkout.checkoutFailed']) ||
+        TEXT.checkout.checkoutFailed,
+      saved: getFirstDefined(locale, ['checkout.saved']) || TEXT.checkout.saved,
+      addresses:
+        getFirstDefined(locale, ['checkout.addresses']) ||
+        TEXT.checkout.addresses,
+      home: getFirstDefined(locale, ['checkout.home']) || TEXT.checkout.home,
+      default:
+        getFirstDefined(locale, ['checkout.default']) || TEXT.checkout.default,
+      enterNewAddress:
+        getFirstDefined(locale, ['checkout.enterNewAddress']) ||
+        TEXT.checkout.enterNewAddress,
+      billing:
+        getFirstDefined(locale, ['checkout.billing']) || TEXT.checkout.billing,
+      billingSameAsShipping:
+        getFirstDefined(locale, ['checkout.billingSameAsShipping']) ||
+        TEXT.checkout.billingSameAsShipping,
+      orderSummary:
+        getFirstDefined(locale, ['checkout.orderSummary']) ||
+        TEXT.checkout.orderSummary,
+      item: getFirstDefined(locale, ['checkout.item']) || TEXT.checkout.item,
+      qty:
+        getFirstDefined(locale, [
+          'savedItems.qty',
+          'myOrders.quantity',
+          'checkout.qty',
+        ]) || TEXT.checkout.qty,
+      appliedTo:
+        getFirstDefined(locale, ['checkout.appliedTo']) ||
+        TEXT.checkout.appliedTo,
+      free: getFirstDefined(locale, ['checkout.free']) || TEXT.checkout.free,
+      deliveryDiscount:
+        getFirstDefined(locale, ['checkout.deliveryDiscount']) ||
+        TEXT.checkout.deliveryDiscount,
+      bagFee: getFirstDefined(locale, ['checkout.bagFee']) || TEXT.checkout.bagFee,
+      myCredit:
+        getFirstDefined(locale, ['userProfile.myCredit', 'checkout.myCredit']) ||
+        TEXT.checkout.myCredit,
+      available:
+        getFirstDefined(locale, ['checkout.available']) ||
+        TEXT.checkout.available,
+      orderPlacedSuccessfully:
+        getFirstDefined(locale, ['orderPlacedSuccessfully', 'checkout.orderPlacedSuccessfully']) ||
+        TEXT.checkout.orderPlacedSuccessfully,
+      checkoutButton:
+        getFirstDefined(locale, [
+          'checkout.checkoutButton',
+          'checkout.checkout',
+          'shopping.CheckoutNow',
+        ]) || TEXT.checkout.checkoutButton,
+      noWalletCredit:
+        getFirstDefined(locale, ['checkout.noWalletCredit']) ||
+        TEXT.checkout.noWalletCredit,
+      creditAppliedMsg:
+        getFirstDefined(locale, ['checkout.creditAppliedMsg']) ||
+        TEXT.checkout.creditAppliedMsg,
+      creditRemovedMsg:
+        getFirstDefined(locale, ['checkout.creditRemovedMsg']) ||
+        TEXT.checkout.creditRemovedMsg,
+      payLaterWithTabby:
+        getFirstDefined(locale, ['checkout.payLaterWithTabby']) ||
+        TEXT.checkout.payLaterWithTabby,
+      tabbyDescription:
+        getFirstDefined(locale, ['checkout.tabbyDescription']) ||
+        TEXT.checkout.tabbyDescription,
+      secureCheckout:
+        getFirstDefined(locale, ['checkout.secureCheckout']) ||
+        TEXT.checkout.secureCheckout,
+      sslEncrypted:
+        getFirstDefined(locale, ['checkout.sslEncrypted']) ||
+        TEXT.checkout.sslEncrypted,
+    };
+  }
+
+  if (page === 'thankYou') {
+    return {
+      ...TEXT.thankYou,
+      orderReceived:
+        getFirstDefined(locale, [
+          'particularOrder.successMessage',
+          'thankYou.orderReceived',
+        ]) || TEXT.thankYou.orderReceived,
+      orderUpdate:
+        getFirstDefined(locale, ['thankYou.orderUpdate']) ||
+        TEXT.thankYou.orderUpdate,
+      checkingOrder:
+        getFirstDefined(locale, ['thankYou.checkingOrder']) ||
+        TEXT.thankYou.checkingOrder,
+      couldNotVerify:
+        getFirstDefined(locale, ['thankYou.couldNotVerify']) ||
+        TEXT.thankYou.couldNotVerify,
+      refreshingPayment:
+        getFirstDefined(locale, ['thankYou.refreshingPayment']) ||
+        TEXT.thankYou.refreshingPayment,
+      orderId:
+        getFirstDefined(locale, [
+          'myOrders.orderID',
+          'thankYou.orderID',
+          'thankYou.orderId',
+        ]) || TEXT.thankYou.orderId,
+      status:
+        getFirstDefined(locale, ['myOrders.status', 'thankYou.status']) ||
+        TEXT.thankYou.status,
+      mode: getFirstDefined(locale, ['thankYou.mode']) || TEXT.thankYou.mode,
+      payment:
+        getFirstDefined(locale, ['thankYou.payment']) || TEXT.thankYou.payment,
+      juraOrderId:
+        getFirstDefined(locale, ['thankYou.juraOrderId']) ||
+        TEXT.thankYou.juraOrderId,
+      total:
+        getFirstDefined(locale, ['shopping.Total', 'thankYou.total']) ||
+        TEXT.thankYou.total,
+      creditsUsed:
+        getFirstDefined(locale, ['thankYou.creditsUsed']) ||
+        TEXT.thankYou.creditsUsed,
+      amountDue:
+        getFirstDefined(locale, ['thankYou.amountDue']) ||
+        TEXT.thankYou.amountDue,
+      amountPaid:
+        getFirstDefined(locale, ['thankYou.amountPaid']) ||
+        TEXT.thankYou.amountPaid,
+      amountToBePaid:
+        getFirstDefined(locale, ['thankYou.amountToBePaid']) ||
+        TEXT.thankYou.amountToBePaid,
     };
   }
 

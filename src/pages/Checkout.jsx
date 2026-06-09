@@ -16,7 +16,7 @@ const Checkout = () => {
   const [shippingCharges, setShippingCharges] = useState(0);
 
   const {
-    content: { common, cart },
+    content: { common, cart, checkout },
     translateLanguage,
   } = useTranslationContext();
   const {
@@ -48,7 +48,7 @@ const Checkout = () => {
 
           <div className="flex flex-col items-center justify-between w-full gap-4 px-6 py-6 text-black bg-white border-t border-b md:flex-row md:py-12 md:gap-5 md:px-10 lg:px-20 brown-border">
             <h2 className="text-xl font-bold md:text-3xl lg:text-5xl">
-              {common.checkout}
+              {checkout.checkoutButton}
             </h2>
             <CommonButton variant={6} isLink to="/product-listings">
               {common.continueShopping}
@@ -65,6 +65,7 @@ const Checkout = () => {
                 cartItems={cartItems}
                 translateLanguage={translateLanguage}
                 common={common}
+                checkout={checkout}
                 cart={cart}
               />
             </div>
