@@ -1248,7 +1248,9 @@ const TranslationProvider = ({ children }) => {
           pathname.startsWith('/order-success')
         )
           pagesToTranslate.push('thankYou');
-        if (pathname.startsWith('/reset-password'))
+        if (pathname.startsWith('/reset-password') || pathname.startsWith('/admin/reset-password'))
+          pagesToTranslate.push('forgotPasswordPage');
+        if (pathname.startsWith('/admin/forgot-password'))
           pagesToTranslate.push('forgotPasswordPage');
         if (pathname.startsWith('/profile/')) {
           pagesToTranslate.push('profile');

@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { LockOutlined, UserOutlined } from '@ant-design/icons';
 import { Form, Input, Button, message, ConfigProvider } from 'antd';
 import { useAdminAuthContext } from '../../context/AdminAuthProvider';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { useForm } from 'antd/es/form/Form';
 import { adminLogin } from '../../apis/nonAuth/adminAuth';
 import '../../css/adminLogin.css';
@@ -106,10 +106,19 @@ const Login = () => {
                 type="primary"
                 htmlType="submit"
                 loading={loading}
-                className="w-full h-12 text-base"
+                className="w-full h-12 text-base mb-4"
               >
                 Log in
               </Button>
+              <div className="text-center">
+                <Link
+                  to="/admin/forgot-password"
+                  title="Forgot Password"
+                  style={{ color: '#fff' }}
+                >
+                  Forgot Password?
+                </Link>
+              </div>
             </Form.Item>
           </Form>
         </ConfigProvider>
