@@ -83,7 +83,14 @@
   "lingerie": "& Lingerie",
   "customerSayingTitle": "Que disent nos influenceurs ?",
   "backstage": "Coulisses des marques",
-  "customers": ["BRIANNA", "KIARA", "RASHAD", "DEVIN", "TAYLOR", "ALEX"],
+  "customers": [
+    "BRIANNA",
+    "KIARA",
+    "RASHAD",
+    "DEVIN",
+    "TAYLOR",
+    "ALEX"
+  ],
   "newsletterTitle": "NEWSLETTER EMAIL",
   "newsletterDescription": "Recevez des contenus exclusifs et des nouvelles de MMMK WODE, et soyez le premier à découvrir les nouveaux produits et annonces spéciales.",
   "signUpButton": "S'INSCRIRE",
@@ -91,7 +98,7 @@
     "banner1": {
       "title": "MMMK WODE",
       "subTitle": "PRÉSENTATION DU TOUT NOUVEAU MMMK WODE",
-      "buttonText": "EXPLORER"
+      "buttonText": "EXPLORE"
     },
     "section2": {
       "title": "BOUTIQUE",
@@ -99,7 +106,11 @@
       "buttonText": "TOUS LES PRODUITS"
     },
     "section9": {
-      "subTitle": ["LUXE", "BLOND NATUREL", "QUEUE DE CHEVAL"]
+      "subTitle": [
+        "LUXE",
+        "BLOND NATUREL",
+        "QUEUE DE CHEVAL"
+      ]
     },
     "section11": {
       "subTitle": [
@@ -193,5 +204,93 @@
     "requiredPhoneCode": "L'indicatif pays est requis",
     "requiredPhoneNumber": "Le numéro de téléphone est requis",
     "requiredQuery": "La demande est requise"
+  },
+  "shopping": {
+    "SHOPPING_CART": "Panier",
+    "SubTotal": "Sous-total",
+    "ShippingCharge": "Frais de livraison",
+    "Taxes": "Taxes",
+    "Total": "Total",
+    "PaymentBreakdown": "Détails du paiement",
+    "EnterPromoCode": "Entrer le code promo",
+    "Apply": "Appliquer",
+    "CheckoutNow": "Payer maintenant",
+    "Remove": "Supprimer",
+    "ContinueShopping": "Continuer les achats",
+    "Coupon": "Coupon",
+    "addABag": "Ajouter un sac ?",
+    "bagIncludes": "Sac cadeau MMMK WODE premium et papier de soie",
+    "addBag": "Ajouter le sac",
+    "removeBag": "Retirer le sac",
+    "bagFeeLabel": "Frais de sac",
+    "stockWarning": "Seulement {qty} article(s) disponible(s) pour l'option sélectionnée",
+    "viewAvailableCoupons": "Voir les coupons disponibles"
+  },
+  "checkout": {
+    "shippingAddress": "Adresse de livraison",
+    "billingAddress": "Adresse de facturation",
+    "firstName": "Prénom",
+    "lastName": "Nom",
+    "streetAddress": "Adresse",
+    "city": "Ville",
+    "state": "État / Province",
+    "postalCode": "Code postal",
+    "country": "Pays",
+    "company": "Entreprise",
+    "landmark": "Point de repère",
+    "sameAsShippingAddress": "Identique à l'adresse de livraison",
+    "phoneNumber": "Numéro de téléphone",
+    "selectPaymentMethod": "Sélectionner le mode de paiement",
+    "chooseHowToPay": "Choisissez comment payer",
+    "payWithCard": "Payer par carte",
+    "cardPaymentDescription": "Paiement sécurisé par carte de crédit ou de débit",
+    "cashOnDelivery": "Paiement à la livraison",
+    "codPaymentDescription": "Payer en espèces à la réception",
+    "redirectingToPaymentGateway": "Redirection vers la passerelle de paiement...",
+    "checkoutFailed": "Échec du paiement",
+    "checkout": "Paiement",
+    "saved": "Enregistré",
+    "addresses": "Adresses",
+    "home": "Domicile",
+    "default": "Par défaut",
+    "enterNewAddress": "Entrer une nouvelle adresse",
+    "billing": "Facturation",
+    "billingSameAsShipping": "La facturation est identique à la livraison",
+    "orderSummary": "Résumé de la commande",
+    "item": "Article",
+    "qty": "Qté",
+    "appliedTo": "Appliqué à",
+    "free": "Gratuit",
+    "deliveryDiscount": "Remise sur la livraison",
+    "bagFee": "Frais de sac",
+    "myCredit": "Mon crédit",
+    "available": "Disponible",
+    "orderPlacedSuccessfully": "Commande passée avec succès",
+    "checkoutButton": "Passer la commande",
+    "noWalletCredit": "Aucun crédit disponible",
+    "creditAppliedMsg": "Crédit appliqué avec succès",
+    "creditRemovedMsg": "Crédit retiré",
+    "payLaterWithTabby": "Payer plus tard avec Tabby",
+    "tabbyDescription": "Divisez votre achat en 4 paiements sans intérêt",
+    "secureCheckout": "Paiement sécurisé",
+    "sslEncrypted": "Cryptage SSL 256 bits"
+  },
+  "thankYou": {
+    "orderReceived": "Votre commande a été reçue !",
+    "orderUpdate": "Nous vous enverrons une mise à jour dès que votre colis sera expédié.",
+    "checkingOrder": "Vérification de votre commande...",
+    "couldNotVerify": "Nous n'avons pas pu vérifier votre commande.",
+    "refreshingPayment": "Actualisation du statut du paiement...",
+    "orderID": "ID de commande",
+    "status": "Statut",
+    "mode": "Mode",
+    "payment": "Paiement",
+    "juraOrderId": "ID de commande Jura",
+    "total": "Total",
+    "subTotal": "Sous-total",
+    "creditsUsed": "Crédits utilisés",
+    "amountDue": "Montant dû",
+    "amountPaid": "Montant payé",
+    "amountToBePaid": "Montant à payer"
   }
 }

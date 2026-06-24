@@ -6,8 +6,7 @@ import {
   getUserCredits,
 } from '../../apis/user/profile';
 import { Country, State } from 'country-state-city';
-import { createPaymentIntent } from '../../apis/user/payment';
-import { createTabbySession } from '../../apis/user/tabby';
+import { createPaymentIntent, createTabbySession } from '../../apis/user/payment';
 import { message } from 'antd';
 import { useCart } from '../../context/CartProvider';
 import PaymentModal from './PaymentModal';

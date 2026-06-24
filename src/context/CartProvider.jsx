@@ -165,9 +165,22 @@ const CartProvider = ({ children }) => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (isUserSignedIn()) setCartItems({ items: query.data?.data || [] });
-    else setCart(JSON.parse(localStorage.getItem('cartItems')) || []);
-  }, [query.data]);
+    console.log('[DEBUG] Cart Query Status:', {
+      isLoading: query.isLoading,
+      isError: query.isError,
+      data: query.data?.data,
+      isUserSignedIn: isUserSignedIn()
+    });
+    if (isUserSignedIn()) {
+      if (query.data) {
+        console.log('[DEBUG] Setting backend cart items.');
+        setCartItems({ items: query.data.data || [] });
+      }
+    } else {
+      console.log('[DEBUG] Setting local cart items.');
+      setCart(JSON.parse(localStorage.getItem('cartItems')) || []);
+    }
+  }, [query.data, query.isLoading]);
 
   useEffect(() => {
     if (query.error && isUserSignedIn()) {
@@ -356,10 +369,9 @@ const CartProvider = ({ children }) => {
   };
 
   const clearCart = ({ updateOnBackend = false } = {}) => {
-    const localCart = JSON.parse(localStorage.getItem('cartItems')) || [];
     localStorage.removeItem('cartItems');
     queryClient.setQueryData(['cart'], { data: [] });
-    setCartItems({ items: [] });
+    setCart([]);
     setCouponCode('');
     setCouponData({});
     setIsCouponApply(false);
@@ -378,14 +390,11 @@ const CartProvider = ({ children }) => {
     localStorage.removeItem(APPLIED_CREDIT_KEY);
     setIsBagAdded(false);
     localStorage.removeItem('isBagAdded');
+
     if (updateOnBackend && isUserSignedIn()) {
-      Promise.allSettled(
-        localCart.map((item) =>
-          removeCartItems(item.product._id, item.sku, item.quantity)
-        )
-      )
-        .catch(() => {
-          // Ignore backend cleanup failures while clearing the local cart.
+      setCartData({ items: [] })
+        .catch((err) => {
+          console.error('Failed to clear backend cart:', err);
         })
         .finally(() => {
           queryClient.invalidateQueries({ queryKey: ['cart'] });

@@ -13,9 +13,36 @@ import {
   SortableContext,
   useSortable,
   verticalListSortingStrategy,
+  rectSortingStrategy,
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { MenuOutlined, PlusOutlined } from '@ant-design/icons';
+import { MenuOutlined, PlusOutlined, DragOutlined } from '@ant-design/icons';
+
+const SortableUploadItem = ({ originNode, file }) => {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: file.uid });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    cursor: 'move',
+    display: 'inline-block',
+    margin: '0 8px 8px 0',
+    ...(isDragging ? { zIndex: 9999, opacity: 0.5 } : {}),
+  };
+
+  return (
+    <div ref={setNodeRef} style={style} {...attributes} {...listeners}>
+      {originNode}
+    </div>
+  );
+};
 import {
   Modal,
   Form,
@@ -1119,38 +1146,60 @@ const PrimaryDetails = ({
           )}
         </Upload>
       </Form.Item>
-      <Form.Item
-        label="Upload Product Images (Gallery)"
-        name="images"
-        rules={[
-          {
-            required: false,
-            message: 'Please upload product images',
-          },
-        ]}
-        valuePropName="fileList"
+      <DndContext
+        sensors={sensors}
+        collisionDetection={closestCenter}
+        onDragEnd={(event) => {
+          const { active, over } = event;
+          if (over && active.id !== over.id) {
+            const oldIndex = images.findIndex((i) => i.uid === active.id);
+            const newIndex = images.findIndex((i) => i.uid === over.id);
+            const newImages = arrayMove(images, oldIndex, newIndex);
+            form.setFieldsValue({ images: newImages });
+          }
+        }}
       >
-        <Upload
-          listType="picture-card"
-          customRequest={runImageUpload}
-          onPreview={handlePreview}
-          onChange={({ fileList }) => {
-            form.setFieldsValue({
-              images: normalizeUploadedFileList(fileList),
-            });
-          }}
-          beforeUpload={beforeUpload}
-          multiple
-          onRemove={(val) => handleDeleteImage(val, 'images')}
+        <SortableContext
+          items={images.map((i) => i.uid)}
+          strategy={rectSortingStrategy}
         >
-          {images?.length >= 5 ? null : (
-            <button type="button">
-              <PlusOutlined />
-              <div style={{ marginTop: 8 }}>Upload</div>
-            </button>
-          )}
-        </Upload>
-      </Form.Item>
+          <Form.Item
+            label="Upload Product Images (Gallery)"
+            name="images"
+            rules={[
+              {
+                required: false,
+                message: 'Please upload product images',
+              },
+            ]}
+            valuePropName="fileList"
+          >
+            <Upload
+              listType="picture-card"
+              customRequest={runImageUpload}
+              onPreview={handlePreview}
+              onChange={({ fileList }) => {
+                form.setFieldsValue({
+                  images: normalizeUploadedFileList(fileList),
+                });
+              }}
+              beforeUpload={beforeUpload}
+              multiple
+              onRemove={(val) => handleDeleteImage(val, 'images')}
+              itemRender={(originNode, file) => (
+                <SortableUploadItem originNode={originNode} file={file} />
+              )}
+            >
+              {images?.length >= 5 ? null : (
+                <button type="button">
+                  <PlusOutlined />
+                  <div style={{ marginTop: 8 }}>Upload</div>
+                </button>
+              )}
+            </Upload>
+          </Form.Item>
+        </SortableContext>
+      </DndContext>
       {isUploadingImages && (
         <div className="mb-4 flex items-center gap-2 text-sm text-slate-600">
           <Spin size="small" />

@@ -1,42 +1,37 @@
-import React, { useEffect, useState } from 'react';
-import { LockOutlined, UserOutlined } from '@ant-design/icons';
+import React, { useState } from 'react';
+import { LockOutlined } from '@ant-design/icons';
 import { Form, Input, Button, message, ConfigProvider } from 'antd';
-import { useAdminAuthContext } from '../../context/AdminAuthProvider';
-import { useNavigate, Link } from 'react-router-dom';
-import { useForm } from 'antd/es/form/Form';
-import { adminLogin } from '../../apis/nonAuth/adminAuth';
+import { useNavigate, useParams } from 'react-router-dom';
+import { adminResetPassword } from '../../apis/nonAuth/adminAuth';
 import '../../css/adminLogin.css';
 import bannerVideo from '../../assets/banner/banner.mp4';
-import { isStoredAdminTokenValid } from '../../utils/adminAuth';
 
-const Login = () => {
-  const [form] = useForm();
+const ResetPassword = () => {
+  const [form] = Form.useForm();
   const [loading, setLoading] = useState(false);
-  const { setData } = useAdminAuthContext();
   const navigate = useNavigate();
+  const { token } = useParams();
+
   const onFinish = async (values) => {
     setLoading(true);
     try {
-      const res = await adminLogin(values);
-      console.log(res);
-      setData(res?.data);
-      localStorage.setItem('adminAuthToken', JSON.stringify(res?.data));
-      return navigate('/admin/dashboard');
+      if (typeof adminResetPassword !== 'function') {
+        throw new Error('API function not found');
+      }
+      const res = await adminResetPassword(token, { password: values.password });
+      message.success(res?.message || 'Password updated successfully');
+      setTimeout(() => {
+        navigate('/admin/login');
+      }, 2000);
     } catch (err) {
-      console.log(err);
+      console.error('Reset password error:', err);
       message.error(
-        err?.response?.data?.message || 'Failed to login please try again'
+        err?.response?.data?.message || err?.message || 'Failed to reset password'
       );
     } finally {
       setLoading(false);
     }
   };
-
-  useEffect(() => {
-    if (isStoredAdminTokenValid()) {
-      navigate('/admin/dashboard');
-    }
-  }, []);
 
   return (
     <div className="min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
@@ -50,10 +45,13 @@ const Login = () => {
       ></video>
       <div className="relative w-full max-w-md space-y-8 bg-[rgba(104,88,36,.5)] p-10 rounded-xl shadow-2xl z-10 backdrop:blur-sm">
         <div className="flex flex-col items-center">
-          <img width={100} src="/Wode Logo.png" />
+          <img width={100} src="/Wode Logo.png" alt="Logo" />
           <h2 className="text-center text-xl font-extrabold text-white">
-            Admin Login
+            Reset Admin Password
           </h2>
+          <p className="mt-2 text-center text-sm text-gray-200">
+            Enter your new password below
+          </p>
         </div>
         <ConfigProvider
           theme={{
@@ -65,39 +63,53 @@ const Login = () => {
           }}
         >
           <Form
-            name="admin_login"
+            name="reset_password"
             className="space-y-6"
-            initialValues={{ remember: true }}
             onFinish={onFinish}
             form={form}
           >
-            <Form.Item
-              name="username"
-              rules={[
-                {
-                  required: true,
-                  message: 'Please input your Username!',
-                },
-              ]}
-            >
-              <Input
-                prefix={<UserOutlined className="site-form-item-icon" />}
-                placeholder="Username"
-                className="h-12 text-base"
-              />
-            </Form.Item>
             <Form.Item
               name="password"
               rules={[
                 {
                   required: true,
-                  message: 'Please input your Password!',
+                  message: 'Please input your new password!',
+                },
+                {
+                  min: 6,
+                  message: 'Password must be at least 6 characters!',
                 },
               ]}
             >
               <Input.Password
                 prefix={<LockOutlined className="site-form-item-icon" />}
-                placeholder="Password"
+                placeholder="New Password"
+                className="h-12 text-base"
+              />
+            </Form.Item>
+            <Form.Item
+              name="confirmPassword"
+              dependencies={['password']}
+              rules={[
+                {
+                  required: true,
+                  message: 'Please confirm your password!',
+                },
+                ({ getFieldValue }) => ({
+                  validator(_, value) {
+                    if (!value || getFieldValue('password') === value) {
+                      return Promise.resolve();
+                    }
+                    return Promise.reject(
+                      new Error('The two passwords do not match!')
+                    );
+                  },
+                }),
+              ]}
+            >
+              <Input.Password
+                prefix={<LockOutlined className="site-form-item-icon" />}
+                placeholder="Confirm New Password"
                 className="h-12 text-base"
               />
             </Form.Item>
@@ -106,19 +118,10 @@ const Login = () => {
                 type="primary"
                 htmlType="submit"
                 loading={loading}
-                className="w-full h-12 text-base mb-4"
+                className="w-full h-12 text-base"
               >
-                Log in
+                Reset Password
               </Button>
-              <div className="text-center">
-                <Link
-                  to="/admin/forgot-password"
-                  title="Forgot Password"
-                  style={{ color: '#fff' }}
-                >
-                  Forgot Password?
-                </Link>
-              </div>
             </Form.Item>
           </Form>
         </ConfigProvider>
@@ -127,4 +130,4 @@ const Login = () => {
   );
 };
 
-export default Login;
+export default ResetPassword;

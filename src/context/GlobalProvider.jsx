@@ -9,6 +9,7 @@ import {
 } from 'react';
 import { getAllCategory } from '../apis/nonAuth/category';
 import { getAllProductsWithFilters } from '../apis/nonAuth/products';
+import { detectLocale } from '../utils/localeDetection';
 
 const GlobalContext = createContext(null);
 
@@ -18,6 +19,7 @@ const GlobalProvider = ({ children }) => {
     categories: [],
     recommendedProducts: [],
     randomProducts: [],
+    detectedCountry: null,
   });
   const updateUtils = (newUtils) => {
     setUtils((prev) => ({ ...prev, ...newUtils }));
@@ -114,6 +116,20 @@ const GlobalProvider = ({ children }) => {
 
   useLayoutEffect(() => {
     handleResizeWindow();
+  }, []);
+
+  useEffect(() => {
+    const initCountry = async () => {
+      try {
+        const detected = await detectLocale();
+        if (detected?.country) {
+          updateUtils({ detectedCountry: detected.country });
+        }
+      } catch (error) {
+        console.error('Global country detection failed:', error);
+      }
+    };
+    initCountry();
   }, []);
 
   return (

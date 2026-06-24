@@ -1,4 +1,4 @@
-export const tablePageSizes = [10, 20, 50, 100];
+export const tablePageSizes = [10, 20, 50, 100, 10000];
 
 export const LANGUAGECODES = [
   'en',

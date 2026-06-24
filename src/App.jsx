@@ -15,6 +15,8 @@ import RootLayout from './layout/RootLayout';
 const SiteRouter = lazy(() => import('./router/SiteRouter').catch(() => { window.location.reload(); }));
 const AdminRouter = lazy(() => import('./router/AdminRouter').catch(() => { window.location.reload(); }));
 const Login = lazy(() => import('./Admin/Auth/Login').catch(() => { window.location.reload(); }));
+const ForgotPassword = lazy(() => import('./Admin/Auth/ForgotPassword').catch(() => { window.location.reload(); }));
+const ResetPassword = lazy(() => import('./Admin/Auth/ResetPassword').catch(() => { window.location.reload(); }));
 
 const router = createBrowserRouter(
   createRoutesFromElements(
@@ -24,6 +26,22 @@ const router = createBrowserRouter(
         element={
           <Suspense fallback={<SiteLoading />}>
             <Login />
+          </Suspense>
+        }
+      />
+      <Route
+        path="/admin/forgot-password"
+        element={
+          <Suspense fallback={<SiteLoading />}>
+            <ForgotPassword />
+          </Suspense>
+        }
+      />
+      <Route
+        path="/admin/reset-password/:token"
+        element={
+          <Suspense fallback={<SiteLoading />}>
+            <ResetPassword />
           </Suspense>
         }
       />
