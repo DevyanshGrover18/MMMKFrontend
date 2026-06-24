@@ -345,6 +345,17 @@
     "continue": "Continue Shopping",
     "checkout": "CHECKOUT",
     "continueShopping": "CONTINUE SHOPPING",
+    "selectPaymentMethod": "Select Payment Method",
+    "chooseHowToPay": "Choose how to pay",
+    "payWithCard": "Pay with Card",
+    "cardPaymentDescription": "Pay securely with your card",
+    "cashOnDelivery": "Cash on Delivery",
+    "codPaymentDescription": "Pay when your order is delivered",
+    "payWithTabby": "Pay with Tabby",
+    "tabbyPaymentDescription": "Pay in installments with Tabby",
+    "tabbySignInDescription": "Sign in to use Tabby",
+    "redirectingToPaymentGateway": "Redirecting to payment gateway...",
+    "checkoutFailed": "Failed to checkout",
     "showAll": "SHOW ALL"
   },
   "productDetails": {

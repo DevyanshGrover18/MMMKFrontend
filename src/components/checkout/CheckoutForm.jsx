@@ -7,10 +7,19 @@ import {
 } from '../../apis/user/profile';
 import { Country, State } from 'country-state-city';
 import { createPaymentIntent } from '../../apis/user/payment';
+import { createTabbySession } from '../../apis/user/tabby';
 import { message } from 'antd';
 import { useCart } from '../../context/CartProvider';
 import PaymentModal from './PaymentModal';
-import { createManualOrder, createGuestOrder } from '../../apis/user/order';
+import { createManualOrder } from '../../apis/user/order';
+import {
+  clearCheckoutVerificationToken,
+  createVerifiedGuestOrder,
+  createVerifiedGuestPaymentIntent,
+  sendCheckoutOtp,
+  setCheckoutVerificationToken,
+  verifyCheckoutOtp,
+} from '../../apis/user/checkoutVerification';
 import { applyCoupon, getValidTokens } from '../../apis/user/coupon';
 import { Modal } from 'antd';
 import { LuX } from 'react-icons/lu';
@@ -75,6 +84,8 @@ const EMPTY_FORM = {
   billing_phoneNumber: '',
   billing_landmark: '',
 };
+
+const OTP_RESEND_SECONDS = 60;
 
 const addressToShippingFields = (addr, prefix) => ({
   [`${prefix}_firstName`]: addr?.firstName || '',
@@ -492,7 +503,6 @@ export default function CheckoutForm({
       });
       const validCoupon = res?.data;
 
-      // Check if coupon is eligible for current cart items
       const tempSummary = calculateCartSummary({
         items: cartData,
         couponData: validCoupon,
@@ -531,13 +541,26 @@ export default function CheckoutForm({
   const [loading, setLoading] = useState(false);
   const [shippingStateList, setShippingStateList] = useState([]);
   const [billingStateList, setBillingStateList] = useState([]);
-  const [formData, setFormData] = useState(EMPTY_FORM);
+
+  // ── FIX: restore email from sessionStorage on mount ──────────────────────────
+  const [formData, setFormData] = useState(() => {
+    const savedEmail = sessionStorage.getItem('checkoutGuestEmail') || '';
+    return { ...EMPTY_FORM, contactEmail: savedEmail };
+  });
+
   const [totalProductWeight, setTotalProductWeight] = useState(0);
   const [isSameAsShipping, setIsSameAsShipping] = useState(false);
   const [selectedShippingId, setSelectedShippingId] = useState(null);
   const [selectedBillingId, setSelectedBillingId] = useState(null);
-  const [contactTab, setContactTab] = useState('email'); // 'email' | 'phone'
   const [contactError, setContactError] = useState('');
+  const [guestEmailVerified, setGuestEmailVerified] = useState(
+    isUserSignedIn() || Boolean(sessionStorage.getItem('checkoutVerificationToken'))
+  );
+  const [otpSent, setOtpSent] = useState(false);
+  const [otpValue, setOtpValue] = useState('');
+  const [otpLoading, setOtpLoading] = useState(false);
+  const [otpError, setOtpError] = useState('');
+  const [resendCountdown, setResendCountdown] = useState(0);
 
   const formatConvertedPrice = (amount) =>
     formatPrice(convertPrice(amount, currency, rates), currency);
@@ -624,6 +647,83 @@ export default function CheckoutForm({
     );
   };
 
+  const applyVerifiedAddressData = (data = {}) => {
+    const savedShippingAddresses = data?.shippingAddresses || [];
+    const savedBillingAddresses = data?.billingAddresses || [];
+    const defaultShipping =
+      savedShippingAddresses.find((a) => a.isDefault) ||
+      savedShippingAddresses[0];
+    const defaultBilling =
+      savedBillingAddresses.find((a) => a.isDefault) ||
+      savedBillingAddresses[0];
+
+    if (defaultShipping) {
+      applyShippingAddress(defaultShipping);
+    } else {
+      clearShippingAddress();
+    }
+
+    if (defaultBilling) {
+      applyBillingAddress(defaultBilling);
+    } else {
+      clearBillingAddress();
+    }
+  };
+
+  const handleSendOtp = async () => {
+    const email = formData.contactEmail.trim().toLowerCase();
+    setContactError('');
+    setOtpError('');
+
+    if (!email) {
+      setContactError('Please enter your email address.');
+      return;
+    }
+
+    setOtpLoading(true);
+    try {
+      const res = await sendCheckoutOtp(email);
+      setOtpSent(true);
+      setResendCountdown(res?.resendAfter || OTP_RESEND_SECONDS);
+      message.success(res?.message || 'OTP sent successfully');
+    } catch (err) {
+      const retryAfter = Number(err?.response?.data?.retryAfter || 0);
+      if (retryAfter > 0) setResendCountdown(retryAfter);
+      setContactError(
+        err?.response?.data?.message || 'Failed to send OTP. Please try again.'
+      );
+    } finally {
+      setOtpLoading(false);
+    }
+  };
+
+  const handleVerifyOtp = async () => {
+    const email = formData.contactEmail.trim().toLowerCase();
+    setOtpError('');
+
+    if (!otpValue.trim()) {
+      setOtpError('Please enter the OTP sent to your email.');
+      return;
+    }
+
+    setOtpLoading(true);
+    try {
+      const res = await verifyCheckoutOtp({ email, otp: otpValue.trim() });
+      if (res?.token) setCheckoutVerificationToken(res.token);
+      setGuestEmailVerified(true);
+      setOtpSent(false);
+      setOtpValue('');
+      applyVerifiedAddressData(res?.data || {});
+      message.success(res?.message || 'Email verified successfully');
+    } catch (err) {
+      setOtpError(
+        err?.response?.data?.message || 'Invalid OTP. Please try again.'
+      );
+    } finally {
+      setOtpLoading(false);
+    }
+  };
+
   const handleRemoveCredits = () => {
     setAppliedCreditAmount(0);
     message.success('Removed applied wallet credit');
@@ -695,8 +795,12 @@ export default function CheckoutForm({
     setBillingStateList([]);
   };
 
+  // ── FIX: persist email to sessionStorage on every change ─────────────────────
   const handleChange = (e) => {
     const { name, value } = e.target;
+    if (name === 'contactEmail') {
+      sessionStorage.setItem('checkoutGuestEmail', value);
+    }
     if (name === 'shipping_country') {
       setShippingStateList(State.getStatesOfCountry(value));
       const newRate = calculateShippingCharges(value, totalProductWeight);
@@ -739,6 +843,47 @@ export default function CheckoutForm({
     const { shippingAddress, billingAddress } =
       formatShippingBillingAddress(formData);
 
+    if (mode === 'tabby') {
+      if (!isUserSignedIn()) {
+        message.warning('Please sign in to pay with Tabby.');
+        return;
+      }
+
+      try {
+        setLoading(true);
+        const payload = {
+          products: cartData,
+          shippingAddress,
+          billingAddress,
+          shippingCharges: effectiveShippingCharges,
+          couponCode: isCouponApply ? couponCode : null,
+          creditsUsed: derivedSummary.creditApplied,
+          creditsUsedBase: appliedCreditAmount,
+          totalAmount: derivedSummary.total,
+          isBagAdded,
+          currency,
+          currencyRate,
+        };
+        const data = await createTabbySession(payload);
+        if (!data?.url) {
+          throw new Error('Tabby checkout URL was not returned');
+        }
+        message.success(
+          checkout.redirectingToPaymentGateway || 'Redirecting to payment gateway...'
+        );
+        window.location.href = data.url;
+      } catch (err) {
+        setLoading(false);
+        message.error(
+          err?.response?.data?.message ||
+            err?.response?.data?.error ||
+            err?.message ||
+            checkout.checkoutFailed
+        );
+      }
+      return;
+    }
+
     if (mode === 'card') {
       try {
         setLoading(true);
@@ -759,7 +904,9 @@ export default function CheckoutForm({
           payload.guestEmail = formData.contactEmail;
           payload.guestPhone = formData.contactPhone;
         }
-        const data = await createPaymentIntent(payload);
+        const data = isUserSignedIn()
+          ? await createPaymentIntent(payload)
+          : await createVerifiedGuestPaymentIntent(payload);
         if (data?.paidWithCredits && data?.orderId) {
           clearCart({ updateOnBackend: true });
           navigate(`/order-success/${data.orderId}`);
@@ -810,7 +957,7 @@ export default function CheckoutForm({
         } else {
           payload.guestEmail = formData.contactEmail;
           payload.guestPhone = formData.contactPhone;
-          res = await createGuestOrder(payload);
+          res = await createVerifiedGuestOrder(payload);
         }
         message.success(res?.message || checkout.orderPlacedSuccessfully);
         clearCart({ updateOnBackend: isUserSignedIn() });
@@ -824,12 +971,9 @@ export default function CheckoutForm({
   const handleSubmit = (e) => {
     e.preventDefault();
 
-    const hasContact =
-      formData.contactEmail.trim() || formData.contactPhone.trim();
-    if (!hasContact) {
-      message.warning(
-        'Please provide either your email or phone number to continue.'
-      );
+    if (!isUserSignedIn() && !guestEmailVerified) {
+      message.warning('Please verify your email before checkout.');
+      contactRef.current?.scrollIntoView({ behavior: 'smooth' });
       return;
     }
 
@@ -904,17 +1048,27 @@ export default function CheckoutForm({
   useEffect(() => {
     onShippingChange?.(calculatedShippingCharges);
   }, [calculatedShippingCharges, onShippingChange]);
+
   useEffect(() => {
     setCheckoutSummary(derivedSummary);
   }, [derivedSummary, setCheckoutSummary]);
+
+  useEffect(() => {
+    if (resendCountdown <= 0) return undefined;
+    const timer = window.setInterval(() => {
+      setResendCountdown((current) => Math.max(0, current - 1));
+    }, 1000);
+    return () => window.clearInterval(timer);
+  }, [resendCountdown]);
 
   const showShippingForm =
     selectedShippingId === 'new' || shippingAddresses.length === 0;
   const showBillingForm =
     !isSameAsShipping &&
     (selectedBillingId === 'new' || billingAddresses.length === 0);
+  const canShowCheckoutForms = isUserSignedIn() || guestEmailVerified;
 
-  // ── Reusable Order Summary block (rendered in both mobile + desktop) ──────────
+  // ── Reusable Order Summary block ──────────────────────────────────────────────
   const OrderSummaryContent = (
     <>
       <p className="mb-4 text-xs text-gray-400">
@@ -1212,279 +1366,296 @@ export default function CheckoutForm({
         onClose={() => setIsModalVisible(false)}
         onSelectPayment={handlePaymentChoice}
         checkout={checkout}
+        canUseTabby={isUserSignedIn()}
       />
 
       <form onSubmit={handleSubmit} className="mx-auto max-w-7xl px-4 py-8">
         <div className="flex flex-col-reverse gap-6 lg:flex-row lg:items-start lg:gap-8">
-          {/* ── LEFT COLUMN: contact + shipping + billing + submit ── */}
+
+          {/* ── LEFT COLUMN ── */}
           <div className="flex-1 min-w-0 space-y-4">
-            {/* Step 1 – Contact */}
+
+            {/* Step 1 – Contact (guests only) */}
             {!isUserSignedIn() && (
-              <SectionCard step="1" title="Contact Information">
-                <p className="mb-4 text-xs text-gray-400">
-                  We'll send your order confirmation here.
-                </p>
+              <SectionCard step="1" title="Contact Information" >
+                <div ref={contactRef}>
+                  <p className="mb-4 text-xs text-gray-400">
+                    We'll send your order confirmation here.
+                  </p>
 
-                {/* Tab switcher */}
-                <div className="mb-5 grid grid-cols-2 gap-3">
-                  {[
-                    {
-                      id: 'email',
-                      label: 'Email',
-                      filled: !!formData.contactEmail,
-                      icon: (
-                        <svg
-                          className="h-5 w-5"
-                          viewBox="0 0 24 24"
-                          fill="none"
-                          stroke="currentColor"
-                          strokeWidth="1.75"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                        >
-                          <rect x="2" y="4" width="20" height="16" rx="2" />
-                          <path d="m2 7 10 7 10-7" />
-                        </svg>
-                      ),
-                    },
-                    {
-                      id: 'phone',
-                      label: 'Phone',
-                      filled: !!formData.contactPhone,
-                      icon: (
-                        <svg
-                          className="h-5 w-5"
-                          viewBox="0 0 24 24"
-                          fill="none"
-                          stroke="currentColor"
-                          strokeWidth="1.75"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                        >
-                          <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12a19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 3.62 1.27h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 8.91a16 16 0 0 0 6.08 6.08l.99-.99a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z" />
-                        </svg>
-                      ),
-                    },
-                  ].map((tab) => {
-                    const isActive = contactTab === tab.id;
-                    return (
-                      <button
-                        key={tab.id}
-                        type="button"
-                        onClick={() => {
-                          setContactTab(tab.id);
-                          setContactError('');
-                        }}
-                        className={`relative flex items-center gap-3 rounded-2xl border-2 px-4 py-3.5 text-left transition-all duration-200 ${
-                          isActive
-                            ? 'border-gray-900 bg-gray-900 text-white'
-                            : 'border-gray-200 bg-white text-gray-500 hover:border-gray-300 hover:bg-gray-50'
-                        }`}
-                      >
-                        <span
-                          className={`flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl transition-colors ${isActive ? 'bg-white/15' : 'bg-gray-100'}`}
-                        >
-                          {tab.icon}
-                        </span>
-                        <span>
-                          <span
-                            className={`block text-sm font-semibold leading-tight ${isActive ? 'text-white' : 'text-gray-800'}`}
-                          >
-                            {tab.label}
-                          </span>
-                        </span>
-                        {tab.filled && (
-                          <span
-                            className={`absolute right-3 top-3 h-2 w-2 rounded-full ${isActive ? 'bg-emerald-400' : 'bg-emerald-500'}`}
-                          />
-                        )}
-                      </button>
-                    );
-                  })}
-                </div>
-
-                {/* Active tab input */}
-                <div>
-                  {contactTab === 'email' ? (
+                  {/* Email row */}
+                  <div className="flex items-end gap-2">
                     <Field
                       label={checkout.email || 'Email Address'}
                       name="contactEmail"
                       type="email"
                       value={formData.contactEmail}
+                      disabled={guestEmailVerified || otpLoading}
                       onChange={(e) => {
                         handleChange(e);
                         setContactError('');
+                        setOtpError('');
+                        // Reset verification if email changes
+                        if (guestEmailVerified) {
+                          setGuestEmailVerified(false);
+                          setOtpSent(false);
+                          sessionStorage.removeItem('checkoutVerificationToken');
+                          clearCheckoutVerificationToken?.();
+                        }
                       }}
+                      required
+                      className="flex-1"
                     />
-                  ) : (
-                    <Field
-                      label={checkout.phoneNumber || 'Phone Number'}
-                      name="contactPhone"
-                      type="tel"
-                      value={formData.contactPhone}
-                      onChange={(e) => {
-                        handleChange(e);
-                        setContactError('');
-                      }}
-                    />
-                  )}
-                  {contactError && (
-                    <p className="mt-2 flex items-center gap-1.5 text-xs font-medium text-rose-500">
-                      <svg
-                        className="h-3.5 w-3.5 flex-shrink-0"
-                        viewBox="0 0 20 20"
-                        fill="currentColor"
+                    {/* Send / Resend / Verified button — inline with email */}
+                    {!guestEmailVerified && (
+                      <button
+                        type="button"
+                        disabled={otpLoading}
+                        onClick={handleSendOtp}
+                        className="h-[52px] flex-shrink-0 rounded-xl border border-gray-900 bg-gray-900 px-4 text-sm font-semibold text-white transition hover:bg-gray-700 disabled:opacity-50"
                       >
-                        <path
-                          fillRule="evenodd"
-                          d="M18 10a8 8 0 1 1-16 0 8 8 0 0 1 16 0Zm-8-5a.75.75 0 0 1 .75.75v4.5a.75.75 0 0 1-1.5 0v-4.5A.75.75 0 0 1 10 5Zm0 10a1 1 0 1 0 0-2 1 1 0 0 0 0 2Z"
-                          clipRule="evenodd"
+                        {otpLoading
+                          ? '…'
+                          : otpSent
+                            ? 'Resend'
+                            : 'Send OTP'}
+                      </button>
+                    )}
+                  </div>
+
+                  {/* Verified state */}
+                  {guestEmailVerified && (
+                    <div className="mt-3 flex items-center justify-between rounded-xl bg-emerald-50 px-4 py-3">
+                      <div className="flex items-center gap-2">
+                        {/* checkmark */}
+                        <svg className="h-4 w-4 text-emerald-600 flex-shrink-0" viewBox="0 0 20 20" fill="currentColor">
+                          <path fillRule="evenodd" d="M10 18a8 8 0 1 0 0-16 8 8 0 0 0 0 16Zm3.857-9.809a.75.75 0 0 0-1.214-.882l-3.483 4.79-1.88-1.88a.75.75 0 1 0-1.06 1.061l2.5 2.5a.75.75 0 0 0 1.137-.089l4-5.5Z" clipRule="evenodd" />
+                        </svg>
+                        <span className="text-sm font-medium text-emerald-700">
+                          {formData.contactEmail} verified
+                        </span>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setGuestEmailVerified(false);
+                          setOtpSent(false);
+                          setOtpValue('');
+                          sessionStorage.removeItem('checkoutVerificationToken');
+                          clearCheckoutVerificationToken?.();
+                        }}
+                        className="text-xs font-medium text-emerald-700 underline hover:text-emerald-900"
+                      >
+                        Change
+                      </button>
+                    </div>
+                  )}
+
+                  {/* OTP entry — only shown after send, before verified */}
+                  {otpSent && !guestEmailVerified && (
+                    <div className="mt-3 space-y-3">
+                      <p className="text-xs text-gray-500">
+                        Enter the 6-digit code sent to{' '}
+                        <span className="font-semibold text-gray-700">
+                          {formData.contactEmail}
+                        </span>
+                      </p>
+
+                      {/* OTP input + Verify in one row */}
+                      <div className="flex items-center gap-2">
+                        <input
+                          value={otpValue}
+                          onChange={(event) => {
+                            setOtpValue(event.target.value.replace(/\D/g, '').slice(0, 6));
+                            setOtpError('');
+                          }}
+                          inputMode="numeric"
+                          maxLength={6}
+                          placeholder="• • • • • •"
+                          className="
+                            w-full rounded-xl border border-gray-200 px-4 py-3
+                            text-center text-lg font-semibold tracking-[0.4em]
+                            outline-none transition focus:border-gray-800
+                            focus:ring-2 focus:ring-gray-800/10
+                          "
                         />
+                        <CommonButton
+                          variant={6}
+                          type="button"
+                          disabled={otpLoading || otpValue.length < 6}
+                          className="h-[50px] flex-shrink-0 px-5"
+                          onClick={handleVerifyOtp}
+                        >
+                          {otpLoading ? '…' : 'Verify'}
+                        </CommonButton>
+                      </div>
+
+                      {/* Resend countdown */}
+                      <p className="text-xs text-gray-400">
+                        {resendCountdown > 0 ? (
+                          <>Resend available in <span className="font-semibold text-gray-600">{resendCountdown}s</span></>
+                        ) : (
+                          <button
+                            type="button"
+                            onClick={handleSendOtp}
+                            disabled={otpLoading}
+                            className="font-semibold text-gray-700 underline hover:text-gray-900 disabled:opacity-50"
+                          >
+                            Resend OTP
+                          </button>
+                        )}
+                      </p>
+                    </div>
+                  )}
+
+                  {/* Errors */}
+                  {(contactError || otpError) && (
+                    <p className="mt-2 flex items-center gap-1.5 text-xs font-medium text-rose-500">
+                      <svg className="h-3.5 w-3.5 flex-shrink-0" viewBox="0 0 20 20" fill="currentColor">
+                        <path fillRule="evenodd" d="M18 10a8 8 0 1 1-16 0 8 8 0 0 1 16 0Zm-8-5a.75.75 0 0 1 .75.75v4.5a.75.75 0 0 1-1.5 0v-4.5A.75.75 0 0 1 10 5Zm0 10a1 1 0 1 0 0-2 1 1 0 0 0 0 2Z" clipRule="evenodd" />
                       </svg>
-                      {contactError}
+                      {contactError || otpError}
                     </p>
                   )}
                 </div>
               </SectionCard>
             )}
 
-            {/* Step 2 – Shipping */}
-            <SectionCard
-              step={isUserSignedIn() ? '1' : '2'}
-              title={checkout.shippingAddress || 'Shipping Address'}
-            >
-              <AddressSelector
-                addresses={shippingAddresses}
-                selectedId={selectedShippingId}
-                onSelect={applyShippingAddress}
-                onNewAddress={clearShippingAddress}
-                label="shipping"
-              />
-              {showShippingForm && (
-                <AddressForm
-                  prefix="shipping"
-                  formData={formData}
-                  onChange={handleChange}
-                  stateList={shippingStateList}
-                  checkout={checkout}
-                />
-              )}
-              {!showShippingForm &&
-                selectedShippingId &&
-                selectedShippingId !== 'new' && (
-                  <div className="rounded-xl bg-gray-50 p-4 text-sm text-gray-600">
-                    <p className="font-semibold text-gray-800">
-                      {formData.shipping_firstName} {formData.shipping_lastName}
-                    </p>
-                    <p>{formData.shipping_streetAddress}</p>
-                    <p>
-                      {formData.shipping_city}, {formData.shipping_state}{' '}
-                      {formData.shipping_postalCode}
-                    </p>
-                    <p>
-                      {
-                        Country.getCountryByCode(formData.shipping_country)
-                          ?.name
-                      }
-                    </p>
-                  </div>
-                )}
-            </SectionCard>
+            {/* Steps 2 & 3 – Shipping + Billing (hidden until contact verified) */}
+            <div className={canShowCheckoutForms ? '' : 'hidden'}>
 
-            {/* Step 3 – Billing */}
-            <SectionCard
-              step={isUserSignedIn() ? '2' : '3'}
-              title={checkout.billingAddress || 'Billing Address'}
-            >
-              <label className="mb-4 flex cursor-pointer items-center gap-3 rounded-xl border border-gray-200 px-4 py-3 transition hover:border-gray-400 has-[:checked]:border-gray-800 has-[:checked]:bg-gray-50">
-                <div className="relative">
-                  <input
-                    type="checkbox"
-                    id="sameAsShipping"
-                    checked={isSameAsShipping}
-                    onChange={handleSameAsShippingChange}
-                    className="sr-only peer"
-                  />
-                  <div className="h-5 w-9 rounded-full bg-gray-200 peer-checked:bg-gray-900 transition-colors" />
-                  <div className="absolute top-0.5 left-0.5 h-4 w-4 rounded-full bg-white shadow transition-transform peer-checked:translate-x-4" />
-                </div>
-                <span className="text-sm font-medium text-gray-700">
-                  {checkout.sameAsShippingAddress || 'Same as shipping address'}
-                </span>
-              </label>
-
-              {isSameAsShipping ? (
-                <p className="text-sm text-gray-400 px-1">
-                  Your billing address matches your shipping address.
-                </p>
-              ) : (
-                <>
-                  <AddressSelector
-                    addresses={billingAddresses}
-                    selectedId={selectedBillingId}
-                    onSelect={applyBillingAddress}
-                    onNewAddress={clearBillingAddress}
-                    label="billing"
-                  />
-                  {showBillingForm && (
-                    <AddressForm
-                      prefix="billing"
-                      formData={formData}
-                      onChange={handleChange}
-                      stateList={billingStateList}
-                      checkout={checkout}
-                    />
-                  )}
-                  {!showBillingForm &&
-                    selectedBillingId &&
-                    selectedBillingId !== 'new' && (
-                      <div className="rounded-xl bg-gray-50 p-4 text-sm text-gray-600">
-                        <p className="font-semibold text-gray-800">
-                          {formData.billing_firstName}{' '}
-                          {formData.billing_lastName}
-                        </p>
-                        <p>{formData.billing_streetAddress}</p>
-                        <p>
-                          {formData.billing_city}, {formData.billing_state}{' '}
-                          {formData.billing_postalCode}
-                        </p>
-                        <p>
-                          {
-                            Country.getCountryByCode(formData.billing_country)
-                              ?.name
-                          }
-                        </p>
-                      </div>
-                    )}
-                </>
-              )}
-            </SectionCard>
-
-            {/* Submit — left column */}
-            <div className="pt-2 pb-8">
-              <CommonButton
-                variant={6}
-                disabled={loading}
-                type="submit"
-                className="w-full"
+              {/* Shipping */}
+              <SectionCard
+                step={isUserSignedIn() ? '1' : '2'}
+                title={checkout.shippingAddress || 'Shipping Address'}
               >
-                {loading ? `${common.pleaseWait}…` : common.checkout}
-              </CommonButton>
-              <p className="mt-3 text-center text-xs text-gray-400">
-                Your payment is secured and encrypted
-              </p>
+                <AddressSelector
+                  addresses={shippingAddresses}
+                  selectedId={selectedShippingId}
+                  onSelect={applyShippingAddress}
+                  onNewAddress={clearShippingAddress}
+                  label="shipping"
+                />
+                {showShippingForm && (
+                  <AddressForm
+                    prefix="shipping"
+                    formData={formData}
+                    onChange={handleChange}
+                    stateList={shippingStateList}
+                    checkout={checkout}
+                  />
+                )}
+                {!showShippingForm &&
+                  selectedShippingId &&
+                  selectedShippingId !== 'new' && (
+                    <div className="rounded-xl bg-gray-50 p-4 text-sm text-gray-600">
+                      <p className="font-semibold text-gray-800">
+                        {formData.shipping_firstName} {formData.shipping_lastName}
+                      </p>
+                      <p>{formData.shipping_streetAddress}</p>
+                      <p>
+                        {formData.shipping_city}, {formData.shipping_state}{' '}
+                        {formData.shipping_postalCode}
+                      </p>
+                      <p>
+                        {Country.getCountryByCode(formData.shipping_country)?.name}
+                      </p>
+                    </div>
+                  )}
+              </SectionCard>
+
+              {/* Billing */}
+              <SectionCard
+                step={isUserSignedIn() ? '2' : '3'}
+                title={checkout.billingAddress || 'Billing Address'}
+              >
+                <label className="mb-4 flex cursor-pointer items-center gap-3 rounded-xl border border-gray-200 px-4 py-3 transition hover:border-gray-400 has-[:checked]:border-gray-800 has-[:checked]:bg-gray-50">
+                  <div className="relative">
+                    <input
+                      type="checkbox"
+                      id="sameAsShipping"
+                      checked={isSameAsShipping}
+                      onChange={handleSameAsShippingChange}
+                      className="sr-only peer"
+                    />
+                    <div className="h-5 w-9 rounded-full bg-gray-200 peer-checked:bg-gray-900 transition-colors" />
+                    <div className="absolute top-0.5 left-0.5 h-4 w-4 rounded-full bg-white shadow transition-transform peer-checked:translate-x-4" />
+                  </div>
+                  <span className="text-sm font-medium text-gray-700">
+                    {checkout.sameAsShippingAddress || 'Same as shipping address'}
+                  </span>
+                </label>
+
+                {isSameAsShipping ? (
+                  <p className="text-sm text-gray-400 px-1">
+                    Your billing address matches your shipping address.
+                  </p>
+                ) : (
+                  <>
+                    <AddressSelector
+                      addresses={billingAddresses}
+                      selectedId={selectedBillingId}
+                      onSelect={applyBillingAddress}
+                      onNewAddress={clearBillingAddress}
+                      label="billing"
+                    />
+                    {showBillingForm && (
+                      <AddressForm
+                        prefix="billing"
+                        formData={formData}
+                        onChange={handleChange}
+                        stateList={billingStateList}
+                        checkout={checkout}
+                      />
+                    )}
+                    {!showBillingForm &&
+                      selectedBillingId &&
+                      selectedBillingId !== 'new' && (
+                        <div className="rounded-xl bg-gray-50 p-4 text-sm text-gray-600">
+                          <p className="font-semibold text-gray-800">
+                            {formData.billing_firstName}{' '}
+                            {formData.billing_lastName}
+                          </p>
+                          <p>{formData.billing_streetAddress}</p>
+                          <p>
+                            {formData.billing_city}, {formData.billing_state}{' '}
+                            {formData.billing_postalCode}
+                          </p>
+                          <p>
+                            {Country.getCountryByCode(formData.billing_country)?.name}
+                          </p>
+                        </div>
+                      )}
+                  </>
+                )}
+              </SectionCard>
+
+              {/* Submit */}
+              <div className="pt-2 pb-8">
+                <CommonButton
+                  variant={6}
+                  disabled={loading}
+                  type="submit"
+                  className="w-full"
+                >
+                  {loading ? `${common.pleaseWait}…` : common.checkout}
+                </CommonButton>
+                <p className="mt-3 text-center text-xs text-gray-400">
+                  Your payment is secured and encrypted
+                </p>
+              </div>
             </div>
           </div>
 
-          {/* ── RIGHT COLUMN: order summary (sticky on desktop, top on mobile) ── */}
+          {/* ── RIGHT COLUMN: order summary ── */}
           <div className="w-full lg:w-[400px] lg:flex-shrink-0">
-            {/* Mobile: plain card at top; Desktop: sticky card */}
             <div className="lg:sticky lg:top-6">
               <SectionCard title="Order Summary">
                 {OrderSummaryContent}
               </SectionCard>
             </div>
           </div>
+
         </div>
       </form>
     </>

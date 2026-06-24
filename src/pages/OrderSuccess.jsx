@@ -8,6 +8,7 @@ import bg from '../assets/bg.png';
 import CategoryNavBar from '../components/global/CategoryNavBar';
 import { getOrders } from '../apis/user/order';
 import { refreshPaymentStatus } from '../apis/user/payment';
+import { refreshTabbyStatus } from '../apis/user/tabby';
 import { useCart } from '../context/CartProvider';
 import { useTranslationContext } from '../context/TranslationContext';
 import { CommonButton } from '../components/global/UIButtons';
@@ -17,6 +18,7 @@ import {
   formatPrice,
 } from '../utils/currency';
 import { useCurrency } from '../context/CurrencyContext';
+import { isUserSignedIn } from '../utils/globalMethods';
 
 const OrderSuccess = () => {
   const { orderId } = useParams();
@@ -65,17 +67,22 @@ const OrderSuccess = () => {
 
   useEffect(() => {
     if (!orderId || !order || refreshingOrder) return;
-    if (order.mode !== 'card') return;
+    if (!['card', 'tabby'].includes(order.mode)) return;
     if (order.paymentStatus === 'Paid') return;
 
     const refreshOrderStatus = async () => {
       try {
         setRefreshingOrder(true);
-        const response = await refreshPaymentStatus(orderId);
+        if (order.mode === 'tabby') {
+          await refreshTabbyStatus(orderId);
+        } else {
+          await refreshPaymentStatus(orderId);
+        }
         await query.refetch();
       } catch (error) {
-        console.error('[ORDER_SUCCESS_PAGE] Failed to refresh card payment', {
+        console.error('[ORDER_SUCCESS_PAGE] Failed to refresh payment', {
           orderId,
+          mode: order.mode,
           error:
             error?.response?.data?.message ||
             error?.response?.data?.error ||

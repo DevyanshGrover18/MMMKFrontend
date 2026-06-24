@@ -208,10 +208,10 @@ const ProductListing = () => {
           </div>
 
           {/* Main Content Section */}
-          <main className="grid w-full grid-cols-1 md:grid-cols-12">
-            <div className="w-full md:col-span-3 lg:col-span-2 md:border-b-0">
+          <main className="grid w-full grid-cols-1 lg:grid-cols-12">
+            <div className="w-full lg:col-span-2 lg:border-b-0">
               {/* Desktop Filter */}
-              <div className="hidden md:block">
+              <div className="hidden lg:block">
                 <Suspense
                   fallback={
                     <div className="h-[80vh] w-full bg-black p-4 text-white">
@@ -227,8 +227,8 @@ const ProductListing = () => {
                 </Suspense>
               </div>
 
-              {/* Mobile Filter Button */}
-              <div className="flex items-end justify-end mr-2 md:hidden">
+              {/* Mobile and tablet filter button */}
+              <div className="flex items-end justify-end mr-2 lg:hidden">
                 <button
                   type="button"
                   onClick={toggleFilterSidebar}
@@ -242,7 +242,7 @@ const ProductListing = () => {
             </div>
 
             {/* Right (ProductGrid component) */}
-            <div className="w-full md:col-span-9 lg:col-span-10">
+            <div className="w-full lg:col-span-10">
               {query.isLoading ? (
                 <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4">
                   {[...Array(8)].map((_, i) => (
@@ -270,7 +270,7 @@ const ProductListing = () => {
 
           {/* Sidebar Filter (Mobile Only) */}
           {isFilterSidebarOpen && (
-            <div className="fixed inset-y-0 right-0 z-[30] w-[80%] max-w-sm bg-black border-l border-white p-5 transform transition-transform duration-300 md:hidden">
+            <div className="fixed inset-y-0 right-0 z-[30] w-[80%] max-w-sm bg-black border-l border-white p-5 transform transition-transform duration-300 lg:hidden">
               <div className="flex items-center justify-between pb-4 border-b border-gray-600">
                 <h3 className="text-xl font-bold text-white">
                   {common.filters}
@@ -300,7 +300,7 @@ const ProductListing = () => {
           {isFilterSidebarOpen && (
             <div
               onClick={toggleFilterSidebar}
-              className="fixed inset-0 z-12 bg-black bg-opacity-50 md:hidden"
+              className="fixed inset-0 z-12 bg-black bg-opacity-50 lg:hidden"
             ></div>
           )}
 

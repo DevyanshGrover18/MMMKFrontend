@@ -76,3 +76,28 @@ export const resolveAssetUrl = (value = '') => {
 
   return `${DEPLOYED_UPLOADS_BASE_URL.replace(/\/$/, '')}/${filename}`;
 };
+
+const getFileNameFromAsset = (value = '') => {
+  if (!value) return '';
+
+  if (isAbsoluteAssetUrl(value)) {
+    try {
+      return new URL(value).pathname.split('/').pop() || '';
+    } catch {
+      return '';
+    }
+  }
+
+  return String(value).replace(/^\/+/, '').split('/').pop() || '';
+};
+
+export const getThumbnailAssetUrl = (value = '') => {
+  const fileName = getFileNameFromAsset(value);
+  if (!fileName) return '';
+  if (fileName.startsWith('thumb-')) {
+    return resolveAssetUrl(fileName);
+  }
+
+  const baseName = fileName.replace(/\.[^.]+$/, '');
+  return resolveAssetUrl(`thumb-${baseName}.webp`);
+};

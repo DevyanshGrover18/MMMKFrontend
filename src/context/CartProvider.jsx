@@ -413,7 +413,7 @@ const CartProvider = ({ children }) => {
     }
 
     // Resolve SKU details
-    if (Array.isArray(finalProduct?.filters) && finalProduct.filters.length === 0) {
+    if (!Array.isArray(finalProduct?.filters) || finalProduct.filters.length === 0) {
       // Product has no variants
       selectedSku = { sku: sku || productId, quantity: finalProduct.quantity, filters: {} };
     } else {
