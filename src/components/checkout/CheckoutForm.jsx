@@ -679,6 +679,14 @@ export default function CheckoutForm({
         requestPayerName: true,
         requestPayerEmail: true,
         requestPayerPhone: true,
+        shippingOptions: [
+          {
+            id: 'delivery',
+            label: 'Delivery',
+            detail: 'Standard delivery fee calculated based on your address',
+            amount: 0,
+          },
+        ],
       });
 
       pr.canMakePayment().then((result) => {
@@ -705,7 +713,7 @@ export default function CheckoutForm({
           const deliveryFee = res.deliveryFee;
           onShippingChange?.(deliveryFee);
 
-          const subtotal = derivedSummaryRef.current.subtotal;
+          const subtotal = derivedSummaryRef.current?.subtotal || 0;
           const updatedTotal = subtotal + deliveryFee;
 
           ev.updateWith({
@@ -720,6 +728,14 @@ export default function CheckoutForm({
                 amount: Math.round(deliveryFee * 100),
               },
             ],
+            shippingOptions: [
+              {
+                id: 'delivery',
+                label: 'Delivery',
+                detail: 'Standard delivery fee calculated based on your address',
+                amount: Math.round(deliveryFee * 100),
+              },
+            ],
             total: {
               label: 'Total',
               amount: Math.round(updatedTotal * 100),
@@ -729,6 +745,10 @@ export default function CheckoutForm({
           console.error('Error in shippingaddresschange', err);
           ev.updateWith({ status: 'fail' });
         }
+      });
+
+      pr.on('shippingoptionchange', (ev) => {
+        ev.updateWith({ status: 'success' });
       });
 
       pr.on('paymentmethod', async (ev) => {
