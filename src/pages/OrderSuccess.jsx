@@ -6,8 +6,8 @@ import Banner from '../components/global/Banner';
 import NewsLetter from '../components/global/NewsLetter';
 import bg from '../assets/bg.png';
 import CategoryNavBar from '../components/global/CategoryNavBar';
-import { getOrders } from '../apis/user/order';
-import { refreshPaymentStatus, refreshTabbyStatus } from '../apis/user/payment';
+import { getOrderByIdPublic } from '../apis/user/order';
+import { refreshPaymentStatusPublic, refreshTabbyStatusPublic } from '../apis/user/payment';
 import { useCart } from '../context/CartProvider';
 import { useTranslationContext } from '../context/TranslationContext';
 import { CommonButton } from '../components/global/UIButtons';
@@ -30,7 +30,7 @@ const OrderSuccess = () => {
 
   const query = useQuery({
     queryKey: ['order-success', orderId],
-    queryFn: () => getOrders({ orderId }),
+    queryFn: () => getOrderByIdPublic(orderId),
     enabled: !!orderId,
   });
 
@@ -72,9 +72,9 @@ const OrderSuccess = () => {
       try {
         setRefreshingOrder(true);
         if (order.mode === 'card') {
-          await refreshPaymentStatus(orderId);
+          await refreshPaymentStatusPublic(orderId);
         } else if (order.mode === 'tabby') {
-          await refreshTabbyStatus(orderId);
+          await refreshTabbyStatusPublic(orderId);
         }
         await query.refetch();
       } catch (error) {
@@ -98,7 +98,7 @@ const OrderSuccess = () => {
     if (
       order &&
       !cartCleared &&
-      (order.paymentStatus === 'Paid' || order.status === 'Processing')
+      (order.paymentStatus === 'Paid' || order.status === 'Processing' || order.mode === 'cod')
     ) {
       clearCart({ updateOnBackend: true });
       setCartCleared(true);

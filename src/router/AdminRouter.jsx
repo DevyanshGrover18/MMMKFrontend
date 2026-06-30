@@ -38,6 +38,8 @@ const FormWithFields = lazy(
 const Footer = lazy(() => import('../Admin/pages/editPage/home/footer/Footer').catch(() => { window.location.reload(); }));
 const FilterPage = lazy(() => import('../Admin/pages/Filters/FilterPage').catch(() => { window.location.reload(); }));
 const PaymentPage = lazy(() => import('../Admin/pages/Payments/PaymentPage').catch(() => { window.location.reload(); }));
+const TopStripPage = lazy(() => import('../Admin/pages/TopStrip/TopStripPage').catch(() => { window.location.reload(); }));
+const HomeBanner = lazy(() => import('../Admin/pages/editPage/home/banner/BannerBubbleSettings').catch(() => { window.location.reload(); }));
 
 export default function AdminRouter() {
   return (
@@ -190,6 +192,22 @@ export default function AdminRouter() {
             element={
               <AdminSidebar>
                 <PaymentPage />
+              </AdminSidebar>
+            }
+          />
+          <Route
+            path="top-strip"
+            element={
+              <AdminSidebar>
+                <TopStripPage />
+              </AdminSidebar>
+            }
+          />
+          <Route
+            path="banner-bubble"
+            element={
+              <AdminSidebar>
+                <HomeBanner />
               </AdminSidebar>
             }
           />

@@ -101,7 +101,7 @@ export const TEXT = {
     soldOut: 'Sold Out',
   },
   homepage: {
-    section1Heading1: 'INTRODUCING THE ALL NEW MMMK WODE',
+    section1Heading1: 'BE BLESSED & ENJOY ALL THE DESIGNS',
     section2Heading1: 'MMMK WODE COLLECTIONS',
     section4Heading1: 'EXCLUSIVE HANDMADE DRESSES',
     section4Heading2: 'ELEGANCE COMFORT STYLE',

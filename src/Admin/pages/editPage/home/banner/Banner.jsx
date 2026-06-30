@@ -16,6 +16,7 @@ import BannerForm from './BannerForm';
 import { getHomeBanner } from '../../../../../apis/admin/editPage';
 import { useQuery } from '@tanstack/react-query';
 import { resolveAssetUrl } from '../../../../../utils/assetUrl';
+import BannerBubble from '../../../../../components/global/BannerBubble';
 
 const Banner = ({ children, minHight = '300px', bg }) => {
   const { t, i18n } = useTranslation();
@@ -195,6 +196,11 @@ const Banner = ({ children, minHight = '300px', bg }) => {
         </Container>
         <div className="w-full relative z-[2]">
           <div className="text-white text-center md:h-[70vh] h-[80vh] flex flex-col items-center justify-center md:mt-16 md:mb-0 -mb-56">
+            <BannerBubble
+              text={query?.data?.home?.banner?.bubbleText}
+              link={query?.data?.home?.banner?.bubbleLink}
+              enabled={query?.data?.home?.banner?.bubbleEnabled}
+            />
             <h4 className="text-lg sm:text-5xl md:text-6xl lg:text-2xl">
               {query?.data?.home?.banner?.title[i18n.language]}
             </h4>

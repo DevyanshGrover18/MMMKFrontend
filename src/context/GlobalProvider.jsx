@@ -10,6 +10,7 @@ import {
 import { getAllCategory } from '../apis/nonAuth/category';
 import { getAllProductsWithFilters } from '../apis/nonAuth/products';
 import { detectLocale } from '../utils/localeDetection';
+import { getTopStrip } from '../apis/nonAuth/editPage';
 
 const GlobalContext = createContext(null);
 
@@ -49,6 +50,12 @@ const GlobalProvider = ({ children }) => {
   const Categories = useQuery({
     queryKey: ['getAllCategory'],
     queryFn: getAllCategory,
+  });
+
+  const TopStripQuery = useQuery({
+    queryKey: ['top-strip'],
+    queryFn: getTopStrip,
+    staleTime: 600000,
   });
 
   const recommendedProducts = useQuery({
@@ -140,6 +147,9 @@ const GlobalProvider = ({ children }) => {
         reorderCategories,
         categoryOrder,
         isRecommendedLoading: recommendedProducts.isLoading,
+        topStrip: TopStripQuery.data?.data || null,
+        isTopStripLoading: TopStripQuery.isLoading,
+        refetchTopStrip: TopStripQuery.refetch,
       }}
     >
       {children}

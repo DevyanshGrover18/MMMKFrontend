@@ -22,3 +22,9 @@ export const requestReturnExchange = async (orderId, data) => {
   const response = await order.post(`/request-return-exchange/${orderId}`, data);
   return response.data;
 };
+
+const checkoutPublic = createUserApiClient('/api/v1/checkout', 30000);
+export const getOrderByIdPublic = async (orderId) => {
+  const response = await checkoutPublic.get(`/order/${orderId}`);
+  return response.data;
+};

@@ -390,6 +390,8 @@ const CartProvider = ({ children }) => {
     localStorage.removeItem(APPLIED_CREDIT_KEY);
     setIsBagAdded(false);
     localStorage.removeItem('isBagAdded');
+    sessionStorage.removeItem('checkoutGuestEmail');
+    sessionStorage.removeItem('checkoutVerificationToken');
 
     if (updateOnBackend && isUserSignedIn()) {
       setCartData({ items: [] })
@@ -423,8 +425,9 @@ const CartProvider = ({ children }) => {
 
     // Resolve SKU details
     if (!Array.isArray(finalProduct?.filters) || finalProduct.filters.length === 0) {
-      // Product has no variants
-      selectedSku = { sku: sku || productId, quantity: finalProduct.quantity, filters: {} };
+      // Product has no variants — use empty string, NOT the productId, as the sku value.
+      // Passing an _id as sku causes the backend to fail with "SKU not found".
+      selectedSku = { sku: sku || '', quantity: finalProduct.quantity, filters: {} };
     } else {
       const skus = await getProductSkus(productId);
       selectedSku = skus.find((s) => s.sku === sku);

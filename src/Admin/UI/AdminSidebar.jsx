@@ -116,6 +116,18 @@ export default function AdminSidebar({ children }) {
         title: 'Support',
         key: '/admin/support',
       },
+      {
+        icon: <SlidersHorizontal size={15} />,
+        label: 'Top Strip',
+        title: 'Top Strip',
+        key: '/admin/top-strip',
+      },
+      {
+        icon: <FileText size={15} />,
+        label: 'Banner Bubble',
+        title: 'Banner Bubble',
+        key: '/admin/banner-bubble',
+      },
       // {
       //   icon: <FileText size={15} />,
       //   label: "Edit Pages",

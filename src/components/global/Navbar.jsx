@@ -11,8 +11,10 @@ import SearchDrawer from './SearchDrawer';
 import { useTranslationContext } from '../../context/TranslationContext';
 import LanguageDropdown from './LanguageDropdown';
 import CurrencyDropdown from './CurrencyDropdown';
+import { useGlobalContext } from '../../context/GlobalProvider';
 
 export default function Navbar() {
+  const { topStrip } = useGlobalContext();
   const {
     translateLanguage,
     content: { common },
@@ -23,6 +25,8 @@ export default function Navbar() {
     isMenuOpen: false,
     isSearchOpen: false,
   });
+
+  const showTopStrip = !!(topStrip?.enabled && topStrip?.messages?.some(msg => msg && msg.trim() !== ''));
 
   const updateUtils = (newUtils) =>
     setUtils((prev) => ({ ...prev, ...newUtils }));
@@ -49,7 +53,7 @@ export default function Navbar() {
         onClose={() => updateUtils({ isSearchOpen: false })}
       />
 
-      <nav className="absolute top-12 left-0 w-full z-50">
+      <nav className={`absolute left-0 w-full z-50 transition-all duration-300 ${showTopStrip ? 'top-12' : 'top-0'}`}>
         <Container>
 
           {/* ── Mobile (< md) ── */}
@@ -145,7 +149,7 @@ export default function Navbar() {
           </div>
 
           {/* ── Desktop (>= md) ── */}
-          <div className="hidden md:flex items-center justify-between py-3 relative">
+          <div className="hidden md:flex items-center justify-between py-12 relative">
 
             {/* Left: menu */}
             <button

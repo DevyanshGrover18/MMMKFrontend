@@ -1,12 +1,12 @@
 import { useQuery } from '@tanstack/react-query';
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState, useRef, useMemo } from 'react';
 import {
   getAddressBook,
   getMyAccount,
   getUserCredits,
 } from '../../apis/user/profile';
 import { Country, State } from 'country-state-city';
-import { createPaymentIntent, createTabbySession } from '../../apis/user/payment';
+import { createPaymentIntent, createTabbySession, getDeliveryFee, confirmApplePayPayment } from '../../apis/user/payment';
 import { message } from 'antd';
 import { useCart } from '../../context/CartProvider';
 import PaymentModal from './PaymentModal';
@@ -18,6 +18,7 @@ import {
   sendCheckoutOtp,
   setCheckoutVerificationToken,
   verifyCheckoutOtp,
+  getVerifiedCheckoutAddresses,
 } from '../../apis/user/checkoutVerification';
 import { applyCoupon, getValidTokens } from '../../apis/user/coupon';
 import { Modal } from 'antd';
@@ -485,9 +486,8 @@ export default function CheckoutForm({
   const handleApplyCoupon = async (coupon) => {
     if (!coupon) return;
 
-    const hasContact = formData.contactEmail.trim() || formData.contactPhone.trim();
-    if (!hasContact) {
-      message.warning("Please provide your email or phone number first.");
+    if (!isUserSignedIn() && !guestEmailVerified) {
+      message.warning("Please verify your email address to apply coupons.");
       contactRef.current?.scrollIntoView({ behavior: 'smooth' });
       return;
     }
@@ -561,6 +561,13 @@ export default function CheckoutForm({
   const [otpError, setOtpError] = useState('');
   const [resendCountdown, setResendCountdown] = useState(0);
 
+  const [stripe, setStripe] = useState(null);
+  const [paymentRequest, setPaymentRequest] = useState(null);
+  const [canShowApplePay, setCanShowApplePay] = useState(true);
+  const [isApplePayWarningOpen, setIsApplePayWarningOpen] = useState(false);
+
+
+
   const formatConvertedPrice = (amount) =>
     formatPrice(convertPrice(amount, currency, rates), currency);
 
@@ -572,21 +579,236 @@ export default function CheckoutForm({
       ? Number(shippingChargesProp)
       : calculatedShippingCharges;
 
-  const derivedSummary =
-    liveSummary ||
-    calculateCartSummary({
-      items: cartData,
-      couponData,
-      isCouponApply,
-      isBagAdded,
-      shippingCharges: effectiveShippingCharges,
-      appliedCreditAmount,
-      currency,
-      rates,
-    });
+  // useMemo so derivedSummary only gets a new object reference when its inputs
+  // actually change. Without this it's a new object every render, causing the
+  // useEffect below to call setCheckoutSummary on every render → infinite loop.
+  const derivedSummary = useMemo(
+    () =>
+      liveSummary ||
+      calculateCartSummary({
+        items: cartData,
+        couponData,
+        isCouponApply,
+        isBagAdded,
+        shippingCharges: effectiveShippingCharges,
+        appliedCreditAmount,
+        currency,
+        rates,
+      }),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [liveSummary, cartData, couponData, isCouponApply, isBagAdded, effectiveShippingCharges, appliedCreditAmount, currency, rates]
+  );
 
   const effectiveAppliedCredit = appliedCreditAmountProp ?? appliedCreditAmount;
   const items = cartItems || cartData;
+
+  const totalProductWeightRef = useRef(totalProductWeight);
+  const cartItemsRef = useRef(cartItems);
+  const currencyRef = useRef(currency);
+  const shippingChargesRef = useRef(shippingChargesProp || 0);
+  const isCouponApplyRef = useRef(isCouponApply);
+  const couponCodeRef = useRef(couponCode);
+  const contactEmailRef = useRef(formData.contactEmail);
+  const derivedSummaryRef = useRef(null);
+
+  useEffect(() => {
+    totalProductWeightRef.current = totalProductWeight;
+  }, [totalProductWeight]);
+
+  useEffect(() => {
+    cartItemsRef.current = cartItems;
+  }, [cartItems]);
+
+  useEffect(() => {
+    currencyRef.current = currency;
+  }, [currency]);
+
+  useEffect(() => {
+    shippingChargesRef.current = shippingChargesProp || 0;
+  }, [shippingChargesProp]);
+
+  useEffect(() => {
+    isCouponApplyRef.current = isCouponApply;
+  }, [isCouponApply]);
+
+  useEffect(() => {
+    couponCodeRef.current = couponCode;
+  }, [couponCode]);
+
+  useEffect(() => {
+    contactEmailRef.current = formData.contactEmail;
+  }, [formData.contactEmail]);
+
+  useEffect(() => {
+    derivedSummaryRef.current = derivedSummary;
+  }, [derivedSummary]);
+
+  useEffect(() => {
+    const initStripe = async () => {
+      const pubKey = getStripePublishableKey();
+      if (!pubKey) return;
+      const stripeInstance = await loadStripe(pubKey);
+      setStripe(stripeInstance);
+    };
+    initStripe();
+  }, []);
+
+  useEffect(() => {
+    if (!stripe || !derivedSummary?.subtotal) return;
+
+    const subtotalInMinor = Math.round(derivedSummary.subtotal * 100);
+    const curr = currency.toLowerCase();
+
+    if (paymentRequest) {
+      paymentRequest.update({
+        total: {
+          label: 'Cart Subtotal',
+          amount: subtotalInMinor,
+        },
+        currency: curr,
+      });
+    } else {
+      const pr = stripe.paymentRequest({
+        country: 'AE',
+        currency: curr,
+        total: {
+          label: 'Cart Subtotal',
+          amount: subtotalInMinor,
+        },
+        requestShipping: true,
+        requestPayerName: true,
+        requestPayerEmail: true,
+        requestPayerPhone: true,
+      });
+
+      pr.canMakePayment().then((result) => {
+        setCanShowApplePay(true);
+      });
+
+      pr.on('shippingaddresschange', async (ev) => {
+        try {
+          const country = ev.shippingAddress.country;
+          const weight = totalProductWeightRef.current;
+          const targetCurr = currencyRef.current;
+
+          const res = await getDeliveryFee({
+            country,
+            weight,
+            currency: targetCurr,
+          });
+
+          if (!res.success) {
+            ev.updateWith({ status: 'fail' });
+            return;
+          }
+
+          const deliveryFee = res.deliveryFee;
+          onShippingChange?.(deliveryFee);
+
+          const subtotal = derivedSummaryRef.current.subtotal;
+          const updatedTotal = subtotal + deliveryFee;
+
+          ev.updateWith({
+            status: 'success',
+            displayItems: [
+              {
+                label: 'Subtotal',
+                amount: Math.round(subtotal * 100),
+              },
+              {
+                label: 'Delivery Fee',
+                amount: Math.round(deliveryFee * 100),
+              },
+            ],
+            total: {
+              label: 'Total',
+              amount: Math.round(updatedTotal * 100),
+            },
+          });
+        } catch (err) {
+          console.error('Error in shippingaddresschange', err);
+          ev.updateWith({ status: 'fail' });
+        }
+      });
+
+      pr.on('paymentmethod', async (ev) => {
+        try {
+          const { paymentMethod, shippingAddress, payerEmail, payerName, payerPhone } = ev;
+
+          const recipientName = shippingAddress.recipient || payerName || '';
+          const nameParts = recipientName.trim().split(/\s+/);
+          const firstName = nameParts[0] || '';
+          const lastName = nameParts.slice(1).join(' ') || '';
+          const addressLines = shippingAddress.addressLine || [];
+          const streetAddress = addressLines.join(', ');
+
+          const formattedShipping = {
+            firstName,
+            lastName,
+            streetAddress,
+            city: shippingAddress.city || '',
+            state: shippingAddress.region || '',
+            postalCode: shippingAddress.postalCode || '',
+            country: shippingAddress.country || '',
+            phoneNumber: shippingAddress.phone || payerPhone || '',
+          };
+
+          const items = cartItemsRef.current || [];
+          const productsPayload = items.map((item) => ({
+            product: item.product?._id || item.product?.id || item.product || item._id,
+            quantity: item.quantity,
+            sku: item.sku,
+            filters: item.filters,
+            bags: item.bags || 0,
+          }));
+
+          const res = await confirmApplePayPayment({
+            paymentMethodId: paymentMethod.id,
+            email: payerEmail || contactEmailRef.current || '',
+            shippingAddress: formattedShipping,
+            billingAddress: formattedShipping,
+            deliveryFee: shippingChargesRef.current,
+            products: productsPayload,
+            currency: currencyRef.current,
+            couponCode: isCouponApplyRef.current ? couponCodeRef.current : null,
+          });
+
+          if (res.success) {
+            ev.complete('success');
+            clearCart({ updateOnBackend: isUserSignedIn() });
+            navigate(`/order-success/${res.orderId}`);
+          } else {
+            ev.complete('fail');
+            message.error(res.error || 'Payment confirmation failed');
+          }
+        } catch (err) {
+          console.error('Error confirming Apple Pay payment', err);
+          ev.complete('fail');
+          message.error(err.response?.data?.error || err.message || 'Payment confirmation failed');
+        }
+      });
+
+      setPaymentRequest(pr);
+    }
+  }, [stripe, derivedSummary?.subtotal, currency]);
+
+  const handleApplePayClick = () => {
+    setIsApplePayWarningOpen(true);
+  };
+
+  const handleApplePayContinue = async () => {
+    setIsApplePayWarningOpen(false);
+    if (!paymentRequest) return;
+    try {
+      await paymentRequest.show();
+    } catch (err) {
+      console.warn("Payment Request failed to launch:", err);
+      message.warning(
+        "Payment Request sheet is not supported in this browser (or requires HTTPS / active saved cards). " +
+        "Please test in Safari on Apple devices or configure Chrome with a saved card."
+      );
+    }
+  };
 
   const query = useQuery({
     queryKey: ['address-book'],
@@ -668,6 +890,22 @@ export default function CheckoutForm({
       clearBillingAddress();
     }
   };
+
+  useEffect(() => {
+    const fetchGuestAddresses = async () => {
+      if (!isUserSignedIn() && guestEmailVerified) {
+        try {
+          const res = await getVerifiedCheckoutAddresses();
+          if (res?.data) {
+            applyVerifiedAddressData(res.data);
+          }
+        } catch (err) {
+          console.error("Failed to fetch guest addresses", err);
+        }
+      }
+    };
+    fetchGuestAddresses();
+  }, [guestEmailVerified]);
 
   const handleSendOtp = async () => {
     const email = formData.contactEmail.trim().toLowerCase();
@@ -1023,6 +1261,7 @@ export default function CheckoutForm({
     const p = profileQuery.data.data;
     setFormData((prev) => ({
       ...prev,
+      contactEmail: prev.contactEmail || p.email || '',
       shipping_firstName: prev.shipping_firstName || p.firstName || '',
       shipping_lastName: prev.shipping_lastName || p.lastName || '',
       shipping_phoneNumber: prev.shipping_phoneNumber || p.contactNumber || '',
@@ -1050,7 +1289,10 @@ export default function CheckoutForm({
 
   useEffect(() => {
     setCheckoutSummary(derivedSummary);
-  }, [derivedSummary, setCheckoutSummary]);
+    // setCheckoutSummary is a stable React state setter — safe to omit from deps.
+    // Including it previously caused the infinite re-render loop.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [derivedSummary]);
 
   useEffect(() => {
     if (resendCountdown <= 0) return undefined;
@@ -1368,14 +1610,50 @@ export default function CheckoutForm({
         canUseTabby={isUserSignedIn()}
       />
 
+      <Modal
+        title="Estimate Delivery Fee"
+        open={isApplePayWarningOpen}
+        onCancel={() => setIsApplePayWarningOpen(false)}
+        footer={[
+          <button
+            key="cancel"
+            onClick={() => setIsApplePayWarningOpen(false)}
+            className="mr-2 rounded-xl border border-gray-200 bg-white px-5 py-2.5 text-sm font-semibold text-gray-700 hover:bg-gray-50 transition"
+          >
+            Cancel
+          </button>,
+          <button
+            key="continue"
+            onClick={handleApplePayContinue}
+            className="rounded-xl bg-black px-5 py-2.5 text-sm font-semibold text-white hover:bg-black/90 transition"
+          >
+            Continue
+          </button>
+        ]}
+        centered
+      >
+        <p className="py-4 text-sm text-gray-600 leading-relaxed">
+          Please note: the amount shown is not final. The final total will be calculated after you select your delivery address, based on your country and cart weight.
+        </p>
+      </Modal>
+
       <form onSubmit={handleSubmit} className="mx-auto max-w-7xl px-4 py-8">
         <div className="flex flex-col-reverse gap-6 lg:flex-row lg:items-start lg:gap-8">
 
           {/* ── LEFT COLUMN ── */}
           <div className="flex-1 min-w-0 space-y-4">
 
-            {/* Step 1 – Contact (guests only) */}
-            {!isUserSignedIn() && (
+            {/* Step 1 – Contact */}
+            {isUserSignedIn() ? (
+              <SectionCard step="1" title="Contact Information">
+                <div className="flex items-center justify-between rounded-xl bg-gray-50 px-4 py-3">
+                  <div>
+                    <p className="text-xs text-gray-400 font-semibold uppercase tracking-wider">Email Address</p>
+                    <p className="text-sm font-semibold text-gray-800">{formData.contactEmail || profileQuery.data?.data?.email}</p>
+                  </div>
+                </div>
+              </SectionCard>
+            ) : (
               <SectionCard step="1" title="Contact Information" >
                 <div ref={contactRef}>
                   <p className="mb-4 text-xs text-gray-400">
@@ -1520,12 +1798,12 @@ export default function CheckoutForm({
               </SectionCard>
             )}
 
+
             {/* Steps 2 & 3 – Shipping + Billing (hidden until contact verified) */}
             <div className={canShowCheckoutForms ? '' : 'hidden'}>
-
               {/* Shipping */}
               <SectionCard
-                step={isUserSignedIn() ? '1' : '2'}
+                step="2"
                 title={checkout.shippingAddress || 'Shipping Address'}
               >
                 <AddressSelector
@@ -1565,7 +1843,7 @@ export default function CheckoutForm({
 
               {/* Billing */}
               <SectionCard
-                step={isUserSignedIn() ? '2' : '3'}
+                step="3"
                 title={checkout.billingAddress || 'Billing Address'}
               >
                 <label className="mb-4 flex cursor-pointer items-center gap-3 rounded-xl border border-gray-200 px-4 py-3 transition hover:border-gray-400 has-[:checked]:border-gray-800 has-[:checked]:bg-gray-50">
@@ -1628,9 +1906,31 @@ export default function CheckoutForm({
                   </>
                 )}
               </SectionCard>
+            </div>
 
-              {/* Submit */}
-              <div className="pt-2 pb-8">
+            {/* Apple Pay Fast Checkout Button (positioned under address fields) */}
+            {canShowApplePay && (
+              <div className="mt-4">
+                <div className="flex items-center my-4">
+                  <div className="flex-grow border-t border-gray-200"></div>
+                  <span className="mx-4 text-sm text-gray-500 font-semibold tracking-wider">OR</span>
+                  <div className="flex-grow border-t border-gray-200"></div>
+                </div>
+                <CommonButton
+                  variant={6}
+                  type="button"
+                  onClick={handleApplePayClick}
+                  className="w-full flex items-center justify-center gap-2"
+                >
+                  <svg fill="currentColor" className='h-6' viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><g id="SVGRepo_bgCarrier" stroke-width="0"></g><g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g><g id="SVGRepo_iconCarrier"> <path d="M18.71 19.5C17.88 20.74 17 21.95 15.66 21.97C14.32 22 13.89 21.18 12.37 21.18C10.84 21.18 10.37 21.95 9.09997 22C7.78997 22.05 6.79997 20.68 5.95997 19.47C4.24997 17 2.93997 12.45 4.69997 9.39C5.56997 7.87 7.12997 6.91 8.81997 6.88C10.1 6.86 11.32 7.75 12.11 7.75C12.89 7.75 14.37 6.68 15.92 6.84C16.57 6.87 18.39 7.1 19.56 8.82C19.47 8.88 17.39 10.1 17.41 12.63C17.44 15.65 20.06 16.66 20.09 16.67C20.06 16.74 19.67 18.11 18.71 19.5ZM13 3.5C13.73 2.67 14.94 2.04 15.94 2C16.07 3.17 15.6 4.35 14.9 5.19C14.21 6.04 13.07 6.7 11.95 6.61C11.8 5.46 12.36 4.26 13 3.5Z"></path> </g></svg>
+                  <span>Fast Checkout with Apple Pay</span>
+                </CommonButton>
+              </div>
+            )}
+
+            {/* Submit block */}
+            <div className={canShowCheckoutForms ? '' : 'hidden'}>
+              <div className="pb-8">
                 <CommonButton
                   variant={6}
                   disabled={loading}

@@ -97,14 +97,14 @@ const BannerVideo = ({ children, minHight, bg, poster }) => {
         <button
           onClick={toggleMute}
           type="button"
-          className="absolute top-4 right-4 z-10 p-2 bg-black bg-opacity-50 rounded-full text-white hover:bg-opacity-75 transition-all"
+          className="absolute bottom-8 right-4 md:right-12 z-30 p-2.5 bg-black bg-opacity-50 hover:bg-opacity-75 rounded-full text-white transition-all cursor-pointer flex items-center justify-center border border-white/10"
           aria-label={isMuted ? 'Unmute video' : 'Mute video'}
           aria-pressed={!isMuted}
         >
           {isMuted ? (
-            <FaVolumeMute className="text-xl" />
+            <FaVolumeMute className="text-lg" />
           ) : (
-            <FaVolumeUp className="text-xl" />
+            <FaVolumeUp className="text-lg" />
           )}
         </button>
 

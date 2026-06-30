@@ -92,3 +92,13 @@ export const getFooter = async () => {
   const response = await editPage.get('/footer/get');
   return response?.data;
 };
+
+export const getAdminTopStrip = async () => {
+  const response = await editPage.get('/top-strip/get');
+  return response?.data?.data;
+};
+
+export const updateTopStrip = async (data) => {
+  const response = await editPage.post('/top-strip/update', data);
+  return response?.data;
+};

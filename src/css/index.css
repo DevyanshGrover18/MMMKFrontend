@@ -396,3 +396,27 @@ button {
   background-color: rgba(0, 0, 0, 0.4);
   backdrop-filter: blur(3px);
 }
+
+@keyframes marqueeCustom {
+  0% {
+    transform: translate3d(0%, 0, 0);
+  }
+  100% {
+    transform: translate3d(-50%, 0, 0);
+  }
+}
+
+.animate-marquee-custom {
+  animation: marqueeCustom var(--marquee-duration, 20s) linear infinite;
+}
+
+@media (max-width: 767px) {
+  .animate-marquee-custom {
+    animation-duration: var(--marquee-duration-mobile, 10s) !important;
+  }
+}
+
+.animate-marquee-custom:hover {
+  animation-play-state: paused;
+}
+

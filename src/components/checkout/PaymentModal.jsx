@@ -26,23 +26,23 @@ const PaymentModal = ({
       iconBg: 'bg-gray-900',
       iconColor: 'text-white',
     },
-    {
-      id: 'tabby',
-      label:
-        checkout?.payLaterWithTabby ||
-        checkout?.payWithTabby ||
-        'Pay later with Tabby',
-      description: canUseTabby
-        ? checkout?.tabbyDescription ||
-          checkout?.tabbyPaymentDescription ||
-          '4 interest-free payments'
-        : checkout?.tabbySignInDescription || 'Sign in to use Tabby',
-      icon: <span className="text-[11px] font-black tracking-tight">tabby</span>,
-      iconBg: 'bg-[#3efad9]',
-      iconColor: 'text-black',
-      allowed: isTabbyCountry,
-      disabled: !canUseTabby,
-    },
+    // {
+    //   id: 'tabby',
+    //   label:
+    //     checkout?.payLaterWithTabby ||
+    //     checkout?.payWithTabby ||
+    //     'Pay later with Tabby',
+    //   description: canUseTabby
+    //     ? checkout?.tabbyDescription ||
+    //       checkout?.tabbyPaymentDescription ||
+    //       '4 interest-free payments'
+    //     : checkout?.tabbySignInDescription || 'Sign in to use Tabby',
+    //   icon: <span className="text-[11px] font-black tracking-tight">tabby</span>,
+    //   iconBg: 'bg-[#3efad9]',
+    //   iconColor: 'text-black',
+    //   allowed: isTabbyCountry,
+    //   disabled: !canUseTabby,
+    // },
     {
       id: 'cod',
       label: checkout?.cashOnDelivery || 'Cash on delivery',

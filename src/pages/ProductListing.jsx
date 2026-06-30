@@ -81,12 +81,15 @@ const ProductListing = () => {
     setUtils((prevData) => {
       return { ...prevData, currentPage: value };
     });
+    const element = document.getElementById('categories-navbar');
+    element?.scrollIntoView({ top: 0, behavior: 'smooth' });
   };
 
   // fetching paginated products
   const query = useQuery({
     queryKey: ['products', utils, translateLanguage],
     queryFn: () => getAllProducts(utils, { translateLanguage }),
+    refetchOnWindowFocus: false,
   });
 
   useEffect(() => {
@@ -208,10 +211,10 @@ const ProductListing = () => {
           </div>
 
           {/* Main Content Section */}
-          <main className="grid w-full grid-cols-1 lg:grid-cols-12">
-            <div className="w-full lg:col-span-2 lg:border-b-0">
+          <main className="grid w-full grid-cols-1 xl:grid-cols-12">
+            <div className="w-full xl:col-span-2 xl:border-b-0">
               {/* Desktop Filter */}
-              <div className="hidden lg:block">
+              <div className="hidden xl:block">
                 <Suspense
                   fallback={
                     <div className="h-[80vh] w-full bg-black p-4 text-white">
@@ -228,7 +231,7 @@ const ProductListing = () => {
               </div>
 
               {/* Mobile and tablet filter button */}
-              <div className="flex items-end justify-end mr-2 lg:hidden">
+              <div className="flex items-end justify-end mr-2 xl:hidden">
                 <button
                   type="button"
                   onClick={toggleFilterSidebar}
@@ -242,10 +245,10 @@ const ProductListing = () => {
             </div>
 
             {/* Right (ProductGrid component) */}
-            <div className="w-full lg:col-span-10">
-              {query.isLoading ? (
-                <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4">
-                  {[...Array(8)].map((_, i) => (
+            <div className="w-full xl:col-span-10 min-h-[80vh]">
+              {query.isLoading || query.isFetching ? (
+                <div className="grid grid-cols-2 md:grid-cols-2 xl:grid-cols-4">
+                  {[...Array(12)].map((_, i) => (
                     <SkeletonCard key={`skeleton-${i}`} />
                   ))}
                 </div>
@@ -268,9 +271,9 @@ const ProductListing = () => {
             </div>
           </main>
 
-          {/* Sidebar Filter (Mobile Only) */}
+          {/* Sidebar Filter (Mobile/Tablet) */}
           {isFilterSidebarOpen && (
-            <div className="fixed inset-y-0 right-0 z-[30] w-[80%] max-w-sm bg-black border-l border-white p-5 transform transition-transform duration-300 lg:hidden">
+            <div className="fixed inset-y-0 right-0 z-[30] w-[80%] max-w-sm bg-black border-l border-white p-5 transform transition-transform duration-300 xl:hidden">
               <div className="flex items-center justify-between pb-4 border-b border-gray-600">
                 <h3 className="text-xl font-bold text-white">
                   {common.filters}
@@ -296,11 +299,11 @@ const ProductListing = () => {
             </div>
           )}
 
-          {/* Overlay for Sidebar (Mobile Only) */}
+          {/* Overlay for Sidebar (Mobile/Tablet) */}
           {isFilterSidebarOpen && (
             <div
               onClick={toggleFilterSidebar}
-              className="fixed inset-0 z-12 bg-black bg-opacity-50 lg:hidden"
+              className="fixed inset-0 z-12 bg-black bg-opacity-50 xl:hidden"
             ></div>
           )}
 

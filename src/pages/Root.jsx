@@ -4,6 +4,7 @@ import Header from '../layout/Header';
 import Footer from '../layout/Footer';
 import ScrollToTop from '../hook/ScrollTop';
 import Navbar from '../components/global/Navbar';
+import TopStrip from '../components/global/TopStrip';
 
 const Root = () => {
   const location = useLocation();
@@ -18,6 +19,7 @@ const Root = () => {
 
   return (
     <div className="w-full relative">
+      {!isAdminRoute && <TopStrip />}
       {!isAdminRoute && <Navbar />}
       <Header />
       <ScrollToTop>

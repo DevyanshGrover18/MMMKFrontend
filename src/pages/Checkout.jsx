@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo, useCallback } from 'react';
 
 import Banner from '../components/global/Banner';
 import NewsLetter from '../components/global/NewsLetter';
@@ -29,16 +29,28 @@ const Checkout = () => {
   } = useCart();
   const { currency, rates } = useCurrency();
 
-  const liveSummary = calculateCartSummary({
-    items: cartItems,
-    couponData,
-    isCouponApply,
-    appliedCreditAmount,
-    isBagAdded,
-    shippingCharges,
-    currency,
-    rates,
-  });
+  // Memoize so a new object reference is only created when inputs actually change.
+  // Without this, liveSummary is a new object every render, which triggers the
+  // setCheckoutSummary useEffect in CheckoutForm on every render → infinite loop.
+  const liveSummary = useMemo(
+    () =>
+      calculateCartSummary({
+        items: cartItems,
+        couponData,
+        isCouponApply,
+        appliedCreditAmount,
+        isBagAdded,
+        shippingCharges,
+        currency,
+        rates,
+      }),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [cartItems, couponData, isCouponApply, appliedCreditAmount, isBagAdded, shippingCharges, currency, rates]
+  );
+
+  // Stable callback reference so the shipping useEffect in CheckoutForm
+  // does not retrigger on every render.
+  const handleShippingChange = useCallback((charge) => setShippingCharges(charge), []);
 
   return (
     <div className="w-full">
@@ -58,7 +70,7 @@ const Checkout = () => {
           <main className="w-full text-black bg-white">
             <div className="mx-auto w-full max-w-6xl px-4 py-8 md:px-6 lg:px-8">
               <CheckoutForm
-                onShippingChange={setShippingCharges}
+                onShippingChange={handleShippingChange}
                 liveSummary={liveSummary}
                 shippingCharges={shippingCharges}
                 appliedCreditAmount={appliedCreditAmount}

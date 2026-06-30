@@ -94,6 +94,16 @@ const ShoppingCart = () => {
 
   const handleApplyCoupon = async (coupon) => {
     if (!coupon) return;
+    
+    if (!isUserSignedIn()) {
+      showTranslatedMessage({
+        msg: 'Please proceed to checkout and verify your email to apply coupons.',
+        language: translateLanguage,
+        type: 'warning',
+      });
+      return;
+    }
+    
     setIsApplyingCoupon(true);
 
     try {
@@ -655,9 +665,6 @@ const ShoppingCart = () => {
 
                   {/* Promo Code Section */}
                   <div className="mt-5">
-                    <h4 className="font-bold text-center md:text-left">
-                      {cart.enterPromoCode}
-                    </h4>
                     {/* Promo Code input moved to checkout */}
                     <div className="mt-4">
                       <p className="text-gray-500 text-sm">Please proceed to checkout to apply coupon codes.</p>

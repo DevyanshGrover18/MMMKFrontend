@@ -87,7 +87,7 @@ const STATIC_PAGE_TRANSLATIONS = {
       continueShopping: 'Continuar comprando',
     },
     homepage: {
-      section1Heading1: 'PRESENTAMOS LO NUEVO DE MMMK WODE',
+      section1Heading1: 'SÉ BENDECIDO Y DISFRUTA DE TODOS LOS DISEÑOS',
       section2Heading1: 'COLECCIONES MMMK WODE',
       section4Heading1: 'VESTIDOS ARTESANALES EXCLUSIVOS',
       section4Heading2: 'ELEGANCIA COMODIDAD ESTILO',
@@ -151,7 +151,7 @@ const STATIC_PAGE_TRANSLATIONS = {
       continueShopping: 'Continuar comprando',
     },
     homepage: {
-      section1Heading1: 'APRESENTANDO O NOVO MMMK WODE',
+      section1Heading1: 'SEJA ABENÇOADO E APROVEITE TODOS OS DESIGNS',
       section2Heading1: 'COLEÇÕES MMMK WODE',
       section4Heading1: 'VESTIDOS ARTESANAIS EXCLUSIVOS',
       section4Heading2: 'ELEGÂNCIA CONFORTO ESTILO',
@@ -215,7 +215,7 @@ const STATIC_PAGE_TRANSLATIONS = {
       continueShopping: 'Continua lo shopping',
     },
     homepage: {
-      section1Heading1: 'PRESENTIAMO IL NUOVISSIMO MMMK WODE',
+      section1Heading1: 'SII BENEDETTO E GODITI TUTTI I DESIGN',
       section2Heading1: 'COLLEZIONI MMMK WODE',
       section4Heading1: 'ABITI ARTIGIANALI ESCLUSIVI',
       section4Heading2: 'ELEGANZA COMFORT STILE',
@@ -279,7 +279,7 @@ const STATIC_PAGE_TRANSLATIONS = {
       continueShopping: 'Weiter einkaufen',
     },
     homepage: {
-      section1Heading1: 'WIR PRÄSENTIEREN DAS BRANDNEUE MMMK WODE',
+      section1Heading1: 'SEIEN SIE GESEGNET UND GENIESSEN SIE ALLE DESIGNS',
       section2Heading1: 'MMMK WODE KOLLEKTIONEN',
       section4Heading1: 'EXKLUSIVE HANDGEFERTIGTE KLEIDER',
       section4Heading2: 'ELEGANZ KOMFORT STIL',

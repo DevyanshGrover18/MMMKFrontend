@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import { Modal, Form, Input, Button, message, Upload } from 'antd';
+import { Modal, Form, Input, Button, message, Upload, Switch, Divider } from 'antd';
+import BannerBubble from '../../../../../components/global/BannerBubble';
 import { updateHomeBanner } from '../../../../../apis/admin/editPage';
 import { useForm } from 'antd/es/form/Form';
 import { PlusOutlined } from '@ant-design/icons';
@@ -10,6 +11,10 @@ const BannerForm = ({ data, query }) => {
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [form] = useForm();
   const [fileList, setFileList] = useState([]);
+
+  const bubbleText = Form.useWatch('bubbleText', form);
+  const bubbleLink = Form.useWatch('bubbleLink', form);
+  const bubbleEnabled = Form.useWatch('bubbleEnabled', form);
 
   const showModal = () => {
     setIsModalVisible(true);
@@ -48,6 +53,10 @@ const BannerForm = ({ data, query }) => {
         buttonTextArabic: data?.home?.banner?.buttonText?.ar,
         buttonTextFrench: data?.home?.banner?.buttonText?.fr,
         buttonTextRussian: data?.home?.banner?.buttonText?.ru,
+
+        bubbleEnabled: data?.home?.banner?.bubbleEnabled ?? false,
+        bubbleText: data?.home?.banner?.bubbleText || '',
+        bubbleLink: data?.home?.banner?.bubbleLink || '',
       });
     }
     setFileList([
@@ -179,6 +188,56 @@ const BannerForm = ({ data, query }) => {
           <Form.Item label="Button Text in Russian" name="buttonTextRussian">
             <Input placeholder="Enter button text in Russian" />
           </Form.Item>
+
+          <Divider orientation="left" className="text-neutral-500 font-semibold">Banner Bubble Settings</Divider>
+
+          <Form.Item
+            label="Enable Banner Bubble"
+            name="bubbleEnabled"
+            valuePropName="checked"
+          >
+            <Switch checkedChildren="ON" unCheckedChildren="OFF" />
+          </Form.Item>
+
+          <Form.Item
+            label="Bubble Text (Max 40 Characters)"
+            name="bubbleText"
+            rules={[
+              {
+                max: 40,
+                message: 'Bubble text cannot exceed 40 characters',
+              },
+            ]}
+          >
+            <Input 
+              maxLength={40} 
+              showCount 
+              placeholder="e.g. 🎄 Merry Christmas!" 
+            />
+          </Form.Item>
+
+          <Form.Item
+            label="Bubble Link (Optional)"
+            name="bubbleLink"
+          >
+            <Input placeholder="e.g. /product-listings or https://example.com" />
+          </Form.Item>
+
+          {/* Live Preview */}
+          <div className="border border-dashed border-neutral-300 rounded-lg p-6 bg-neutral-900 flex flex-col items-center justify-center my-4 min-h-[140px] relative overflow-hidden select-none">
+            <span className="absolute top-2 left-2 text-[10px] text-neutral-400 font-mono tracking-wider">LIVE PREVIEW</span>
+            {bubbleEnabled && bubbleText && bubbleText.trim() !== '' ? (
+              <div className="scale-90 md:scale-100 transform origin-center transition-all duration-300">
+                <BannerBubble 
+                  text={bubbleText} 
+                  link={bubbleLink} 
+                  enabled={bubbleEnabled} 
+                />
+              </div>
+            ) : (
+              <span className="text-neutral-500 text-sm italic">Bubble is disabled or text is empty</span>
+            )}
+          </div>
 
           <Form.Item label="Category Image" name="image" valuePropName="file">
             <Upload

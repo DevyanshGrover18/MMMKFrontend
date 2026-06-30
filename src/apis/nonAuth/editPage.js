@@ -46,3 +46,8 @@ export const getFooter = async () => {
   const response = await editPage.get('/home/getFooter');
   return response.data;
 };
+
+export const getTopStrip = async () => {
+  const response = await editPage.get('/top-strip/get');
+  return response.data;
+};

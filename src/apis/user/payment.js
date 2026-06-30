@@ -23,3 +23,26 @@ export const refreshTabbyStatus = async (orderId) => {
   return response.data;
 };
 
+const checkoutPublic = createUserApiClient('/api/v1/checkout', 30000);
+
+export const refreshPaymentStatusPublic = async (orderId) => {
+  const response = await checkoutPublic.post(`/refresh-payment/${orderId}`);
+  return response.data;
+};
+
+export const refreshTabbyStatusPublic = async (orderId) => {
+  const response = await checkoutPublic.post(`/refresh-tabby/${orderId}`);
+  return response.data;
+};
+
+export const getDeliveryFee = async (data) => {
+  const response = await checkoutPublic.post('/delivery-fee', data);
+  return response.data;
+};
+
+export const confirmApplePayPayment = async (data) => {
+  const response = await checkoutPublic.post('/apple-pay-checkout', data);
+  return response.data;
+};
+
+

@@ -5,8 +5,8 @@ import { useParams, useNavigate } from 'react-router-dom';
 import Banner from '../components/global/Banner';
 import NewsLetter from '../components/global/NewsLetter';
 import bg from '../assets/bg.png';
-import { getOrders } from '../apis/user/order';
-import { refreshPaymentStatus } from '../apis/user/payment';
+import { getOrderByIdPublic } from '../apis/user/order';
+import { refreshPaymentStatusPublic } from '../apis/user/payment';
 import { useTranslationContext } from '../context/TranslationContext';
 import { CommonButton } from '../components/global/UIButtons';
 import {
@@ -26,7 +26,7 @@ const GiftCardSuccess = () => {
 
   const query = useQuery({
     queryKey: ['gift-card-success', orderId],
-    queryFn: () => getOrders({ orderId }),
+    queryFn: () => getOrderByIdPublic(orderId),
     enabled: !!orderId,
   });
 
@@ -42,7 +42,7 @@ const GiftCardSuccess = () => {
     const refreshOrderStatus = async () => {
       try {
         setRefreshingOrder(true);
-        await refreshPaymentStatus(orderId);
+        await refreshPaymentStatusPublic(orderId);
         await query.refetch();
       } catch (error) {
         console.error('[GIFT_CARD_SUCCESS] Failed to refresh status', error);

@@ -8,6 +8,10 @@ import LazySection from '../components/global/LazySection';
 import Section8 from '../components/home/Section8';
 import Slider from '../components/global/Slider';
 
+import { useQuery } from '@tanstack/react-query';
+import { getHomeBanner } from '../apis/nonAuth/editPage';
+import BannerBubble from '../components/global/BannerBubble';
+
 const Section2 = lazy(() => import('../components/home/Section2').catch(() => { window.location.reload(); }));
 const Section3 = lazy(() => import('../components/home/Section3').catch(() => { window.location.reload(); }));
 const Section6 = lazy(() => import('../components/home/Section6').catch(() => { window.location.reload(); }));
@@ -31,10 +35,22 @@ const Home = () => {
     content: { common, homepage },
   } = useTranslationContext();
 
+  const bannerQuery = useQuery({
+    queryKey: ['homeBanner'],
+    queryFn: getHomeBanner,
+  });
+
+  const bannerData = bannerQuery.data?.data?.home?.banner;
+
   return (
     <div className="w-full">
       <BannerVideo bg="/heroSectionBg1.mp4" poster="/bannerSectionImage.jpg">
         <div className="flex min-h-[520px] flex-col items-center justify-center px-4 py-24 text-center text-white sm:min-h-[620px] md:min-h-[70vh] md:mt-16">
+          <BannerBubble
+            text={bannerData?.bubbleText}
+            link={bannerData?.bubbleLink}
+            enabled={bannerData?.bubbleEnabled}
+          />
           <h1 className="my-4 max-w-full text-4xl font-semibold leading-tight text-orange-200 sm:text-6xl md:text-8xl lg:text-7xl sm:my-6 md:my-10">
             {homepage.section1Heading1 || common.mmmk}
           </h1>
