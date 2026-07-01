@@ -703,7 +703,11 @@ export default function CheckoutForm({
       });
 
       pr.canMakePayment().then((result) => {
-        setCanShowApplePay(true);
+        if (result) {
+          setCanShowApplePay(true);
+        } else {
+          setCanShowApplePay(false);
+        }
       });
 
       pr.on('shippingaddresschange', async (ev) => {
