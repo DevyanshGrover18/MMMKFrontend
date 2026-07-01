@@ -155,6 +155,7 @@ const Field = ({
   required,
   disabled,
   className = '',
+  autoComplete,
 }) => (
   <div className={`relative ${className}`}>
     <input
@@ -166,6 +167,7 @@ const Field = ({
       required={required}
       disabled={disabled}
       placeholder=" "
+      autoComplete={autoComplete}
       className={`
         peer w-full rounded-xl border border-gray-200 bg-white px-4 pt-6 pb-2
         text-sm text-gray-900 outline-none transition-all
@@ -202,6 +204,7 @@ const SelectField = ({
   disabled,
   children,
   className = '',
+  autoComplete,
 }) => (
   <div className={`relative ${className}`}>
     <select
@@ -211,6 +214,7 @@ const SelectField = ({
       onChange={onChange}
       required={required}
       disabled={disabled}
+      autoComplete={autoComplete}
       className={`
         peer w-full appearance-none rounded-xl border border-gray-200 bg-white
         px-4 pt-6 pb-2 text-sm text-gray-900 outline-none transition-all
@@ -337,6 +341,7 @@ const AddressForm = ({
         onChange={onChange}
         required
         disabled={disabled}
+        autoComplete={prefix === 'shipping' ? 'shipping given-name' : 'billing given-name'}
       />
       <Field
         label={checkout.lastName || 'Last Name'}
@@ -345,6 +350,7 @@ const AddressForm = ({
         onChange={onChange}
         required
         disabled={disabled}
+        autoComplete={prefix === 'shipping' ? 'shipping family-name' : 'billing family-name'}
       />
     </div>
     <Field
@@ -354,6 +360,7 @@ const AddressForm = ({
       onChange={onChange}
       required
       disabled={disabled}
+      autoComplete={prefix === 'shipping' ? 'shipping street-address' : 'billing street-address'}
     />
     <div className="grid grid-cols-2 gap-3">
       <SelectField
@@ -363,6 +370,7 @@ const AddressForm = ({
         onChange={onChange}
         required
         disabled={disabled}
+        autoComplete={prefix === 'shipping' ? 'shipping country' : 'billing country'}
       >
         <option value="" disabled />
         {Country.getAllCountries().map((c) => (
@@ -378,6 +386,7 @@ const AddressForm = ({
         onChange={onChange}
         required
         disabled={disabled}
+        autoComplete={prefix === 'shipping' ? 'shipping address-level1' : 'billing address-level1'}
       >
         <option value="" disabled />
         {stateList.map((s) => (
@@ -395,6 +404,7 @@ const AddressForm = ({
         onChange={onChange}
         required
         disabled={disabled}
+        autoComplete={prefix === 'shipping' ? 'shipping address-level2' : 'billing address-level2'}
       />
       <Field
         label={checkout.postalCode || 'Postal Code'}
@@ -403,6 +413,7 @@ const AddressForm = ({
         onChange={onChange}
         required
         disabled={disabled}
+        autoComplete={prefix === 'shipping' ? 'shipping postal-code' : 'billing postal-code'}
       />
     </div>
     <div className="grid grid-cols-2 gap-3">
@@ -414,6 +425,7 @@ const AddressForm = ({
         required
         disabled={disabled}
         type="tel"
+        autoComplete={prefix === 'shipping' ? 'shipping tel' : 'billing tel'}
       />
       <Field
         label={checkout.landmark || 'Landmark (optional)'}
@@ -429,6 +441,7 @@ const AddressForm = ({
       value={formData[`${prefix}_company`]}
       onChange={onChange}
       disabled={disabled}
+      autoComplete={prefix === 'shipping' ? 'shipping organization' : 'billing organization'}
     />
   </div>
 );
@@ -1702,6 +1715,7 @@ export default function CheckoutForm({
                       }}
                       required
                       className="flex-1"
+                      autoComplete="email"
                     />
                     {/* Send / Resend / Verified button — inline with email */}
                     {!guestEmailVerified && (
