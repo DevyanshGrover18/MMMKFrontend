@@ -113,7 +113,7 @@ const ProductGrid = ({ list = [], textColor = 'white' }) => {
 
       const added = await addProductToCart({
         productId: product._id,
-        sku: product._id,
+        sku: undefined,
         quantity: 1,
         showMessage: true,
         productData: product,
