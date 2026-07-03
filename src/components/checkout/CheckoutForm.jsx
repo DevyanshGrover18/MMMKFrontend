@@ -576,7 +576,7 @@ export default function CheckoutForm({
 
   const [stripe, setStripe] = useState(null);
   const [paymentRequest, setPaymentRequest] = useState(null);
-  const [canShowApplePay, setCanShowApplePay] = useState(true);
+  const [fastCheckoutBrand, setFastCheckoutBrand] = useState('applePay');
   const [isApplePayWarningOpen, setIsApplePayWarningOpen] = useState(false);
 
 
@@ -704,9 +704,16 @@ export default function CheckoutForm({
 
       pr.canMakePayment().then((result) => {
         if (result) {
-          setCanShowApplePay(true);
+          if (result.applePay) {
+            setFastCheckoutBrand('applePay');
+          } else if (result.googlePay) {
+            setFastCheckoutBrand('googlePay');
+          } else {
+            setFastCheckoutBrand('generic');
+          }
         } else {
-          setCanShowApplePay(false);
+          // For testing: Keep it visible as 'applePay' instead of setting to null
+          // setFastCheckoutBrand(null);
         }
       });
 
@@ -1946,8 +1953,8 @@ export default function CheckoutForm({
               </SectionCard>
             </div>
 
-            {/* Apple Pay Fast Checkout Button (positioned under address fields) */}
-            {canShowApplePay && (
+            {/* Apple Pay/Google Pay Fast Checkout Button (positioned under address fields) */}
+            {fastCheckoutBrand && (
               <div className="mt-4">
                 <div className="flex items-center my-4">
                   <div className="flex-grow border-t border-gray-200"></div>
@@ -1960,8 +1967,23 @@ export default function CheckoutForm({
                   onClick={handleApplePayClick}
                   className="w-full flex items-center justify-center gap-2"
                 >
-                  <svg fill="currentColor" className='h-6' viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><g id="SVGRepo_bgCarrier" stroke-width="0"></g><g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g><g id="SVGRepo_iconCarrier"> <path d="M18.71 19.5C17.88 20.74 17 21.95 15.66 21.97C14.32 22 13.89 21.18 12.37 21.18C10.84 21.18 10.37 21.95 9.09997 22C7.78997 22.05 6.79997 20.68 5.95997 19.47C4.24997 17 2.93997 12.45 4.69997 9.39C5.56997 7.87 7.12997 6.91 8.81997 6.88C10.1 6.86 11.32 7.75 12.11 7.75C12.89 7.75 14.37 6.68 15.92 6.84C16.57 6.87 18.39 7.1 19.56 8.82C19.47 8.88 17.39 10.1 17.41 12.63C17.44 15.65 20.06 16.66 20.09 16.67C20.06 16.74 19.67 18.11 18.71 19.5ZM13 3.5C13.73 2.67 14.94 2.04 15.94 2C16.07 3.17 15.6 4.35 14.9 5.19C14.21 6.04 13.07 6.7 11.95 6.61C11.8 5.46 12.36 4.26 13 3.5Z"></path> </g></svg>
-                  <span>Fast Checkout with Apple Pay</span>
+                  {fastCheckoutBrand === 'applePay' ? (
+                    <>
+                      <svg fill="currentColor" className="h-6" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M18.71 19.5C17.88 20.74 17 21.95 15.66 21.97C14.32 22 13.89 21.18 12.37 21.18C10.84 21.18 10.37 21.95 9.09997 22C7.78997 22.05 6.79997 20.68 5.95997 19.47C4.24997 17 2.93997 12.45 4.69997 9.39C5.56997 7.87 7.12997 6.91 8.81997 6.88C10.1 6.86 11.32 7.75 12.11 7.75C12.89 7.75 14.37 6.68 15.92 6.84C16.57 6.87 18.39 7.1 19.56 8.82C19.47 8.88 17.39 10.1 17.41 12.63C17.44 15.65 20.06 16.66 20.09 16.67C20.06 16.74 19.67 18.11 18.71 19.5ZM13 3.5C13.73 2.67 14.94 2.04 15.94 2C16.07 3.17 15.6 4.35 14.9 5.19C14.21 6.04 13.07 6.7 11.95 6.61C11.8 5.46 12.36 4.26 13 3.5Z" />
+                      </svg>
+                      <span>Fast Checkout with Apple Pay</span>
+                    </>
+                  ) : fastCheckoutBrand === 'googlePay' ? (
+                    <>
+                      <svg fill="currentColor" className="h-5" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M12.24 10.285V14.4h6.887c-.648 2.41-2.519 4.09-5.142 4.09-3.3 0-5.98-2.68-5.98-5.98s2.68-5.98 5.98-5.98c1.5 0 2.87.55 3.94 1.45l3.07-3.07C19.14 3.2 15.96 2 12.24 2 6.58 2 2 6.58 2 12.24s4.58 10.24 10.24 10.24c5.79 0 10.24-4.11 10.24-10.24 0-.69-.06-1.35-.18-1.955H12.24z" />
+                      </svg>
+                      <span>Fast Checkout with Google Pay</span>
+                    </>
+                  ) : (
+                    <span>Fast Checkout</span>
+                  )}
                 </CommonButton>
               </div>
             )}
