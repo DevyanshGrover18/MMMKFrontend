@@ -743,7 +743,7 @@ export default function CheckoutForm({
           }
 
           const deliveryFee = res.deliveryFee;
-          onShippingChange?.(deliveryFee);
+          onShippingChange?.(res.feeInUsd || deliveryFee);
 
           const subtotal = derivedSummaryRef.current?.subtotal || 0;
           const updatedTotal = subtotal + deliveryFee;
@@ -819,7 +819,7 @@ export default function CheckoutForm({
             email: payerEmail || contactEmailRef.current || '',
             shippingAddress: formattedShipping,
             billingAddress: formattedShipping,
-            deliveryFee: shippingChargesRef.current,
+            deliveryFee: convertPrice(shippingChargesRef.current, currencyRef.current, rates),
             products: productsPayload,
             currency: currencyRef.current,
             couponCode: isCouponApplyRef.current ? couponCodeRef.current : null,
@@ -1180,7 +1180,7 @@ export default function CheckoutForm({
           products: cartData,
           shippingAddress,
           billingAddress,
-          shippingCharges: effectiveShippingCharges,
+          shippingCharges: convertPrice(effectiveShippingCharges, currency, rates),
           couponCode: isCouponApply ? couponCode : null,
           creditsUsed: derivedSummary.creditApplied,
           creditsUsedBase: appliedCreditAmount,
