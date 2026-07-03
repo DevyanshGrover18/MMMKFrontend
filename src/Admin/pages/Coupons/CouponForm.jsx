@@ -46,7 +46,11 @@ const CouponForm = ({ isModalVisible, handleCancel, tableQuery, currentEditCoupo
         form.setFieldsValue({
           ...currentEditCoupon,
           expiryDate: currentEditCoupon.expiryDate ? dayjs(currentEditCoupon.expiryDate) : null,
-          scopeCategory: currentEditCoupon.scopeCategory?._id || currentEditCoupon.scopeCategory,
+          scopeCategory: Array.isArray(currentEditCoupon.scopeCategory)
+            ? currentEditCoupon.scopeCategory.map(cat => cat?._id || cat)
+            : (currentEditCoupon.scopeCategory?._id || currentEditCoupon.scopeCategory
+              ? [currentEditCoupon.scopeCategory?._id || currentEditCoupon.scopeCategory]
+              : []),
           scopeProduct: currentEditCoupon.scopeProduct?._id || currentEditCoupon.scopeProduct,
         });
         setScope(currentEditCoupon.scope || 'All');
@@ -78,7 +82,7 @@ const CouponForm = ({ isModalVisible, handleCancel, tableQuery, currentEditCoupo
       setApplyToProducts(true);
       setApplyToDelivery(false);
     } catch (err) {
-      console.log(err);
+      
       message.error(err?.response?.data?.message || 'Failed to save coupon');
     } finally {
       setLoading(false);
@@ -180,13 +184,14 @@ const CouponForm = ({ isModalVisible, handleCancel, tableQuery, currentEditCoupo
 
             {scope === 'Category' && (
               <Form.Item
-                label="Select Category"
+                label="Select Categories"
                 name="scopeCategory"
-                rules={[{ required: true, message: 'Please select a category' }]}
+                rules={[{ required: true, message: 'Please select at least one category', type: 'array' }]}
               >
                 <Select
+                  mode="multiple"
                   showSearch
-                  placeholder="Search category"
+                  placeholder="Search and select categories"
                   optionFilterProp="children"
                 >
                   {categories.map((cat) => (

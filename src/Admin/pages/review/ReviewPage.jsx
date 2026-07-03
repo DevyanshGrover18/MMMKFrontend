@@ -39,7 +39,7 @@ const ReviewPage = () => {
       Reviews.refetch();
       message.success('Review deleted successfully');
     } catch (err) {
-      console.log(err);
+      
       message.error(err?.response?.data?.message || 'Failed to delete review');
     }
   };

@@ -28,7 +28,7 @@ const CouponTable = ({ data, tableQuery }) => {
       message.success('Coupon deleted successfuly');
       tableQuery.refetch();
     } catch (err) {
-      console.log(err);
+      
       message.error(err?.response?.data?.message || 'Failed to delete coupon');
     }
   };
@@ -79,6 +79,21 @@ const CouponTable = ({ data, tableQuery }) => {
       key: 'scope',
       render: (scope, record) => {
         if (scope === 'Category') {
+          if (Array.isArray(record.scopeCategory)) {
+            if (record.scopeCategory.length === 0) return <Tag color="purple">Category: None</Tag>;
+            return (
+              <div className="flex flex-wrap gap-1 max-w-[180px]">
+                {record.scopeCategory.map((cat) => {
+                  const catName = cat?.name?.en || cat?.name || 'Unknown Category';
+                  return (
+                    <Tag key={cat?._id || cat} color="purple" className="truncate max-w-[150px]" title={catName}>
+                      {catName}
+                    </Tag>
+                  );
+                })}
+              </div>
+            );
+          }
           const catName =
             record.scopeCategory?.name?.en ||
             record.scopeCategory?.name ||

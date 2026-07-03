@@ -158,11 +158,11 @@ const FilterTable = ({ data, tableQuery }) => {
 
       if (currentEdit) {
         const res = await updateFilter(currentEdit._id, filterData);
-        console.log(res);
+        
         message.success('Filter updated successfully');
       } else {
         const res = await createFilter(filterData);
-        console.log(res);
+        
         message.success('Filter added successfully');
       }
 
@@ -170,7 +170,7 @@ const FilterTable = ({ data, tableQuery }) => {
       setIsModalVisible(false);
       setCurrentEdit(null);
     } catch (err) {
-      console.log(err);
+      
       message.error(err?.response?.data?.message || 'Server Error');
     }
   };

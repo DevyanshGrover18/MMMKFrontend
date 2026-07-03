@@ -27,7 +27,7 @@ const Section9Form = ({ data, query }) => {
   };
 
   const handleFinish = async (values) => {
-    console.log('Submitted values:', values);
+    
 
     const formData = new FormData();
     Object.keys(values).forEach((key) => {

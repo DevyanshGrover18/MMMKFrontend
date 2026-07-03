@@ -82,7 +82,7 @@ const Profile = ({ children }) => {
       clearCart();
       return navigate('/');
     } catch (err) {
-      console.log(err);
+      
       message.error('Something went wrong, please refresh the page');
     }
   };

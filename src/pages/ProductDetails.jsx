@@ -252,7 +252,7 @@ const ProductDetails = () => {
         navigate('/shopping-cart');
       }
     } catch (err) {
-      console.log('Error adding to cart:', err);
+      
       message.error(err?.response?.data?.message || common.addToCartFailed);
     }
   };
@@ -421,15 +421,16 @@ const ProductDetails = () => {
                         )}
                     </div>
 
+                    {!isOutOfStock && (
                       <button
                         name="wishList"
                         type="button"
                         onClick={handleAddToCart}
                         className="w-full py-2 mt-3 font-semibold text-black bg-white"
-                        disabled={isOutOfStock}
-                    >
-                      {isOutOfStock ? 'Sold Out' : common.addToCart}
-                    </button>
+                      >
+                        {common.addToCart}
+                      </button>
+                    )}
                   </div>
                 </div>
               </div>

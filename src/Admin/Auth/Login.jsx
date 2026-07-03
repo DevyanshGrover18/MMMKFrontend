@@ -18,12 +18,12 @@ const Login = () => {
     setLoading(true);
     try {
       const res = await adminLogin(values);
-      console.log(res);
+      
       setData(res?.data);
       localStorage.setItem('adminAuthToken', JSON.stringify(res?.data));
       return navigate('/admin/dashboard');
     } catch (err) {
-      console.log(err);
+      
       message.error(
         err?.response?.data?.message || 'Failed to login please try again'
       );

@@ -82,7 +82,7 @@ const ContentForm = () => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    console.log('Form Data Submitted:', formData);
+    
     // Submit both the English and Arabic content when the form is submitted
   };
 

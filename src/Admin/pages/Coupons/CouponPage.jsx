@@ -45,7 +45,7 @@ const CouponPage = () => {
       Coupons.refetch();
       message.success('Coupon deleted successfully');
     } catch (err) {
-      console.log(err);
+      
       message.error(err?.response?.data?.message || 'Failed to delete coupon');
     }
   };
@@ -132,6 +132,21 @@ const CouponPage = () => {
         render: (scope, record) => {
           if (record.applyToProducts === false) return <Tag color="default">N/A</Tag>;
           if (scope === 'Category') {
+            if (Array.isArray(record.scopeCategory)) {
+              if (record.scopeCategory.length === 0) return <Tag color="purple">Category: None</Tag>;
+              return (
+                <div className="flex flex-wrap gap-1 max-w-[180px]">
+                  {record.scopeCategory.map((cat) => {
+                    const catName = cat?.name?.en || cat?.name || 'Unknown Category';
+                    return (
+                      <Tag key={cat?._id || cat} color="purple" className="truncate max-w-[150px]" title={catName}>
+                        {catName}
+                      </Tag>
+                    );
+                  })}
+                </div>
+              );
+            }
             const catName =
               record.scopeCategory?.name?.en ||
               record.scopeCategory?.name ||

@@ -52,15 +52,7 @@ const OrderSuccess = () => {
   useEffect(() => {
     if (!order) return;
 
-    console.log('[ORDER_SUCCESS_PAGE] Order verification result', {
-      orderId: order.orderId,
-      mode: order.mode || null,
-      paymentStatus: order.paymentStatus || 'Pending',
-      status: order.status || 'Pending',
-      juraSyncStatus,
-      jura_order_id: juraOrderId,
-      juraSyncError,
-    });
+    
   }, [order]);
 
   useEffect(() => {

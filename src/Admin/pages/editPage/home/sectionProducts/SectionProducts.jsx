@@ -29,10 +29,10 @@ const FormWithFields = () => {
   const handleFinish = async (values) => {
     try {
       const res = await updateSectionProducts(values);
-      console.log(res);
+      
       message.success('Section products updated successfully');
     } catch (err) {
-      console.log(err);
+      
       message.error(
         err?.response?.data?.message || 'Failed to updated section products'
       );

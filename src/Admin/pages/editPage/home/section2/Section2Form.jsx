@@ -40,7 +40,7 @@ const Section2Form = ({ data, query }) => {
   };
 
   const handleFinish = async (values) => {
-    console.log('value', values);
+    
     const formData = new FormData();
     Object.keys(values).forEach((key) => {
       if (key !== 'leftImage' && key !== 'rightImage') {
@@ -60,12 +60,12 @@ const Section2Form = ({ data, query }) => {
 
     try {
       const res = await updateHomeSection2(formData);
-      console.log(res);
+      
       query.refetch();
       setIsModalOpen(false);
       message.success('Section updated successfully');
     } catch (err) {
-      console.log(err);
+      
       message.error(err?.response?.data?.message || 'Failed to add content');
     }
   };

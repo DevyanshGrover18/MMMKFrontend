@@ -1173,21 +1173,21 @@ const TranslationProvider = ({ children }) => {
     }
   }, [utils.translateLanguage, categories, recommendedProducts]);
   const translatePages = async (pages, language) => {
-    console.log(`[DEBUG] translatePages called for: ${pages.join(', ')}, language: ${language}`);
+    
     const nextContent = { ...utils.content };
     const nextContentInLanguage = { ...utils.contentInLanguage };
 
     for (const page of pages) {
       const cachedPage = utils.contentInLanguage?.[page]?.[language];
       if (cachedPage) {
-        console.log(`[DEBUG] Using cached translation for ${page}`);
+        
         nextContent[page] = cachedPage;
         continue;
       }
 
       const staticPageContent = buildStaticPageContent(page, language);
       if (staticPageContent) {
-        console.log(`[DEBUG] Using static translation for ${page}`);
+        
         nextContent[page] = staticPageContent;
         nextContentInLanguage[page] = {
           ...nextContentInLanguage[page],
@@ -1197,7 +1197,7 @@ const TranslationProvider = ({ children }) => {
       }
 
       try {
-        console.log(`[DEBUG] Requesting translation for ${page}`);
+        
         
         // For legal pages, use local legal translations
         if (page === 'legal') {
@@ -1214,7 +1214,7 @@ const TranslationProvider = ({ children }) => {
           ...nextContentInLanguage[page],
           [language]: pageContent,
         };
-        console.log(`[DEBUG] Successfully translated ${page}`);
+        
       } catch (error) {
         console.error(`[DEBUG] Failed to translate ${page} for ${language}:`, error);
         nextContent[page] = TEXT[page];

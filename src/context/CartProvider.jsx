@@ -165,19 +165,14 @@ const CartProvider = ({ children }) => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    console.log('[DEBUG] Cart Query Status:', {
-      isLoading: query.isLoading,
-      isError: query.isError,
-      data: query.data?.data,
-      isUserSignedIn: isUserSignedIn()
-    });
+    
     if (isUserSignedIn()) {
       if (query.data) {
-        console.log('[DEBUG] Setting backend cart items.');
+        
         setCartItems({ items: query.data.data || [] });
       }
     } else {
-      console.log('[DEBUG] Setting local cart items.');
+      
       setCart(JSON.parse(localStorage.getItem('cartItems')) || []);
     }
   }, [query.data, query.isLoading]);

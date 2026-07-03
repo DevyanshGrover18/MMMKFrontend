@@ -55,7 +55,7 @@ const MyAccounts = () => {
       setLoading(false);
       message.success('My account updated successfully');
     } catch (err) {
-      console.log(err);
+      
       setLoading(false);
       message.err(
         err?.response?.data?.message || 'Failed to update my account'

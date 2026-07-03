@@ -68,7 +68,9 @@ export default function BarChart({
       categories: labels,
     },
     yaxis: {
+      decimalsInFloat: 0,
       labels: {
+        formatter: (val) => Math.round(val),
         style: {
           colors: xColors,
         },

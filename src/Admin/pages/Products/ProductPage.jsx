@@ -152,7 +152,7 @@ export default function AdminProductPage() {
       message.success('Product deleted successfully');
       Products.refetch();
     } catch (err) {
-      console.log(err);
+      
       message.error(err?.response?.data?.message || 'Failed to delete');
     }
   };

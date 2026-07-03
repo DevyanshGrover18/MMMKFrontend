@@ -45,14 +45,14 @@ const NewPassword = () => {
       const res = await updatePassword(params.token, {
         password: formData.password,
       });
-      console.log(res);
+      
       message.success('Password updated successfully');
       setFormData({ password: '', confirmPassword: '' });
       setLoading(false);
       navigate('/auth');
     } catch (err) {
       setLoading(false);
-      console.log(err);
+      
       message.error(
         err?.response?.data?.message || 'Failed to set new password'
       );

@@ -15,7 +15,7 @@ const GiftCardForm = ({
   const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (values) => {
-    console.log('Form Data:', values);
+    
 
     try {
       setLoading(true);
@@ -30,7 +30,7 @@ const GiftCardForm = ({
       form.resetFields();
       onClose();
     } catch (err) {
-      console.log(err);
+      
       message.error(err?.response?.data?.message || 'Failed to add gift card');
     } finally {
       setLoading(false);
@@ -41,7 +41,7 @@ const GiftCardForm = ({
     if (visible) {
       form.resetFields();
       if (editedRow) {
-        console.log('editedRow', editedRow);
+        
         form.setFieldsValue(editedRow);
       }
     }

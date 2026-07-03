@@ -84,7 +84,7 @@ const GiftCardPage = () => {
       GiftCards.refetch();
       message.success('Gift card deleted successfully');
     } catch (err) {
-      console.log(err);
+      
       message.error(
         err?.response?.data?.message || 'Failed to delete gift card'
       );
@@ -172,7 +172,7 @@ const GiftCardPage = () => {
         render: (createdBy) =>
           createdBy ? (
             <div className="flex flex-col items-center">
-              {console.log(createdBy)}
+              {}
               <p>
                 {createdBy?.firstName} {createdBy?.lastName}
               </p>

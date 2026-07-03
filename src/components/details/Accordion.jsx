@@ -9,7 +9,7 @@ const Accordion = ({ data }) => {
 
   const [items, setItems] = useState([]);
 
-  console.log('accordion data', data);
+  
 
   useEffect(() => {
     if (data) {
@@ -58,7 +58,7 @@ const Accordion = ({ data }) => {
   }, [data, productDetails]);
 
   const onChange = (key) => {
-    console.log(key);
+    
   };
 
   return (

@@ -53,7 +53,7 @@ const UserPage = () => {
       Users.refetch();
       message.success('User deleted successfully');
     } catch (err) {
-      console.log(err);
+      
       message.error(err?.response?.data?.message || 'Failed to delete user');
     }
   };

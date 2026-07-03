@@ -35,7 +35,7 @@ const VideoUploadForm = ({ data, query }) => {
 
     try {
       const res = await updateHomeSection12(formData);
-      console.log(res);
+      
       query.refetch();
       setDeletedFiles([]);
       message.success('Videos uploaded successfully!');

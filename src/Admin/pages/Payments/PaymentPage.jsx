@@ -53,7 +53,7 @@ const PaymentPage = () => {
       Payments.refetch();
       message.success('Payment deleted successfully');
     } catch (err) {
-      console.log(err);
+      
       message.error(err?.response?.data?.message || 'Failed to delete payment');
     }
   };

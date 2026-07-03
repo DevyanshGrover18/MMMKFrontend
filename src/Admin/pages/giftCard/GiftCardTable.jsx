@@ -16,7 +16,7 @@ const GiftCardTable = ({ data, query, setEditedRow, setIsModalOpen }) => {
       message.success('Gift card deleted successfully');
       query.refetch();
     } catch (err) {
-      console.log(err);
+      
       message.error(
         err?.response?.data?.messsage || 'Gift card deleted successfully'
       );

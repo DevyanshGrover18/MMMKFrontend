@@ -53,7 +53,7 @@ export default function OrdersTable({ data, tableQuery, setIsEditData }) {
       message.success('Order deleted successfully');
       tableQuery.refetch();
     } catch (err) {
-      console.log(err);
+      
       message.error(err?.response?.data?.message || 'Failed to delete order');
     }
   };
@@ -69,7 +69,7 @@ export default function OrdersTable({ data, tableQuery, setIsEditData }) {
         message.error({ content: res.message || 'Failed to update status', key: 'syncTracking' });
       }
     } catch (err) {
-      console.log(err);
+      
       message.error({ content: err?.response?.data?.message || err.message || 'Failed to sync tracking status', key: 'syncTracking' });
     }
   };

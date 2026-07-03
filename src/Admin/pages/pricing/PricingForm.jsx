@@ -14,10 +14,10 @@ const PricingForm = () => {
   const onFinish = async (values) => {
     try {
       const res = await updatePricing(values);
-      console.log(res);
+      
       message.success('Pricing update sucessfully');
     } catch (err) {
-      console.log(err);
+      
       message.error(err.response.data.message || 'Failed to update pricing');
     }
   };

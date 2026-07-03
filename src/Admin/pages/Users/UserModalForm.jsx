@@ -23,7 +23,7 @@ const UserModalForm = ({ isOpen, onCancel, refetchTable, selectedUser }) => {
       form.resetFields();
       onCancel();
     } catch (err) {
-      console.log(err);
+      
       message.error(err?.response?.data?.message);
     }
   };

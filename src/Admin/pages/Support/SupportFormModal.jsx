@@ -17,7 +17,7 @@ const SupportFormModal = ({ onClose }) => {
       message,
       reply: hasReply ? reply : 'No reply yet',
     };
-    console.log('Submitted form data:', formData);
+    
     onClose();
   };
 

@@ -24,12 +24,12 @@ const ForgetPassword = () => {
     try {
       setLoading(true);
       const res = await forgotPassword({ email });
-      console.log(res);
+      
       setEmail('');
       message.success('Reset password link sent to your email');
       setLoading(false);
     } catch (err) {
-      console.log(err);
+      
       setLoading(false);
       message.error(err?.response?.data?.message || 'Failed to login');
     }

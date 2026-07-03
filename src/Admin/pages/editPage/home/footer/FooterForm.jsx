@@ -55,20 +55,20 @@ const FooterForm = ({ data, query }) => {
   const handleOk = async () => {
     try {
       const values = await form.validateFields();
-      console.log('values', values);
+      
       const formData = new FormData();
       await appendCompressedImage(formData, 'image', values?.footerImage?.[0]);
       formData.append('footerContent', JSON.stringify(values?.footerContent));
       formData.append('footerLinks', JSON.stringify(values?.footerLinks));
       formData.append('socialLinks', JSON.stringify(values?.socialLinks));
       const res = await updateFooter(formData);
-      console.log(res);
+      
       query.refetch();
       message.success('Footer updated successfully');
       setIsModalVisible(false);
     } catch (err) {
-      console.log(err);
-      console.log(err?.response?.data?.message || 'Failed to update footer');
+      
+      
     }
   };
 

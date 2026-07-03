@@ -17,7 +17,7 @@ export const createProduct = async (data) => {
 
 export const getAllProducts = async (options) => {
   try {
-    console.log('getAllProducts options:', options);
+    
     const response = await product.get('/get-all', { params: options });
     return response.data;
   } catch (error) {

@@ -73,7 +73,7 @@ const CategoryModal = ({
     setUtils((prev) => ({ ...prev, ...newUtils }));
 
   useEffect(() => {
-    console.log('Current Edit Category:', currentEditCategory);
+    
     if (isVisible) {
       form.resetFields();
       setImageFile(null);
@@ -109,17 +109,17 @@ const CategoryModal = ({
               name: translatedNames,
             });
 
-            console.log('Translated Names:', translatedNames);
+            
           } else if (utils.activeTab === 1) {
             const subCategories = form.getFieldValue('subcategories') || [];
-            console.log('Subcategories:', subCategories);
+            
             if (subCategories.length) {
               const translatedSubCategories = await Promise.all(
                 subCategories.map(async (subcategory) => {
                   return await getTranslatedFields(subcategory);
                 })
               );
-              console.log('Translated Subcategories:', translatedSubCategories);
+              
               form.setFieldsValue({
                 subcategories: translatedSubCategories,
               });
@@ -142,7 +142,7 @@ const CategoryModal = ({
         'subcategories',
         JSON.stringify(formValues.subcategories)
       );
-      console.log('Form Values:', formValues);
+      
       formData.append('filters', JSON.stringify(formValues.filters || []));
 
       await appendCompressedImage(formData, 'image', imageFile);
@@ -161,7 +161,7 @@ const CategoryModal = ({
           ? message.success('Category updated successfully')
           : message.success('Category added successfully');
       } catch (err) {
-        console.log(err);
+        
         message.error(
           err?.response?.data?.message || 'Failed to save category'
         );

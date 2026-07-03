@@ -47,7 +47,7 @@ const SupportPage = () => {
       Supports.refetch();
       message.success('Support deleted successfully');
     } catch (err) {
-      console.log(err);
+      
       message.error(err?.response?.data?.message || 'Failed to delete support');
     }
   };

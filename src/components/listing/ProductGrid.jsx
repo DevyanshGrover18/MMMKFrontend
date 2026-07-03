@@ -123,7 +123,7 @@ const ProductGrid = ({ list = [], textColor = 'white' }) => {
         message.error(common.addToCartFailed || 'Failed to add item to cart');
       }
     } catch (err) {
-      console.log('Error adding to cart:', err);
+      
       message.error(err?.response?.data?.message || common.addToCartFailed || 'Failed to add item to cart');
       setVariantModalLoading(false);
     } finally {
@@ -150,7 +150,7 @@ const ProductGrid = ({ list = [], textColor = 'white' }) => {
         message.error(common.addToCartFailed || 'Failed to add item to cart');
       }
     } catch (err) {
-      console.log('Error adding variant to cart:', err);
+      
       message.error(err?.response?.data?.message || common.addToCartFailed || 'Failed to add item to cart');
     } finally {
       setAddingProductId(null);
@@ -185,7 +185,7 @@ const ProductGrid = ({ list = [], textColor = 'white' }) => {
         placement: 'topRight',
       });
     } catch (err) {
-      console.log(err);
+      
       notification.error({
         message: common.wishlistAddFailed,
         placement: 'topRight',

@@ -24,7 +24,7 @@ const UserTable = ({ data, tableQuery, setEditRow }) => {
       message.success('User delete successfully');
       tableQuery.refetch();
     } catch (err) {
-      console.log(err);
+      
       message.error(err?.response?.data?.message || 'Failed to delete user');
     }
   };

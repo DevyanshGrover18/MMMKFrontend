@@ -10,7 +10,7 @@ const ReviewTable = ({ data, tableQuery }) => {
       message.success('Product deleted successfully');
       tableQuery.refetch();
     } catch (err) {
-      console.log(err);
+      
       message.error(err?.response?.data?.message || 'Failed to delete');
     }
   };

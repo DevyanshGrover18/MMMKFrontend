@@ -16,16 +16,16 @@ const CreateUserForm = ({ tableQuery }) => {
   };
 
   const onFinish = async (values) => {
-    console.log('Form Values:', values);
+    
 
     try {
       const res = await userSignup(values);
-      console.log(res);
+      
       message.success('User create successfully');
       tableQuery.refetch();
       form.resetFields();
     } catch (err) {
-      console.log(err);
+      
       message.error(
         err?.response?.data?.message || 'Failed to create new user'
       );

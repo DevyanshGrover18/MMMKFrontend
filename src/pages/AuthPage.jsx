@@ -111,7 +111,7 @@ const AuthPage = () => {
       setLoading(false);
       return navigate(state?.from || '/');
     } catch (err) {
-      console.log(err);
+      
       setLoading(false);
       message.error(err?.response?.data?.message || 'Failed to signup');
     }
@@ -150,7 +150,7 @@ const AuthPage = () => {
       return navigate(state?.from || '/');
     } catch (err) {
       setLoading(false);
-      console.log(err);
+      
       message.error(err?.response?.data?.message || 'Failed to login');
     }
   };

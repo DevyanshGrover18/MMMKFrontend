@@ -121,7 +121,7 @@ const FilterPage = () => {
       setCustomFilterName('');
       updateUtils({ isModalVisible: false, currentEditFilter: null });
     } catch (err) {
-      console.log(err);
+      
       message.error(err?.response?.data?.message || 'Server Error');
     }
   };
@@ -139,7 +139,7 @@ const FilterPage = () => {
       message.success('Filter deleted successfully');
       Filters.refetch();
     } catch (err) {
-      console.log(err);
+      
       message.error(err?.response?.data?.message || 'Failed to delete filter');
     }
   };

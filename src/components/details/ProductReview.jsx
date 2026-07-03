@@ -48,7 +48,7 @@ const ProductReview = ({ product }) => {
       query.refetch();
       message.success('Thanks for adding review');
     } catch (err) {
-      console.log(err);
+      
       message.error(err?.response?.data?.message || 'Failed to add review');
     }
   };

@@ -22,11 +22,11 @@ const PaymentTable = ({ data, tableQuery }) => {
   const handleDelete = async (record) => {
     try {
       const res = await deletePayment(record._id);
-      console.log(res);
+      
       message.success('Payment deleted successfully');
       tableQuery.refetch();
     } catch (err) {
-      console.log(err);
+      
       message.error(err?.response?.data?.message || 'Failed to delete');
     }
   };
@@ -99,7 +99,7 @@ const PaymentTable = ({ data, tableQuery }) => {
           <Popconfirm
             title="Are you sure you want to delete this record?"
             onConfirm={() => handleDelete(record)}
-            onCancel={() => console.log('Cancelled')}
+            onCancel={() => }
             okText="Yes"
             cancelText="No"
             placement="topRight"

@@ -1962,7 +1962,7 @@ export default function CheckoutForm({
             </div>
 
             {/* Apple Pay/Google Pay Fast Checkout Button (positioned under address fields) */}
-            {fastCheckoutBrand && (
+            {fastCheckoutBrand && !isUserSignedIn() && (
               <div className="mt-4">
                 <div className="flex items-center my-4">
                   <div className="flex-grow border-t border-gray-200"></div>

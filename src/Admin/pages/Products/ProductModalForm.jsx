@@ -459,7 +459,7 @@ const ProductModalForm = ({
       }
       formData.append('finalImages', JSON.stringify(uploadedGalleryImages));
 
-      console.log(product);
+      
 
       Object.keys(product).forEach((key) => {
         if (['images', 'image'].includes(key)) return;
@@ -486,7 +486,7 @@ const ProductModalForm = ({
       try {
         let res = null;
         if (selected) {
-          console.log('selected', selected);
+          
           formData.append(
             'deletedImages',
             JSON.stringify(utils.deletedImages || [])
@@ -510,7 +510,7 @@ const ProductModalForm = ({
           );
         }
       } catch (err) {
-        console.log(err);
+        
         message.error(
           err.response?.data?.message || `Failed to ${mode} product`
         );
@@ -518,7 +518,7 @@ const ProductModalForm = ({
         updateUtils({ isTabLoading: false });
       }
     } catch (errorInfo) {
-      console.log('Validation Failed:', errorInfo);
+      
       updateUtils({ isTabLoading: false });
       return;
     }
@@ -702,7 +702,7 @@ const PrimaryDetails = ({
   };
 
   const handleDeleteImage = (value, field = 'images') => {
-    console.log('handleDeleteImage', value, field);
+    
     addDeletedImage(value.uid);
     if (field === 'image') {
       form.setFieldsValue({ image: [] });

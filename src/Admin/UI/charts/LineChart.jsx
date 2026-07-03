@@ -84,7 +84,9 @@ export default function LineChart({
     },
 
     yaxis: {
+      decimalsInFloat: 0,
       labels: {
+        formatter: (val) => Math.round(val),
         style: {
           colors: [color],
         },

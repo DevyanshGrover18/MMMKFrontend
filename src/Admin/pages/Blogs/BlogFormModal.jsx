@@ -31,7 +31,7 @@ const BlogFormModal = ({ toggleModal }) => {
     e.preventDefault();
 
     // Log the form data to the console
-    console.log({ title, description, image, badges });
+    
 
     // Close modal after form submission
     toggleModal();

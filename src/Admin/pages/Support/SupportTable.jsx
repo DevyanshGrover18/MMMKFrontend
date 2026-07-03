@@ -30,7 +30,7 @@ const SupportTable = ({ data, tableQuery }) => {
       message.success('Support deleted successfully');
       tableQuery.refetch();
     } catch (err) {
-      console.log(err);
+      
       message.error(err?.response?.data?.message || 'Failed to delete support');
     }
   };
@@ -56,7 +56,7 @@ const SupportTable = ({ data, tableQuery }) => {
       setSelectedRecord(null);
       tableQuery.refetch();
     } catch (err) {
-      console.log(err);
+      
       message.error(err?.response?.data?.message || 'Failed to reply');
     }
   };

@@ -8,12 +8,12 @@ const SupportModal = ({ isModalOpen, handleCancel }) => {
   const handleSubmit = async (values) => {
     try {
       const res = await createSupport(values);
-      console.log(res);
+      
       message.success('Message sent successfully');
       form.resetFields();
       handleCancel();
     } catch (err) {
-      console.log(err);
+      
       message.error(err?.response?.data?.message || 'Failed to send message');
     }
   };

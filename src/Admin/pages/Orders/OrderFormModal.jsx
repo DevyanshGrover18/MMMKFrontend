@@ -19,13 +19,13 @@ const OrderFormModal = ({ editData, onCancel, tableQuery }) => {
         deliveryStatus: values.deliveryStatus,
         paymentStatus: values.paymentStatus,
       });
-      console.log(res);
+      
       message.success('Order updated successfully');
       tableQuery.refetch();
       form.resetFields();
       onCancel();
     } catch (err) {
-      console.log(err);
+      
       message.error(err?.response?.data?.message || 'failed to update status');
     }
   };
