@@ -143,6 +143,14 @@ const getStripePublishableKey = () => {
   );
 };
 
+const isIOSDevice = () => {
+  if (typeof window === 'undefined') return false;
+  return (
+    ['iPad Simulator', 'iPhone Simulator', 'iPod Simulator', 'iPad', 'iPhone', 'iPod'].includes(window.navigator.platform) ||
+    (window.navigator.userAgent.includes("Mac") && "ontouchend" in window.document)
+  );
+};
+
 // ─── UI Sub-components ────────────────────────────────────────────────────────
 
 /** Floating-label text input */
@@ -576,7 +584,9 @@ export default function CheckoutForm({
 
   const [stripe, setStripe] = useState(null);
   const [paymentRequest, setPaymentRequest] = useState(null);
-  const [fastCheckoutBrand, setFastCheckoutBrand] = useState('applePay');
+  const [fastCheckoutBrand, setFastCheckoutBrand] = useState(() => {
+    return isIOSDevice() ? 'applePay' : 'generic';
+  });
   const [isApplePayWarningOpen, setIsApplePayWarningOpen] = useState(false);
 
 
@@ -703,17 +713,15 @@ export default function CheckoutForm({
       });
 
       pr.canMakePayment().then((result) => {
+        const isIOS = isIOSDevice();
         if (result) {
-          if (result.applePay) {
+          if (isIOS && result.applePay) {
             setFastCheckoutBrand('applePay');
-          } else if (result.googlePay) {
-            setFastCheckoutBrand('googlePay');
           } else {
             setFastCheckoutBrand('generic');
           }
         } else {
-          // For testing: Keep it visible as 'applePay' instead of setting to null
-          // setFastCheckoutBrand(null);
+          setFastCheckoutBrand(isIOS ? 'applePay' : 'generic');
         }
       });
 
@@ -1982,7 +1990,12 @@ export default function CheckoutForm({
                       <span>Fast Checkout with Google Pay</span>
                     </>
                   ) : (
-                    <span>Fast Checkout</span>
+                    <>
+                      <svg fill="currentColor" className="h-5 w-5" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M13 10V3L4 14H11V21L20 10H13Z" />
+                      </svg>
+                      <span>Fast Checkout</span>
+                    </>
                   )}
                 </CommonButton>
               </div>
