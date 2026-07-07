@@ -23,6 +23,7 @@ import {
   X,
   ChevronDown,
   ChevronLeft,
+  Mail,
 } from 'lucide-react';
 import { FaGift } from 'react-icons/fa';
 import { cn } from '../../utils/cn';
@@ -105,8 +106,15 @@ export default function AdminSidebar({ children }) {
         key: '/admin/orders',
       },
       {
+        icon: <Mail size={15} />,
+        label: 'Email Template',
+        title: 'Email Template',
+        key: '/admin/email-template',
+      },
+      {
         icon: <Ticket size={15} />,
         label: 'Coupons',
+
         title: 'Coupons',
         key: '/admin/coupons',
       },

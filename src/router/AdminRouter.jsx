@@ -40,6 +40,7 @@ const FilterPage = lazy(() => import('../Admin/pages/Filters/FilterPage').catch(
 const PaymentPage = lazy(() => import('../Admin/pages/Payments/PaymentPage').catch(() => { window.location.reload(); }));
 const TopStripPage = lazy(() => import('../Admin/pages/TopStrip/TopStripPage').catch(() => { window.location.reload(); }));
 const HomeBanner = lazy(() => import('../Admin/pages/editPage/home/banner/BannerBubbleSettings').catch(() => { window.location.reload(); }));
+const EmailTemplatePage = lazy(() => import('../Admin/pages/EmailTemplate/EmailTemplatePage').catch(() => { window.location.reload(); }));
 
 export default function AdminRouter() {
   return (
@@ -211,8 +212,17 @@ export default function AdminRouter() {
               </AdminSidebar>
             }
           />
+          <Route
+            path="email-template"
+            element={
+              <AdminSidebar>
+                <EmailTemplatePage />
+              </AdminSidebar>
+            }
+          />
         </Routes>
       </AdminProvider>
+
     </AdminProtectedRoute>
   );
 }
