@@ -3,7 +3,8 @@ import { appendCompressedImages } from '../../utils/imageCompression';
 
 const SHARED_UPLOAD_BASE_URL = (
   import.meta.env.VITE_SHARED_UPLOAD_BASE_URL ||
-  'https://node.projects.codenap.in/mmk'
+  import.meta.env.VITE_BACKEND_URL ||
+  (typeof window !== 'undefined' ? window.location.origin : '')
 ).replace(/\/$/, '');
 
 const uploadApi = createAdminApiClient(

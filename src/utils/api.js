@@ -6,6 +6,6 @@ const API_URL =
   import.meta.env.VITE_BACKEND_URL ||
   (isLocalhost
     ? 'http://localhost:3001'
-    : 'https://node.projects.codenap.in/mmk');
+    : (typeof window !== 'undefined' ? window.location.origin : ''));
 
 export default API_URL;

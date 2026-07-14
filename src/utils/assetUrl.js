@@ -1,6 +1,6 @@
 const DEPLOYED_UPLOADS_BASE_URL =
   import.meta.env.VITE_PUBLIC_UPLOAD_BASE_URL ||
-  'https://node.projects.codenap.in/mmk/uploads';
+  (typeof window !== 'undefined' ? `${window.location.origin}/uploads` : '');
 const ASSET_BASE_URL = (
   import.meta.env.VITE_IMAGE_URL ||
   DEPLOYED_UPLOADS_BASE_URL ||
